@@ -14,7 +14,8 @@ from .prompt import SINGLE_TRANSLATION_PROMPT, SUMMARY_SYS_MESSAGE
 load_dotenv()
 OPENAI_URL = os.getenv("OPENAI_API_URL")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("MODEL")
+TASK_MODEL = os.getenv("TASK_MODEL")
+TRANSLATION_MODEL = os.getenv("TRANSLATION_MODEL")
 GEMINI_API = os.getenv("GEMINI_API")
 GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
 
@@ -112,7 +113,7 @@ def gemini_completion(prompt, system_message, temperature, model, key):
 def get_completion(
     prompt: str,
     system_message: str = "You are a helpful assistant.",
-    model: str = "gemini-1.5-pro",
+    model: str = TRANSLATION_MODEL,
     temperature: float = 0.3,
 ) -> str:
     answer = ""
@@ -146,7 +147,7 @@ def get_completion(
 
 
 def openai_completion(
-    prompt, system_message=None, temperature=0.3, model=MODEL, json_output=False
+    prompt, system_message=None, temperature=0.3, model=TASK_MODEL, json_output=False
 ) -> str:
     if system_message:
         message = [
