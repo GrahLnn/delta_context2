@@ -7,6 +7,7 @@ A tool to add any translation subtitles to any video. Using Whisper, translate a
 **install**
 
 ```shell
+# If you are not using the uv package manager, you can simply copy the command that starts with pip.
 # install pytorch
 uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
@@ -18,7 +19,7 @@ uv pip install git+https://github.com/GrahLnn/delta_context2.git
 
 Prepare your .env file in your project. Fill in according to the .env.example example.
 
-Import to use.
+Then
 
 ```python
 from delta_context2 import VideoProcessor
