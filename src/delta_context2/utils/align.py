@@ -238,7 +238,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
             monitor=False,
         ) as bar:
             result = get_json_completion(prompt)
-            print(json.dumps(result, indent=4, ensure_ascii=False))
+            # print(json.dumps(result, indent=4, ensure_ascii=False))
             a_sentences = [pair["sentence_a"] for pair in result["pair"]]
             b_sentences = [pair["sentence_b"] for pair in result["pair"]]
             for idx, (source_text, translated_text) in enumerate(
@@ -257,7 +257,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                         if count + 1 == max_retry:
                             raise ValueError("sentence can not translate")
                 bar()
-        print(abs_uni_len("".join(a_sentences)), abs_uni_len("".join(sentence)))
+        # print(abs_uni_len("".join(a_sentences)), abs_uni_len("".join(sentence)))
         if abs(abs_uni_len("".join(a_sentences)) - abs_uni_len("".join(sentence))) > 10:
             [print(s, t) for s, t in zip(a_sentences, b_sentences)]
             print(abs_uni_len("".join(a_sentences)), abs_uni_len("".join(sentence)))
