@@ -1,4 +1,4 @@
-# delta_context2
+# δ context 2
 
 A tool to add any translation subtitles to any video. Using Whisper, translate agent translation.
 
