@@ -48,7 +48,8 @@ class VideoProcessor:
         atomic_part = split_to_atomic_part(
             item_dir, source_text_chunks, translated_chunks
         )
-        atomic_zhs, atomic_ens = atomic_part["zh"], atomic_part["en"]
+        atomic_zhs = [part["zh"] for part in atomic_part]
+        atomic_ens = [part["en"] for part in atomic_part]
         sentences_timestamps = get_sentence_timestamps(
             item_dir, atomic_ens, words, atomic_zhs
         )
