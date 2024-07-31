@@ -1,0 +1,57 @@
+import os
+from pathlib import Path
+
+from .audio.separator import extract_vocal, separate_audio_from_video
+from .audio.transcribe import get_transcribe
+from .infomation.llm import get_summary
+from .infomation.translate_agent import translate
+from .infomation.video_metadata import get_ytb_video_info
+from .text.utils import split_text_into_chunks
+from .utils.align import get_sentence_timestamps, split_to_atomic_part
+from .utils.network import check_model_exist
+from .utils.subtitle import render_video_with_subtitles, save_to_ass
+from .video.downloader import download_ytb_mp4
+
+class VideoProcessor:
+    def __init__(self, source_lang: str, target_lang: str, country: str):
+        self.source_lang = source_lang
+        self.target_lang = target_lang
+        self.country = country
+        self.DATA_DIR = Path("data")
+        self.weight, self.config = check_model_exist()
+
+    def process(self, ytb_url: str):
+        video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
+        formal_name = (
+            video_info["title"].replace(" ", "_").replace(",", "").replace("#", "")
+        )
+        item_dir = self.DATA_DIR / "videos" / formal_name
+        source_dir = item_dir / "source"
+        save_name = source_dir / formal_name
+        os.makedirs(source_dir, exist_ok=True)
+
+        video_path = download_ytb_mp4(ytb_url, save_name)
+        audio_path = separate_audio_from_video(video_path)
+        audio_path = extract_vocal(audio_path, self.config, self.weight)
+        transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
+        # sys.exit()
+        get_summary(item_dir, transcribe["text"])
+        sentences = transcribe["sentences"]
+        words = transcribe["words"]
+        source_text_chunks = split_text_into_chunks(sentences)
+        translated_chunks = translate(
+            item_dir,
+            self.source_lang,
+            self.target_lang,
+            source_text_chunks,
+            self.country,
+        )
+        atomic_part = split_to_atomic_part(
+            item_dir, source_text_chunks, translated_chunks
+        )
+        atomic_zhs, atomic_ens = atomic_part["zh"], atomic_part["en"]
+        sentences_timestamps = get_sentence_timestamps(
+            item_dir, atomic_ens, words, atomic_zhs
+        )
+        subtitle_path = save_to_ass(sentences_timestamps, "subtitle", item_dir)
+        render_video_with_subtitles(video_path, subtitle_path, item_dir)
