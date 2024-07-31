@@ -34,7 +34,6 @@ class VideoProcessor:
         audio_path = separate_audio_from_video(video_path)
         audio_path = extract_vocal(audio_path, self.config, self.weight)
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
-        # sys.exit()
         get_summary(item_dir, transcribe["text"])
         sentences = transcribe["sentences"]
         words = transcribe["words"]
