@@ -38,3 +38,4 @@ video_processor.process(ytb_url)
 - [ ] other language subtitle
 - [x] support for YouTube videos download
 - [ ] support other platform download (bilibili, x)
+- [ ] support local video
