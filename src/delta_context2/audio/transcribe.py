@@ -117,6 +117,7 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         audio=audio_path,
         word_timestamps=True,
         prompt=description.split("\n")[0],
+        translate=True,
     )
     segments = result["segments"]
     texts = [seg["text"] for seg in segments]
@@ -125,7 +126,9 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
 
     sentences = merge_sentence(texts)
     if len(flatten([s.split() for s in sentences])) != len(formal_words):
-        raise ValueError(f"Error: The words({len(formal_words)}) and sentences({len(flatten([s.split() for s in sentences]))}) do not match.")
+        raise ValueError(
+            f"Error: The words({len(formal_words)}) and sentences({len(flatten([s.split() for s in sentences]))}) do not match."
+        )
 
     result = {
         "text": result["text"],
