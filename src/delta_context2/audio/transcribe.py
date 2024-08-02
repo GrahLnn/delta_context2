@@ -116,7 +116,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
     result = model.transcribe(
         audio=audio_path,
         word_timestamps=True,
-        prompt=description.split("\n")[0],
+        # prompt=description.split("\n")[0],
+        initial_prompt="Prohibit the use of abbreviations."
     )
     segments = result["segments"]
     texts = [seg["text"] for seg in segments]
