@@ -117,7 +117,6 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         audio=audio_path,
         word_timestamps=True,
         prompt=description.split("\n")[0],
-        translate=True,
     )
     segments = result["segments"]
     texts = [seg["text"] for seg in segments]
