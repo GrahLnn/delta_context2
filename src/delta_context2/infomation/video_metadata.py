@@ -1,12 +1,15 @@
 import json
+from io import BytesIO
 from pathlib import Path
+
+import httpx
 import yt_dlp
 from alive_progress import alive_bar
+from PIL import Image
 
-from .prompt import SINGLE_TRANSLATION_PROMPT
-
-from .llm import openai_completion
 from ..text.utils import remove_illegal_chars
+from .llm import openai_completion
+from .prompt import SINGLE_TRANSLATION_PROMPT
 
 
 def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
@@ -40,16 +43,21 @@ def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
                     description = info_dict.get("description", None)
                     uploader = info_dict.get("uploader", None)
                     thumbnail = info_dict.get("thumbnail", None)
-                    data_path = (
-                        data_dir / "videos" / title.replace(" ", "_").replace(",", "").replace("#", "") / "metadata.json"
+                    name_formal = (
+                        title.replace(" ", "_").replace(",", "").replace("#", "")
                     )
+                    data_path = data_dir / "videos" / name_formal / "metadata.json"
                     if data_path.exists():
                         with open(data_path, "r", encoding="utf-8") as file:
                             return json.load(file)
-                        
+
                     prompt = SINGLE_TRANSLATION_PROMPT.format(TEXT=title)
                     res = openai_completion(prompt)
                     res = res.split("\n")[0]
+
+                    download_and_resize_thumbnail(
+                        thumbnail, data_dir / "videos" / name_formal / "source"
+                    )
 
                     metadata = {
                         "title": title,
@@ -69,3 +77,18 @@ def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
                 attempts += 1
 
     raise Exception("Failed to fetch video info after maximum retries.")
+
+
+def download_and_resize_thumbnail(url: str, save_dir: Path) -> None:
+    response = httpx.get(url)
+    if response.status_code == 200:
+        image_data = response.content
+        image = Image.open(BytesIO(image_data))
+
+        # 将图像放大到1080p级别
+        resized_image = image.resize((1920, 1080), Image.ANTIALIAS)
+
+        save_dir.mkdir(parents=True, exist_ok=True)
+        resized_image.save(save_dir / "thumbnail.jpg", "JPEG")
+    else:
+        raise Exception("Failed to download thumbnail.")

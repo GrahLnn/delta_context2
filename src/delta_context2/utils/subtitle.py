@@ -4,7 +4,10 @@ import re
 from typing import TextIO, List, Dict
 from pathlib import Path
 from alive_progress import alive_bar
+from dotenv import load_dotenv
 
+load_dotenv()
+ASS_STYLE = os.getenv("ASS_STYLE")
 
 class WriteASS:
     extension: str = "ass"
@@ -33,7 +36,7 @@ class WriteASS:
             "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
         )
         file.write(
-            "Style: 仓耳今楷,仓耳今楷03 W04,18,&H00F7C34F,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.5,2,2,5,10,1,1\n"
+            f"Style: {ASS_STYLE}\n"
         )
         file.write("\n")
 
@@ -47,7 +50,7 @@ class WriteASS:
             start_time = self.format_timestamp(segment["start"])
             end_time = self.format_timestamp(segment["end"])
             text = segment["text"]
-            file.write(f"Dialogue: 0,{start_time},{end_time},仓耳今楷,,0,0,0,,{text}\n")
+            file.write(f"Dialogue: 0,{start_time},{end_time},{ASS_STYLE.split(",")[0]},,0,0,0,,{text}\n")
 
     def format_timestamp(self, seconds: float):
         # 转换时间格式为ASS文件所需的"hh:mm:ss.cc"形式

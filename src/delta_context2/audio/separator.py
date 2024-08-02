@@ -52,7 +52,7 @@ def separate_audio_from_video(video_path: str, output_audio_path: str = None) ->
 def extract_vocal(audio_path: str, config: str, weight: str) -> None:
     audio_path: Path = Path(audio_path)
     model_give_name = audio_path.with_name(f"{audio_path.stem}_vocals.wav")
-    target_audio_path = audio_path.with_suffix(".wav")
+    target_audio_path = audio_path.with_name("vocal.wav")
     if os.path.exists(target_audio_path):
         return str(target_audio_path)
 
