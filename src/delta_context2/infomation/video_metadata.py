@@ -86,7 +86,7 @@ def download_and_resize_thumbnail(url: str, save_dir: Path) -> None:
         image = Image.open(BytesIO(image_data))
 
         # 将图像放大到1080p级别
-        resized_image = image.resize((1920, 1080), Image.ANTIALIAS)
+        resized_image = image.resize((1920, 1080), Image.Resampling.LANCZOS)
 
         save_dir.mkdir(parents=True, exist_ok=True)
         resized_image.save(save_dir / "thumbnail.jpg", "JPEG")
