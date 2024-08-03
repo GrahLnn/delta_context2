@@ -1,6 +1,7 @@
 import json
 from io import BytesIO
 from pathlib import Path
+import re
 
 import httpx
 import yt_dlp
@@ -51,9 +52,10 @@ def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
                         with open(data_path, "r", encoding="utf-8") as file:
                             return json.load(file)
 
-                    prompt = SINGLE_TRANSLATION_PROMPT.format(TEXT=title)
+                    prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=title)
                     res = openai_completion(prompt)
-                    res = res.split("\n")[0]
+                    pattern = r"<chinese_text>(.*?)</chinese_text>"
+                    res = re.findall(pattern, res, re.DOTALL)[0].strip()
 
                     download_and_resize_thumbnail(
                         thumbnail, data_dir / "videos" / name_formal / "source"

@@ -56,7 +56,7 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
     while True:
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl, alive_bar(
-                1, title="Downloading", manual=True
+                100, title="Downloading", manual=True
             ) as bar:
                 ydl.download([video_url])
             return out_name + ".mp4"

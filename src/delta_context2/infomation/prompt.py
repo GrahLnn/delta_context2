@@ -112,9 +112,25 @@ In this example, the last pair demonstrates a case where a direct corresponding 
 
 Please process the given paragraphs and provide your answer in the specified JSON format. Ensure that the sentences are properly matched, translations are added where necessary, and that the JSON is correctly formatted. Your entire response should be enclosed in ``` tags."""
 
-SINGLE_TRANSLATION_PROMPT = (
-    "Rewrite the following text in engaging Chinese sentences.\n{TEXT}"
-)
+SINGLE_TRANSLATION_PROMPT = """You are tasked with rewriting a given text in engaging Chinese sentences. Your goal is to create a version that is captivating and interesting to Chinese readers while maintaining the original meaning. Follow these steps:
+
+1. Here is the original text you will be working with:
+
+<original_text>
+{ORIGINAL_TEXT}
+</original_text>
+
+2. Rewrite the text in Chinese, focusing on creating engaging and interesting sentences. Use vivid language, appropriate idioms, and cultural references when applicable to make the text more appealing to Chinese readers.
+
+3. Ensure that you maintain the core meaning and key points of the original text while adapting it for a Chinese audience.
+
+4. Use appropriate Chinese characters and grammar. Make sure your writing is fluent and natural-sounding to native Chinese speakers.
+
+5. Only provide the rewritten Chinese text as your output. Do not include any explanations, comparisons to the original text, or additional comments.
+
+6. Present your rewritten text within <chinese_text> tags.
+
+Remember, your task is to create an engaging Chinese version of the text, not a literal translation. Focus on conveying the essence of the original content in a way that resonates with Chinese readers."""
 
 SUMMARY_SYS_MESSAGE = 'You are a summarizing assistant responsible for analyzing the content of YouTube videos. The user will feed you transcriptions but you should always refer to the content in your response as "the video". Focus on accurately summarizing the main points and key details of the videos. Do not comment on the style of the video (e.g., whether it is a voiceover or conversational). Do never mention or imply the existence of text, transcription, or any written format. Use phrases like "The video discusses..." or "According to the video...". Strive to be the best summarizer possible, providing clear, and informative summaries that exclusively reference the video content.'
 
