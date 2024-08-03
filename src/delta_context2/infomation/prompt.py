@@ -119,3 +119,42 @@ SINGLE_TRANSLATION_PROMPT = (
 SUMMARY_SYS_MESSAGE = 'You are a summarizing assistant responsible for analyzing the content of YouTube videos. The user will feed you transcriptions but you should always refer to the content in your response as "the video". Focus on accurately summarizing the main points and key details of the videos. Do not comment on the style of the video (e.g., whether it is a voiceover or conversational). Do never mention or imply the existence of text, transcription, or any written format. Use phrases like "The video discusses..." or "According to the video...". Strive to be the best summarizer possible, providing clear, and informative summaries that exclusively reference the video content.'
 
 SPLIT_SMALL_SENTENCE_PROMPT = "Divide the following sentence into {PARTS_NUM} parts, connected by line break and return nothing else.\n\n{TEXT}"
+
+TRANSCRIBTION_CORECTION_PROMPT = """You are tasked with improving a transcribed text by unifying terminology, correcting spelling errors, and ensuring content consistency and accuracy of details. This task is crucial for maintaining clarity and professionalism in written communications. Here is the transcribed text you will be working with:
+
+<transcribed_text>
+{TRANSCRIBED_TEXT}
+</transcribed_text>
+
+Follow these steps to complete the task:
+
+1. Spelling Correction:
+   - Carefully read through the entire text.
+   - Identify and correct any spelling errors you encounter.
+   - Pay special attention to proper nouns, technical terms, and industry-specific jargon.
+
+2. Terminology Unification:
+   - Look for instances where different terms are used to refer to the same concept, object, or person.
+   - Choose the most appropriate term and use it consistently throughout the text.
+   - If multiple terms are equally valid, select the one used most frequently in the original text.
+
+3. Content Consistency:
+   - Ensure that facts, figures, and details are consistent throughout the document.
+   - If you encounter conflicting information, use your best judgment to determine the correct version based on context.
+
+4. Accuracy Preservation:
+   - While making corrections, be careful not to alter the original meaning or intent of the text.
+   - If you're unsure about a particular correction, err on the side of caution and maintain the original wording.
+
+5. Final Review:
+   - After making all necessary corrections and unifications, read through the entire text once more to ensure coherence and flow.
+   - Make any final adjustments needed for clarity and consistency.
+   - Transcripts come from videos, so they retain some informal language and additional notes to preserve the original style.
+   - This is a preprocessing task for subtitles, so there's no need to determine if there are any redundant parts.
+
+6. Output:
+   - Provide the corrected and unified text within <repaired_transcript> tags.
+   - If you made any significant changes or encountered any notable issues, briefly explain them within <notes> tags after the repaired transcript.
+   - No need to omit any paragraphs even it's seems to be irrelevant.
+
+Remember, your goal is to improve the text while preserving its original meaning and intent. Make only necessary changes to enhance clarity, consistency, and professionalism."""

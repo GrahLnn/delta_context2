@@ -1,4 +1,10 @@
+import difflib
+import re
 import whisper
+
+from ..infomation.llm import get_completion
+
+from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 
 # from pyannote.audio import Pipeline
 # from pydub import AudioSegment
@@ -121,20 +127,23 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         language="en",
     )
     segments = result["segments"]
-    texts = [seg["text"] for seg in segments]
+    # texts = [seg["text"] for seg in segments]
     words = flatten([seg["words"] for seg in segments])
     formal_words = format_words(words)
-
-    sentences = merge_sentence(texts)
-    sen_2_word = flatten([s.split() for s in sentences])
-    if (n := len(sen_2_word)) != (m := len(formal_words)):
-        [print(fw["word"], sw) for fw, sw in zip(formal_words, sen_2_word)]
+    if (n := len(result["text"].split())) != (m := len(formal_words)):
         raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
 
+
+    # sentences = merge_sentence(texts)
+
+    transcribtion = corect_transcription(result["text"])
+    trg_words = get_checked_words(words, result["text"], transcribtion)
+    sentences = collect_sentences(trg_words)
+
     result = {
-        "text": result["text"],
+        "text": transcribtion,
         "sentences": sentences,
-        "words": formal_words,
+        "words": trg_words,
     }
 
     return result
@@ -166,3 +175,78 @@ def format_words(words):
             formal_words[-1]["word"] += word["word"]
             formal_words[-1]["end"] = word["end"]
     return formal_words
+
+
+def corect_transcription(transcription):
+    prompt = TRANSCRIBTION_CORECTION_PROMPT.format(TRANSCRIBED_TEXT=transcription)
+    res = get_completion(prompt=prompt)
+    pattern = r"<repaired_transcript>(.*?)</repaired_transcript>"
+    matche = (
+        re.findall(pattern, res, re.DOTALL)[0]
+        .replace("\n\n", "\n")
+        .replace("\n", " ")
+        .replace("  ", " ")
+        .strip()
+    )
+    return matche
+
+
+def get_checked_words(ord_words: list, text1: str, text2: str) -> list:
+    formwords = format_words(ord_words)
+
+    words1 = text1.split()
+    words2 = text2.split()
+
+    s = difflib.SequenceMatcher(None, words1, words2)
+
+    diff = s.get_opcodes()
+
+    trg_words = []
+    for tag, i1, i2, j1, j2 in diff:
+        match tag:
+            case "replace":
+                replaced_words = words2[j1:j2]
+                for text in replaced_words:
+                    data = {
+                        "word": " " + text,
+                        "start": round(formwords[i2 - 1]["start"], 2),
+                        "end": round(formwords[i2 - 1]["end"], 2),
+                    }
+                    trg_words.append(data)
+
+            case "insert":
+                inserted_words = words2[j1:j2]
+                for text in inserted_words:
+                    data = {
+                        "word": " " + text,
+                        "start": round(formwords[j1]["start"], 2),
+                        "end": round(formwords[j1]["end"], 2),
+                    }
+                    trg_words.append(data)
+
+            case "equal":
+                for idx, text in enumerate(words1[i1:i2]):
+                    data = {
+                        "word": " " + text,
+                        "start": round(formwords[i1 + idx]["start"], 2),
+                        "end": round(formwords[i1 + idx]["end"], 2),
+                    }
+
+                    trg_words.append(data)
+
+    return trg_words
+
+def collect_sentences(words: list) -> list:
+    sentences = []
+    temp_sentence = ""
+    for word in words:
+        if temp_sentence.endswith((".", "?", "!")):
+            print(temp_sentence)
+            sentences.append(temp_sentence)
+            temp_sentence = ""
+        temp_sentence += word["word"]
+
+    if temp_sentence:
+        print(temp_sentence)
+        sentences.append(temp_sentence)
+    return sentences
