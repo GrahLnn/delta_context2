@@ -32,6 +32,8 @@ def get_summary(idir, transcription: str) -> dict:
     summary = get_completion(transcription, SUMMARY_SYS_MESSAGE)
     prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
     summary_zh = openai_completion(prompt)
+    pattern = r"<chinese_text>(.*?)</chinese_text>"
+    summary_zh = re.findall(pattern, summary_zh, re.DOTALL)[0].strip()
     return {"summary": summary, "summary_zh": summary_zh}
 
 
