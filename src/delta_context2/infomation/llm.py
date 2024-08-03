@@ -30,7 +30,7 @@ def get_summary(idir, transcription: str) -> dict:
         return check
 
     summary = get_completion(transcription, SUMMARY_SYS_MESSAGE)
-    prompt = SINGLE_TRANSLATION_PROMPT.format(TEXT=summary)
+    prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
     summary_zh = openai_completion(prompt)
     return {"summary": summary, "summary_zh": summary_zh}
 
