@@ -8,7 +8,6 @@ from .infomation.translate_agent import translate
 from .infomation.video_metadata import get_ytb_video_info
 from .text.utils import split_text_into_chunks
 from .utils.align import get_sentence_timestamps, split_to_atomic_part
-from .utils.network import check_model_exist
 from .utils.subtitle import render_video_with_subtitles, save_to_ass
 from .video.downloader import download_ytb_mp4
 
@@ -18,8 +17,7 @@ class VideoProcessor:
         self.target_lang = target_lang
         self.country = country
         self.DATA_DIR = Path("data")
-        self.weight, self.config = check_model_exist()
-
+ 
     def process(self, ytb_url: str):
         video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
         formal_name = (
@@ -32,7 +30,7 @@ class VideoProcessor:
 
         video_path = download_ytb_mp4(ytb_url, save_name)
         audio_path = separate_audio_from_video(video_path)
-        audio_path = extract_vocal(audio_path, self.config, self.weight)
+        audio_path = extract_vocal(audio_path)
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
         get_summary(item_dir, transcribe["text"])
         sentences = transcribe["sentences"]

@@ -6,6 +6,8 @@ import subprocess
 from pathlib import Path
 
 from museper.inference import separate_audio
+
+from ..utils.network import check_model_exist
 from ..utils.decorator import show_progress
 
 
@@ -49,7 +51,8 @@ def separate_audio_from_video(video_path: str, output_audio_path: str = None) ->
     return str(output_audio_path)
 
 @show_progress("Extracting")
-def extract_vocal(audio_path: str, config: str, weight: str) -> None:
+def extract_vocal(audio_path: str) -> str:
+    weight, config = check_model_exist()
     audio_path: Path = Path(audio_path)
     model_give_name = audio_path.with_name(f"{audio_path.stem}_vocals.wav")
     target_audio_path = audio_path.with_name("vocal.wav")

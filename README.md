@@ -1,6 +1,6 @@
 # δ context 2
 
-A tool to add any translation subtitles to any video. Using Whisper, translate agent translation.
+A tool to add any translation subtitles to any video. Using Whisper, translate agent translation. I strongly recommend using gemini-1.5-pro as the translation model; the results are truly amazing (chinese i tested).
 
 ## How to use
 
@@ -17,7 +17,7 @@ uv pip install git+https://github.com/GrahLnn/delta_context2.git
 
 **useage**
 
-Prepare your .env file in your project. Fill in according to the .env.example example.
+Prepare your `.env` file in your project. Fill in according to the `.env.example` example.
 
 Then
 
@@ -32,10 +32,12 @@ video_processor.process(ytb_url)
 # video in data/videos
 ```
 
-## roadmap
+## todo
 
-- [x] chinese subtitle
-- [ ] other language subtitle
-- [x] support for YouTube videos download
-- [ ] support other platform download (bilibili, x)
-- [ ] support local video
+- [x] suport chinese subtitle.
+- [ ] other language subtitle. (maybe i won't do)
+- [x] support for YouTube videos download.
+- [ ] support other platform download. (e.g. bilibili, x)
+- [ ] support local video laod.
+- [ ] let model verify the facts in the transcription.
+- [ ] generate illustrated articles correspondingly.
