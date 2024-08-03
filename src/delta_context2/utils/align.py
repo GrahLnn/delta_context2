@@ -251,6 +251,8 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     for count in range(max_retry):
                         prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=source_text)
                         res = openai_completion(prompt)
+                        pattern = r"<chinese_text>(.*?)</chinese_text>"
+                        res = re.findall(pattern, res, re.DOTALL)[0].strip()
                         if len(extract_zh_char(res)) != 0:
                             b_sentences[idx] = res
                             break
