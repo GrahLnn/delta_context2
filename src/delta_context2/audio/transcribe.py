@@ -1,4 +1,5 @@
 import difflib
+import json
 import re
 import whisper
 
@@ -104,52 +105,61 @@ from ..utils.list import flatten
 @show_progress("Transcribing")
 @update_metadata(
     ("transcription", lambda result: result["text"]),
-    ("sentences", lambda result: result["sentences"]),
     ("words", lambda result: result["words"]),
+    ("sentences", lambda result: result["sentences"]),
 )
 def get_transcribe(item_dir, audio_path, description: str) -> dict:
     check = read_metadata(item_dir, ["transcription", "segments"])
+    checked_transcribtion = ""
+    ord_transcription = ""
+    words = []
     if check:
-        result = {
-            "text": check["transcription"],
-            "segments": check["segments"],
-        }
-        return result
-    model = whisper.load_model("large-v3")
-    # segments = segment_audio(audio_path)
-    # result = transcribe_audio(audio_path, segments, model)
+        checked_transcribtion = check["transcription"]
+        ord_transcription = " ".join(check["sentences"])
+        words = check["words"]
 
-    result = model.transcribe(
-        audio=audio_path,
-        word_timestamps=True,
-        # prompt=description.split("\n")[0],
-        initial_prompt="Prohibit the use of abbreviations.",
-        language="en",
-    )
-    segments = result["segments"]
-    # texts = [seg["text"] for seg in segments]
-    words = flatten([seg["words"] for seg in segments])
-    formal_words = format_words(words)
-    if (n := len(result["text"].split())) != (m := len(formal_words)):
-        raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
+    if not checked_transcribtion:
+        model = whisper.load_model("large-v3")
+        # segments = segment_audio(audio_path)
+        # result = transcribe_audio(audio_path, segments, model)
 
-
-    # sentences = merge_sentence(texts)
-
-    transcribtion = corect_transcription(result["text"])
-    trg_words = get_checked_words(words, result["text"], transcribtion)
+        result = model.transcribe(
+            audio=audio_path,
+            word_timestamps=True,
+            # prompt=description.split("\n")[0],
+            initial_prompt="Prohibit the use of abbreviations.",
+            language="en",
+        )
+        ord_transcription = result["text"]
+        segments = result["segments"]
+        # texts = [seg["text"] for seg in segments]
+        words = flatten([seg["words"] for seg in segments])
+        formal_words = format_words(words)
+        if (n := len(ord_transcription.split())) != (m := len(formal_words)):
+            raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
+        checked_transcribtion = corect_transcription(ord_transcription)
+    trg_words = get_checked_words(words, ord_transcription, checked_transcribtion)
     sentences = collect_sentences(trg_words)
 
-    # if "[unclear]" in transcribtion:
-    #     raise ValueError(f"Error: The transcription contains unclear words. Needs manual repair.\nPlease check {item_dir}/metadata.json[\"transcription\"]")
+    if "[inaudible]" in checked_transcribtion:
+        data_file = item_dir / "metadata.json"
+        with open(data_file, encoding="utf-8") as file:
+            metadata = json.load(file)
+        metadata["transcription"] = checked_transcribtion
+        metadata["words"] = trg_words
+        metadata["sentences"] = sentences
+        with open(data_file, "w", encoding="utf-8") as file:
+            json.dump(metadata, file, ensure_ascii=False, indent=4)
 
-    result = {
-        "text": transcribtion,
+        raise ValueError(
+            f'The transcription contains unclear words. Needs manual repair.\nPlease check [inaudible] part in {item_dir}/metadata.json["transcription"]'
+        )
+
+    return {
+        "text": checked_transcribtion,
         "sentences": sentences,
         "words": trg_words,
     }
-
-    return result
 
 
 def merge_sentence(lst) -> list[str]:
@@ -239,6 +249,7 @@ def get_checked_words(ord_words: list, text1: str, text2: str) -> list:
 
     return trg_words
 
+
 def collect_sentences(words: list) -> list:
     sentences = []
     temp_sentence = ""
@@ -246,7 +257,7 @@ def collect_sentences(words: list) -> list:
     for word in words:
         if temp_sentence.endswith((".", "?", "!")):
             print(temp_sentence)
-            if not any(n:=[char.isupper() for char in last_word]):
+            if not any(n := [char.isupper() for char in last_word]):
                 print([char for char in last_word], n)
                 sentences.append(temp_sentence)
                 temp_sentence = ""
@@ -254,5 +265,5 @@ def collect_sentences(words: list) -> list:
         last_word = word["word"]
 
     if temp_sentence:
-        sentences.append(temp_sentence)
+        sentences.append(temp_sentence.strip())
     return sentences
