@@ -257,7 +257,7 @@ def collect_sentences(words: list) -> list:
     for word in words:
         if temp_sentence.endswith((".", "?", "!")):
             if not any([char.isupper() for char in last_word]):
-                sentences.append(temp_sentence)
+                sentences.append(temp_sentence.strip())
                 temp_sentence = ""
         temp_sentence += word["word"]
         last_word = word["word"]
