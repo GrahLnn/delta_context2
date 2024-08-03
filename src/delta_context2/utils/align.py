@@ -249,7 +249,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                         continue
                     max_retry = 5
                     for count in range(max_retry):
-                        prompt = SINGLE_TRANSLATION_PROMPT.format(TEXT=source_text)
+                        prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=source_text)
                         res = openai_completion(prompt)
                         if len(extract_zh_char(res)) != 0:
                             b_sentences[idx] = res
