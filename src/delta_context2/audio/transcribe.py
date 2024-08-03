@@ -239,14 +239,17 @@ def get_checked_words(ord_words: list, text1: str, text2: str) -> list:
 def collect_sentences(words: list) -> list:
     sentences = []
     temp_sentence = ""
+    last_word = None
     for word in words:
         if temp_sentence.endswith((".", "?", "!")):
             print(temp_sentence)
-            sentences.append(temp_sentence)
-            temp_sentence = ""
+            if not any(n:=[char.isupper() for char in last_word]):
+                print([char for char in last_word], n)
+                sentences.append(temp_sentence)
+                temp_sentence = ""
         temp_sentence += word["word"]
+        last_word = word["word"]
 
     if temp_sentence:
-        print(temp_sentence)
         sentences.append(temp_sentence)
     return sentences
