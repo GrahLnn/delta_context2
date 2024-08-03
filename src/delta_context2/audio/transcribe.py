@@ -141,19 +141,19 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
     trg_words = get_checked_words(words, ord_transcription, checked_transcribtion)
     sentences = collect_sentences(trg_words)
 
-    if "[inaudible]" in checked_transcribtion:
-        data_file = item_dir / "metadata.json"
-        with open(data_file, encoding="utf-8") as file:
-            metadata = json.load(file)
-        metadata["transcription"] = checked_transcribtion
-        metadata["words"] = trg_words
-        metadata["sentences"] = sentences
-        with open(data_file, "w", encoding="utf-8") as file:
-            json.dump(metadata, file, ensure_ascii=False, indent=4)
+    # if "[inaudible]" in checked_transcribtion:
+    #     data_file = item_dir / "metadata.json"
+    #     with open(data_file, encoding="utf-8") as file:
+    #         metadata = json.load(file)
+    #     metadata["transcription"] = checked_transcribtion
+    #     metadata["words"] = trg_words
+    #     metadata["sentences"] = sentences
+    #     with open(data_file, "w", encoding="utf-8") as file:
+    #         json.dump(metadata, file, ensure_ascii=False, indent=4)
 
-        raise ValueError(
-            f'The transcription contains unclear words. Needs manual repair.\nPlease check [inaudible] part in {item_dir}/metadata.json["transcription"]'
-        )
+    #     raise ValueError(
+    #         f'The transcription contains unclear words. Needs manual repair.\nPlease check [inaudible] part in {item_dir}/metadata.json["transcription"]'
+    #     )
 
     return {
         "text": checked_transcribtion,
