@@ -140,6 +140,9 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
     trg_words = get_checked_words(words, result["text"], transcribtion)
     sentences = collect_sentences(trg_words)
 
+    # if "[unclear]" in transcribtion:
+    #     raise ValueError(f"Error: The transcription contains unclear words. Needs manual repair.\nPlease check {item_dir}/metadata.json[\"transcription\"]")
+
     result = {
         "text": transcribtion,
         "sentences": sentences,

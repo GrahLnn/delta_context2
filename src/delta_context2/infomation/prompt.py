@@ -167,6 +167,7 @@ Follow these steps to complete the task:
    - Make any final adjustments needed for clarity and consistency.
    - Transcripts come from videos, so they retain some informal language and additional notes to preserve the original style.
    - This is a preprocessing task for subtitles, so there's no need to determine if there are any redundant parts.
+   - If there are any unclear parts, insert the [inaudible] marker.
 
 6. Output:
    - Provide the corrected and unified text within <repaired_transcript> tags.
