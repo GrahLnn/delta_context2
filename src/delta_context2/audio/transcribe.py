@@ -109,7 +109,7 @@ from ..utils.list import flatten
     ("sentences", lambda result: result["sentences"]),
 )
 def get_transcribe(item_dir, audio_path, description: str) -> dict:
-    check = read_metadata(item_dir, ["transcription", "segments"])
+    check = read_metadata(item_dir, ["transcription", "sentences", "words"])
     checked_transcribtion = ""
     ord_transcription = ""
     words = []
