@@ -251,8 +251,6 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     for count in range(max_retry):
                         prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=source_text)
                         res = openai_completion(prompt)
-                        pattern = r"<chinese_text>(.*?)</chinese_text>"
-                        res = re.findall(pattern, res, re.DOTALL)[0].strip()
                         if len(extract_zh_char(res)) != 0:
                             b_sentences[idx] = res
                             break
@@ -281,10 +279,17 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 else:
                     new_t = [zh_tsl]
                 new_t = secend_split(new_t, subtitle_len)
-                zh_list, en_list = llm_align_sentences(en_src, new_t)
-                zh_list, en_list = hand_repair(zh_list, en_list)
+                llm_align_zh_list, llm_align_en_list = llm_align_sentences(en_src, new_t)
+                if abs(abs_uni_len("".join(llm_align_en_list)) - abs_uni_len(en_src)) > 10:
+                    aa = abs_uni_len("".join(llm_align_en_list))
+                    bb = abs_uni_len(en_src)
+                    print(new_t)
+                    raise ValueError(
+                        f"abs_uni_len not equal {aa}/{bb} {llm_align_en_list} {en_src} {llm_align_zh_list}"
+                    )
+                print(llm_align_en_list)
+                zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
                 if abs(abs_uni_len("".join(en_list)) - abs_uni_len(en_src)) > 10:
-                    print(en_list)
                     aa = abs_uni_len("".join(en_list))
                     bb = abs_uni_len(en_src)
 
@@ -293,7 +298,6 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     )
                 en_list = en_large_diff_radio_repair(zh_list, en_list)
                 if abs(abs_uni_len("".join(en_list)) - abs_uni_len(en_src)) > 10:
-                    print(en_list)
                     aa = abs_uni_len("".join(en_list))
                     bb = abs_uni_len(en_src)
 
@@ -301,7 +305,6 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 en_list = move_commas(en_list)
 
                 if abs(abs_uni_len("".join(en_list)) - abs_uni_len(en_src)) > 10:
-                    print(en_list)
                     aa = abs_uni_len("".join(en_list))
                     bb = abs_uni_len(en_src)
 

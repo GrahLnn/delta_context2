@@ -54,8 +54,6 @@ def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
 
                     prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=title)
                     res = openai_completion(prompt)
-                    pattern = r"<chinese_text>(.*?)</chinese_text>"
-                    res = re.findall(pattern, res, re.DOTALL)[0].strip()
 
                     download_and_resize_thumbnail(
                         thumbnail, data_dir / "videos" / name_formal / "source"

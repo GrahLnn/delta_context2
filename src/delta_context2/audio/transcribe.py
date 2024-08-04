@@ -107,6 +107,7 @@ from ..utils.list import flatten
     ("transcription", lambda result: result["text"]),
     ("words", lambda result: result["words"]),
     ("sentences", lambda result: result["sentences"]),
+    ("ord_text", lambda result: result["ord_text"]),
 )
 def get_transcribe(item_dir, audio_path, description: str) -> dict:
     check = read_metadata(item_dir, ["transcription", "sentences", "words"])
@@ -126,9 +127,6 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         result = model.transcribe(
             audio=audio_path,
             word_timestamps=True,
-            # prompt=description.split("\n")[0],
-            initial_prompt="Prohibit the use of abbreviations.",
-            language="en",
         )
         ord_transcription = result["text"]
         segments = result["segments"]
@@ -136,6 +134,7 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         words = flatten([seg["words"] for seg in segments])
         formal_words = format_words(words)
         if (n := len(ord_transcription.split())) != (m := len(formal_words)):
+            [print(sw, fw["word"]) for sw, fw in zip(ord_transcription.split(), formal_words)]
             raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
         checked_transcribtion = corect_transcription(ord_transcription)
     trg_words = get_checked_words(words, ord_transcription, checked_transcribtion)
@@ -157,6 +156,7 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
 
     return {
         "text": checked_transcribtion,
+        "ord_text": ord_transcription,
         "sentences": sentences,
         "words": trg_words,
     }

@@ -128,7 +128,7 @@ SINGLE_TRANSLATION_PROMPT = """You are tasked with rewriting a given text in eng
 
 5. Only provide the rewritten Chinese text as your output. Do not include any explanations, comparisons to the original text, or additional comments.
 
-6. Present your rewritten text within <chinese_text> tags.
+6. Only return your rewritten text and nothing else.
 
 Remember, your task is to create an engaging Chinese version of the text, not a literal translation. Focus on conveying the essence of the original content in a way that resonates with Chinese readers."""
 
