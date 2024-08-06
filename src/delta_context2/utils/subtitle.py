@@ -1,8 +1,9 @@
 import os
-import subprocess
 import re
-from typing import TextIO, List, Dict
+import subprocess
 from pathlib import Path
+from typing import Dict, List, TextIO
+
 from alive_progress import alive_bar
 from dotenv import load_dotenv
 

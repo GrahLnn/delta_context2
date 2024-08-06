@@ -1,6 +1,7 @@
 import json
-from pathlib import Path
 from functools import wraps
+from pathlib import Path
+
 from alive_progress import alive_bar
 
 
