@@ -20,10 +20,16 @@ def remove_illegal_chars(filename):
 
 
 def abs_uni_len(s):
-    return len("".join(c for c in s if unicodedata.category(c).startswith("L")))
+    chinese_chars = [c for c in s if unicodedata.category(c) == 'Lo']
+    non_chinese_chars = [c for c in s if unicodedata.category(c) != 'Lo']
 
+    chinese_length = len(chinese_chars)
+    non_chinese_length = sum(0.5 if unicodedata.category(c).startswith("L") else 1 for c in non_chinese_chars)
+    
+    total_length = chinese_length + non_chinese_length
+    return int(total_length)
 
-def split_text_into_chunks(sentences, max_tokens=1000):
+def split_sentences_into_chunks(sentences, max_tokens=1000):
     chunks = []
     chunk = []
     current_token_count = 0
@@ -42,14 +48,32 @@ def split_text_into_chunks(sentences, max_tokens=1000):
             current_token_count += token_count
         else:
             # Save the current chunk and start a new one
-            chunks.append(chunk)
+            chunks.append("".join(chunk))
             chunk = [sentence]
             current_token_count = token_count
 
     # Add the last chunk if it's not empty
     if chunk:
-        chunks.append(chunk)
+        chunks.append("".join(chunk))
 
+    return chunks
+
+
+def split_text_into_chunks(text, max_tokens=5000, delimiter="."):
+    parts = re.split(f"({re.escape(delimiter)})", text)
+    # 将分隔符和前面的字符串合并
+    combined_parts = [parts[i] + parts[i + 1] for i in range(0, len(parts) - 1, 2)]
+    # 如果原始字符串不以分隔符结尾，则最后一个部分需要添加
+    if len(parts) % 2 != 0:
+        combined_parts.append(parts[-1])
+    result = []
+    for part in combined_parts:
+        if result and part == delimiter:
+            result[-1] += part
+        elif part:
+            result.append(part)
+
+    chunks = split_sentences_into_chunks(result, max_tokens)
     return chunks
 
 
@@ -84,11 +108,12 @@ def merge_sentences_with_commas(sentences):
 
     return merged_sentences
 
+
 def split_paragraph_regex(paragraph):
     # 使用正则表达式匹配句子，考虑常见的句子结束符号
-    sentences = re.findall(r'[^.!?;]*[.!?;]', paragraph)
-    
+    sentences = re.findall(r"[^.!?;]*[.!?;]", paragraph)
+
     # 去除首尾的空白字符
     sentences = [sentence.strip() for sentence in sentences]
-    
+
     return sentences

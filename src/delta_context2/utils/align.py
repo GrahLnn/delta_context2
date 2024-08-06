@@ -1,19 +1,22 @@
 import json
+import os
 import re
-import sys
+import shutil
+from pathlib import Path
 
+import demjson3
 from alive_progress import alive_bar, alive_it
 from retry import retry
 
+from ..audio.transcribe import align_diff_words
 from ..infomation.llm import get_json_completion, openai_completion
 from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
-    SINGLE_TRANSLATION_PROMPT,
     SPLIT_SMALL_SENTENCE_PROMPT,
 )
 from ..infomation.read_metadata import read_metadata
-from ..text.utils import abs_uni_len, extract_zh_char, normalize_to_10
+from ..text.utils import abs_uni_len, normalize_to_10
 from ..utils.decorator import update_metadata
 from ..utils.list import flatten
 
@@ -80,7 +83,7 @@ def secend_split(zh_list, len_limit):
 def get_aligned_sentences(prompt):
     result = openai_completion(prompt)
     pattern = re.compile(r"^json")
-    result = json.loads(pattern.sub("", result.strip("```")))["pair"]
+    result = demjson3.decode(pattern.sub("", result.strip("```")))["pair"]
     return result
 
 
@@ -134,14 +137,22 @@ def llm_align_sentences(source_text, translated_snetence_array):
 def hand_repair(zh_list, en_list):
     en_check = [abs_uni_len(en) for en in en_list]
 
+    check_zh_list = []
+    check_en_list = []
+    for zh, en in zip(zh_list, en_list):
+        if not zh.strip():
+            check_en_list[-1] += (" " + en) if check_en_list else check_en_list.append(en)
+        else:
+            check_zh_list.append(zh)
+            check_en_list.append(en)
+    zh_list, en_list = check_zh_list, check_en_list
     new_zh_list = []
     new_en_list = []
     if 0 in en_check:
         for idx, _ in enumerate(en_check):
             if en_check[idx] == 0:
                 if idx == 0:
-                    print("none english in zero idx")
-                    sys.exit(0)
+                    continue
                 if abs_uni_len(zh_list[idx] + zh_list[idx - 1]) <= 27:
                     new_zh_list[-1] = new_zh_list[-1] + "，" + zh_list[idx]
                     new_en_list[-1] = new_en_list[-1] + "" + en_list[idx]
@@ -157,7 +168,10 @@ def hand_repair(zh_list, en_list):
                     part1 = " ".join(words[:split_index])
                     part2 = " ".join(words[split_index:])
 
-                    new_en_list[-1] = part1
+                    if new_en_list:
+                        new_en_list[-1] = part1
+                    else:
+                        new_en_list.append(part1)
                     new_en_list.append(part2)
                     new_zh_list.append(zh_list[idx])
 
@@ -217,19 +231,30 @@ def move_commas(en_list):
 
 @update_metadata(("atomic_part", lambda result: result))
 def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_len=27):
+    os.makedirs("cache", exist_ok=True)
     check = read_metadata(dir, ["atomic_zhs", "atomic_ens"])
     if check:
         return check["atomic_zhs"], check["atomic_ens"]
     atomic_zhs = []
     atomic_ens = []
-    for i, (sentence, translation) in enumerate(
-        zip(source_text_chunks, translated_chunks)
-    ):
+    done_idx = -1
+    if os.path.exists(Path("cache") / "split_to_atomic_part.json"):
+        with open(
+            Path("cache") / "split_to_atomic_part.json", encoding="utf-8"
+        ) as file:
+            cache_data = demjson3.decode(file)
+        atomic_zhs = cache_data["atomic_zhs"]
+        atomic_ens = cache_data["atomic_ens"]
+        done_idx = cache_data.get("done_idx")
+    not_belong_this_chunk_zh = ""
+    for i in range(done_idx + 1, len(source_text_chunks)):
+        sentence = source_text_chunks[i]
+        translation = not_belong_this_chunk_zh + translated_chunks[i]
+        not_belong_this_chunk_zh = ""
         prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
             PARAGRAPH_A="".join(sentence),
             PARAGRAPH_B=translation.strip().replace("。", " ").replace("，", " "),
         )
-
         with alive_bar(
             1,
             title=f"align chunk {i + 1}/{len(source_text_chunks)}",
@@ -241,34 +266,55 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
             # print(json.dumps(result, indent=4, ensure_ascii=False))
             a_sentences = [pair["sentence_a"] for pair in result["pair"]]
             b_sentences = [pair["sentence_b"] for pair in result["pair"]]
+
+            en_texts = []
+            zh_texts = []
             for idx, (source_text, translated_text) in enumerate(
                 zip(a_sentences, b_sentences)
             ):
                 if translated_text.strip() == "":
-                    if len(source_text.split()) == 1:
-                        continue
-                    max_retry = 5
-                    for count in range(max_retry):
-                        prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=source_text)
-                        res = openai_completion(prompt)
-                        if len(extract_zh_char(res)) != 0:
-                            b_sentences[idx] = res
-                            break
-                        if count + 1 == max_retry:
-                            raise ValueError("sentence can not translate")
-                bar()
-        # print(abs_uni_len("".join(a_sentences)), abs_uni_len("".join(sentence)))
-        if abs(abs_uni_len("".join(a_sentences)) - abs_uni_len("".join(sentence))) > 10:
-            [print(s, t) for s, t in zip(a_sentences, b_sentences)]
-            print(abs_uni_len("".join(a_sentences)), abs_uni_len("".join(sentence)))
-            raise ValueError("abs_uni_len not equal")
+                    en_texts[-1] += (" " + source_text) if en_texts else en_texts.append(
+                        source_text
+                    )
+                    # if len(source_text.split()) == 1:
+                    #     continue
+                    # max_retry = 5
+                    # for count in range(max_retry):
+                    #     prompt = SINGLE_TRANSLATION_PROMPT.format(
+                    #         ORIGINAL_TEXT=source_text
+                    #     )
+                    #     res = openai_completion(prompt)
+                    #     print("补偿：", source_text, "->", res)
+                    #     if len(extract_zh_char(res)) != 0:
+                    #         b_sentences[idx] = res
+                    #         break
+                    #     if count + 1 == max_retry:
+                    #         raise ValueError("sentence can not translate")
+                else:
+                    en_texts.append(source_text)
+                    zh_texts.append(translated_text)
+            bar()
+        empty_indices = []
+        for emptyi in range(len(en_texts) - 1, -1, -1):
+            if en_texts[emptyi] == "":
+                empty_indices.append(emptyi)
+            else:
+                break
 
-        # if "" in trans:
-        #     raise ValueError("empty translation")
+        # 根据空项的索引从 z 中移除并保存到另一个列表
+        removed_items = []
+        for index in sorted(empty_indices, reverse=True):
+            removed_items.append(en_texts.pop(index))
+            en_texts.pop(index)
+
+        # 逆序保存的 removed_items 列表，因为我们是从末尾开始移除的
+        removed_items.reverse()
+
+        not_belong_this_chunk_zh = " ".join(removed_items) + " " if removed_items else ""
 
         for en_src, zh_tsl in alive_it(
-            zip(a_sentences, b_sentences),
-            total=len(a_sentences),
+            zip(en_texts, zh_texts),
+            total=len(zh_texts),
             title=f"split chunk {i + 1}/{len(source_text_chunks)}",
         ):
             if abs_uni_len(zh_tsl) > subtitle_len:
@@ -279,36 +325,15 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 else:
                     new_t = [zh_tsl]
                 new_t = secend_split(new_t, subtitle_len)
-                llm_align_zh_list, llm_align_en_list = llm_align_sentences(en_src, new_t)
-                if abs(abs_uni_len("".join(llm_align_en_list)) - abs_uni_len(en_src)) > 10:
-                    aa = abs_uni_len("".join(llm_align_en_list))
-                    bb = abs_uni_len(en_src)
-                    print(new_t)
-                    raise ValueError(
-                        f"abs_uni_len not equal {aa}/{bb} {llm_align_en_list} {en_src} {llm_align_zh_list}"
-                    )
-                print(llm_align_en_list)
+                llm_align_zh_list, llm_align_en_list = llm_align_sentences(
+                    en_src, new_t
+                )
+
                 zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
-                if abs(abs_uni_len("".join(en_list)) - abs_uni_len(en_src)) > 10:
-                    aa = abs_uni_len("".join(en_list))
-                    bb = abs_uni_len(en_src)
-
-                    raise ValueError(
-                        f"abs_uni_len not equal {aa}/{bb} {en_list} {en_src} {zh_list}"
-                    )
+                if abs_uni_len("".join(en_list)) == 0:
+                    raise ValueError(f"empty translation\n{llm_align_en_list}")
                 en_list = en_large_diff_radio_repair(zh_list, en_list)
-                if abs(abs_uni_len("".join(en_list)) - abs_uni_len(en_src)) > 10:
-                    aa = abs_uni_len("".join(en_list))
-                    bb = abs_uni_len(en_src)
-
-                    raise ValueError(f"abs_uni_len not equal {aa}/{bb} {en_list}")
                 en_list = move_commas(en_list)
-
-                if abs(abs_uni_len("".join(en_list)) - abs_uni_len(en_src)) > 10:
-                    aa = abs_uni_len("".join(en_list))
-                    bb = abs_uni_len(en_src)
-
-                    raise ValueError(f"abs_uni_len not equal {aa}/{bb} {en_list}")
 
                 atomic_zhs.extend(zh_list)
                 atomic_ens.extend(en_list)
@@ -320,40 +345,51 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 else:
                     atomic_zhs[-1] += "，" + zh_tsl
 
+        cache_data = {
+            "done_idx": i,
+            "atomic_zhs": atomic_zhs,
+            "atomic_ens": atomic_ens,
+        }
+        with open(
+            Path("cache") / "split_to_atomic_part.json", "w", encoding="utf-8"
+        ) as file:
+            json.dump(cache_data, file, ensure_ascii=False, indent=4)
+
+    with open(Path(dir) / "metadata.json", encoding="utf-8") as file:
+        data = json.load(file)
+    with open(Path(dir) / "metadata.json", "w", encoding="utf-8") as file:
+        final_transcribe = " ".join(atomic_ens)
+        data["final_transcribe"] = final_transcribe
+        json.dump(data, file, ensure_ascii=False, indent=4)
+
     atomic_part = []
     for zh, en in zip(atomic_zhs, atomic_ens):
         atomic_part.append({"zh": zh, "en": en})
+    shutil.rmtree("cache")
     return atomic_part
 
 
 @update_metadata(("sentence_timestamps", lambda result: result))
 def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
-    # 拆分 atomic_ens 中的每个句子为单词
     split_atomic_ens = [s.split() for s in atomic_ens]
 
-    # 检查单词数量是否匹配
     if len(flatten(split_atomic_ens)) != len(words):
-        [print(e, w["word"]) for e, w in zip(flatten(split_atomic_ens), words)]
-        raise ValueError(
-            f"The number of atomic_ens({len(flatten(split_atomic_ens))}) is not equal to the number of words({len(words)})."
+        words = align_diff_words(
+            words,
+            "".join([word["word"] for word in words]).strip(),
+            " ".join(atomic_ens).replace("  ", " ").strip(),
         )
 
-    # 用于存储句子的时间戳
     sentence_timestamps = []
 
-    # 当前处理的单词索引
     word_index = 0
 
-    # 遍历每个句子
     for sentence, zh_stc in zip(split_atomic_ens, atomic_zhs):
-        # 获取句子的开始时间戳
         sentence_start = words[word_index]["start"]
 
-        # 获取句子的结束时间戳
         sentence_end = words[word_index + len(sentence) - 1]["end"]
         zh_stc = zh_stc.replace("，", " ").replace("。", "").replace("；", "").strip()
 
-        # 将句子的时间戳存储到结果列表中
         if zh_stc:
             sentence_timestamps.append(
                 {
@@ -363,7 +399,6 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
                 }
             )
 
-        # 更新单词索引
         word_index += len(sentence)
 
     return sentence_timestamps

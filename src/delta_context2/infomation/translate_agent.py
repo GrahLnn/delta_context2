@@ -161,7 +161,7 @@ Output only the translation of the portion you are asked to translate, and nothi
     if os.path.exists(cache_file):
         with open(cache_file, encoding="utf-8") as f:
             cache_data: dict = json.load(f)
-            done_idx = cache_data.get("done_idx", 0)
+            done_idx = cache_data.get("done_idx")
             translation_chunks = cache_data.get("translation_chunks", [])
 
     if done_idx == len(source_text_chunks) - 1:
@@ -444,15 +444,7 @@ Output only the new translation of the indicated part and nothing else.
         )
 
         translation_2 = get_completion(prompt, system_message=system_message)
-        translation_2 = "\n\n" + (
-            translation_2.replace("<TRANSLATION>", "")
-            .replace("</TRANSLATION>", "")
-            .replace("</TRANSLATE_THIS>", "")
-            .replace("<TRANSLATE_THIS>", "")
-            .replace("<TRANSLATE_this>", "")
-            .replace("</TRANSLATE_this>", "")
-            .strip()
-        )
+        translation_2 = "\n\n" + re.sub(r'<[^>]*>', '', translation_2).strip()
         translation_2_chunks.append(translation_2)
 
         cache_data = {
@@ -570,10 +562,10 @@ def translate(
     if check:
         return check
 
-    source_text_chunks = ["".join(chunk) for chunk in sentences]
+    # source_text_chunks = ["".join(chunk) for chunk in sentences]
 
     translation_2_chunks = multichunk_translation(
-        source_lang, target_lang, source_text_chunks, country
+        source_lang, target_lang, sentences, country
     )
 
     translation_2_chunks = [chunk.replace("\n", "") for chunk in translation_2_chunks]

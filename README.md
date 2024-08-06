@@ -41,3 +41,5 @@ video_processor.process(ytb_url)
 - [ ] support local video laod.
 - [ ] let model verify the facts in the transcription.
 - [ ] generate illustrated articles correspondingly.
+- [ ] retrieve existing definitions of standardized translation.
+- [ ] suport more asr model (e.g. SenseVoice)

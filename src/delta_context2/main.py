@@ -6,7 +6,7 @@ from .audio.transcribe import get_transcribe
 from .infomation.llm import get_summary
 from .infomation.translate_agent import translate
 from .infomation.video_metadata import get_ytb_video_info
-from .text.utils import split_text_into_chunks
+from .text.utils import split_sentences_into_chunks
 from .utils.align import get_sentence_timestamps, split_to_atomic_part
 from .utils.subtitle import render_video_with_subtitles, save_to_ass
 from .video.downloader import download_ytb_mp4
@@ -35,7 +35,7 @@ class VideoProcessor:
         get_summary(item_dir, transcribe["text"])
         sentences = transcribe["sentences"]
         words = transcribe["words"]
-        source_text_chunks = split_text_into_chunks(sentences)
+        source_text_chunks = split_sentences_into_chunks(sentences)
         translated_chunks = translate(
             item_dir,
             self.source_lang,

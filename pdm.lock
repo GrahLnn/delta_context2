@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:4c756d9d343981dfbb8842c869e8017effe83d287f1863ddcacd4c26cfdaa040"
+content_hash = "sha256:99718ec8903aef02fc78dcdec4f0b02fb0a55f7554592a08d0bbcd21817f6614"
 
 [[metadata.targets]]
 requires_python = "==3.11.*"
@@ -244,6 +244,15 @@ groups = ["default"]
 files = [
     {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
     {file = "decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
+]
+
+[[package]]
+name = "demjson3"
+version = "3.0.6"
+summary = "encoder, decoder, and lint/validator for JSON (JavaScript Object Notation) compliant with RFC 7159"
+groups = ["default"]
+files = [
+    {file = "demjson3-3.0.6.tar.gz", hash = "sha256:37c83b0c6eb08d25defc88df0a2a4875d58a7809a9650bd6eee7afd8053cdbac"},
 ]
 
 [[package]]

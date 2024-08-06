@@ -1,17 +1,16 @@
 import difflib
-import json
 import re
+
 import whisper
 
 from ..infomation.llm import get_completion
-
 from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 
 # from pyannote.audio import Pipeline
 # from pydub import AudioSegment
 # from alive_progress import alive_bar, alive_it
-
 from ..infomation.read_metadata import read_metadata
+from ..text.utils import split_text_into_chunks
 from ..utils.decorator import show_progress, update_metadata
 from ..utils.list import flatten
 
@@ -110,16 +109,15 @@ from ..utils.list import flatten
     ("ord_text", lambda result: result["ord_text"]),
 )
 def get_transcribe(item_dir, audio_path, description: str) -> dict:
-    check = read_metadata(item_dir, ["transcription", "sentences", "words"])
-    checked_transcribtion = ""
-    ord_transcription = ""
-    words = []
+    check = read_metadata(item_dir, ["transcription", "sentences", "words", "ord_text"])
+
     if check:
         checked_transcribtion = check["transcription"]
-        ord_transcription = " ".join(check["sentences"])
-        words = check["words"]
+        ord_transcription = check["ord_text"]
+        trg_words = check["words"]
+        sentences = check["sentences"]
 
-    if not checked_transcribtion:
+    else:
         model = whisper.load_model("large-v3")
         # segments = segment_audio(audio_path)
         # result = transcribe_audio(audio_path, segments, model)
@@ -132,27 +130,20 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         segments = result["segments"]
         # texts = [seg["text"] for seg in segments]
         words = flatten([seg["words"] for seg in segments])
+        # Somtimes the transcription is not correct with segments words
+        words = align_diff_words(
+            words, "".join([word["word"] for word in words]), ord_transcription
+        )
         formal_words = format_words(words)
         if (n := len(ord_transcription.split())) != (m := len(formal_words)):
-            [print(sw, fw["word"]) for sw, fw in zip(ord_transcription.split(), formal_words)]
+            [
+                print(sw, fw["word"])
+                for sw, fw in zip(ord_transcription.split(), formal_words)
+            ]
             raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
         checked_transcribtion = corect_transcription(ord_transcription)
-    trg_words = get_checked_words(words, ord_transcription, checked_transcribtion)
-    sentences = collect_sentences(trg_words)
-
-    # if "[inaudible]" in checked_transcribtion:
-    #     data_file = item_dir / "metadata.json"
-    #     with open(data_file, encoding="utf-8") as file:
-    #         metadata = json.load(file)
-    #     metadata["transcription"] = checked_transcribtion
-    #     metadata["words"] = trg_words
-    #     metadata["sentences"] = sentences
-    #     with open(data_file, "w", encoding="utf-8") as file:
-    #         json.dump(metadata, file, ensure_ascii=False, indent=4)
-
-    #     raise ValueError(
-    #         f'The transcription contains unclear words. Needs manual repair.\nPlease check [inaudible] part in {item_dir}/metadata.json["transcription"]'
-    #     )
+        trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
+        sentences = collect_sentences(trg_words)
 
     return {
         "text": checked_transcribtion,
@@ -191,20 +182,17 @@ def format_words(words):
 
 
 def corect_transcription(transcription):
-    prompt = TRANSCRIBTION_CORECTION_PROMPT.format(TRANSCRIBED_TEXT=transcription)
-    res = get_completion(prompt=prompt)
-    pattern = r"<repaired_transcript>(.*?)</repaired_transcript>"
-    matche = (
-        re.findall(pattern, res, re.DOTALL)[0]
-        .replace("\n\n", "\n")
-        .replace("\n", " ")
-        .replace("  ", " ")
-        .strip()
-    )
-    return matche
+    chunks = split_text_into_chunks(transcription)
+    texts = []
+    for chunk in chunks:
+        prompt = TRANSCRIBTION_CORECTION_PROMPT.format(TRANSCRIBED_TEXT=chunk)
+        res = get_completion(prompt=prompt)
+        clean_text = re.sub(r'<[^>]*>', '', res)
+        texts.append(clean_text.strip())
+    return " ".join(texts)
 
 
-def get_checked_words(ord_words: list, text1: str, text2: str) -> list:
+def align_diff_words(ord_words: list, text1: str, text2: str) -> list:
     formwords = format_words(ord_words)
 
     words1 = text1.split()

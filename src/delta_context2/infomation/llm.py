@@ -1,4 +1,4 @@
-import json
+import demjson3
 import os
 import random
 import re
@@ -44,9 +44,10 @@ def choose_key():
 @retry(tries=3, delay=2)
 def get_json_completion(prompt):
     result = get_completion(prompt)
-    # print(result)
     pattern = re.compile(r"^json")
-    result = json.loads(pattern.sub("", result.strip("```")))
+    json_str = pattern.sub("", result.strip("```"))
+    result = demjson3.decode(json_str)
+
     return result
 
 
