@@ -19,8 +19,11 @@ class VideoProcessor:
         self.target_lang = target_lang
         self.country = country
         self.DATA_DIR = Path("data")
- 
-    def process(self, ytb_url: str):
+
+    def process(self, ytb_url: str) -> dict:
+        """
+        return: the video metadata.json path
+        """
         video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
         formal_name = (
             video_info["title"].replace(" ", "_").replace(",", "").replace("#", "")
@@ -54,5 +57,8 @@ class VideoProcessor:
             item_dir, atomic_ens, words, atomic_zhs
         )
         subtitle_path = save_to_ass(sentences_timestamps, "subtitle", item_dir)
-        translate_video = render_video_with_subtitles(video_path, subtitle_path, item_dir)
+        translate_video = render_video_with_subtitles(
+            video_path, subtitle_path, item_dir
+        )
         compress_video(translate_video)
+        return item_dir / "metadata.json"
