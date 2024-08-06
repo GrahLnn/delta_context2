@@ -1,6 +1,5 @@
 import os
 import re
-import shutil
 import subprocess
 
 from alive_progress import alive_bar
@@ -8,17 +7,13 @@ from alive_progress import alive_bar
 from ..utils.subtitle import get_seconds
 
 
-def compress_video(input_file, output_dir=None):
+def compress_video(input_file):
     # 获取输入文件的目录和文件名
     dir_name, base_name = os.path.split(input_file)
     # 构建输出文件名
     name, ext = os.path.splitext(base_name)
 
-    output_file = (
-        os.path.join(dir_name, f"{name}_compressed{ext}")
-        if output_dir is None
-        else os.path.join(output_dir, base_name)
-    )
+    output_file = os.path.join(dir_name, f"translated_video{ext}")
 
     if os.path.exists(output_file):
         os.remove(output_file)
@@ -49,7 +44,7 @@ def compress_video(input_file, output_dir=None):
             stdin=subprocess.PIPE,
             encoding="utf-8",
             text=True,
-        )   
+        )
 
         duration = None
         progress = 0
@@ -77,7 +72,6 @@ def compress_video(input_file, output_dir=None):
 
         if progress >= 1.0:
             os.remove(input_file)
-            shutil.move(output_file, input_file)
             break
         else:
             if os.path.exists(output_file):

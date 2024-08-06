@@ -22,7 +22,7 @@ class VideoProcessor:
 
     def process(self, ytb_url: str) -> dict:
         """
-        return: the video metadata.json path
+        return: the video dir
         """
         video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
         formal_name = (
@@ -61,4 +61,4 @@ class VideoProcessor:
             video_path, subtitle_path, item_dir
         )
         compress_video(translate_video)
-        return item_dir / "metadata.json"
+        return item_dir
