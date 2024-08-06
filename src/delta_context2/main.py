@@ -10,6 +10,8 @@ from .text.utils import split_sentences_into_chunks
 from .utils.align import get_sentence_timestamps, split_to_atomic_part
 from .utils.subtitle import render_video_with_subtitles, save_to_ass
 from .video.downloader import download_ytb_mp4
+from .video.utils import compress_video
+
 
 class VideoProcessor:
     def __init__(self, source_lang: str, target_lang: str, country: str):
@@ -52,4 +54,5 @@ class VideoProcessor:
             item_dir, atomic_ens, words, atomic_zhs
         )
         subtitle_path = save_to_ass(sentences_timestamps, "subtitle", item_dir)
-        render_video_with_subtitles(video_path, subtitle_path, item_dir)
+        translate_video = render_video_with_subtitles(video_path, subtitle_path, item_dir)
+        compress_video(translate_video)

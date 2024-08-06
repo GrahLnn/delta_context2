@@ -77,7 +77,9 @@ def get_seconds(time_str):
     return int(h) * 3600 + int(m) * 60 + s
 
 
-def render_video_with_subtitles(video_path: str, subtitles_path: str, output_path: str):
+def render_video_with_subtitles(
+    video_path: str, subtitles_path: str, output_path: str
+) -> str:
     """
     使用 ffmpeg 渲染带字幕的视频。
 
@@ -129,3 +131,4 @@ def render_video_with_subtitles(video_path: str, subtitles_path: str, output_pat
                     bar(progress)
 
     process.wait()
+    return output_path
