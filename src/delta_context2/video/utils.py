@@ -48,9 +48,8 @@ def compress_video(input_file):
 
         duration = None
         progress = 0
-        shortened_name = name if len(name) <= 15 else name[:6] + "..."
         # 使用 alive_progress 显示进度条
-        with alive_bar(100, title=f"{shortened_name}", manual=True) as bar:
+        with alive_bar(100, title="compressing", manual=True) as bar:
             while True:
                 line = process.stdout.readline()
                 if not line and process.poll() is not None:
