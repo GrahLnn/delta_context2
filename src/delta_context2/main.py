@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .audio.separator import extract_vocal, separate_audio_from_video
 from .audio.transcribe import get_transcribe
-from .infomation.llm import get_summary
+from .infomation.llm import get_summary, get_tags
 from .infomation.translate_agent import translate
 from .infomation.video_metadata import get_ytb_video_info
 from .text.utils import split_sentences_into_chunks
@@ -37,7 +37,8 @@ class VideoProcessor:
         audio_path = separate_audio_from_video(video_path)
         audio_path = extract_vocal(audio_path)
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
-        get_summary(item_dir, transcribe["text"])
+        summary = get_summary(item_dir, transcribe["text"])
+        get_tags(item_dir, summary["summary"])
         sentences = transcribe["sentences"]
         words = transcribe["words"]
         source_text_chunks = split_sentences_into_chunks(sentences)

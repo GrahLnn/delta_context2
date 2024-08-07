@@ -35,6 +35,22 @@ def get_summary(idir, transcription: str) -> dict:
     return {"summary": summary, "summary_zh": summary_zh}
 
 
+@update_metadata(("tags", lambda r: r))
+def get_tags(idir, summary: str) -> dict:
+    check = read_metadata(idir, ["tags"])
+    if check:
+        return check
+
+    prompt = "Select three main keywords based on the summary, separated by commas. Only return tags and nothing else.\n\nHere is the summary text you will be working with:\n\n<summary>\n{summary}\n</summary>".format(
+        summary=summary
+    )
+
+    res = openai_completion(prompt)
+    tags = res.split(",")
+    tags = [tag.strip() for tag in tags]
+    return tags
+
+
 def choose_key():
     random.shuffle(GEMINI_KEYS)
 
