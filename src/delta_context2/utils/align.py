@@ -242,6 +242,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
         with open(
             Path("cache") / "split_to_atomic_part.json", encoding="utf-8"
         ) as file:
+            file = file.read()
             cache_data = demjson3.decode(file)
         atomic_zhs = cache_data["atomic_zhs"]
         atomic_ens = cache_data["atomic_ens"]
@@ -273,9 +274,11 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 zip(a_sentences, b_sentences)
             ):
                 if translated_text.strip() == "":
-                    en_texts[-1] += (" " + source_text) if en_texts else en_texts.append(
-                        source_text
-                    )
+                    if en_texts:
+                        en_texts[-1] += " " + source_text
+                    else:
+                        en_texts.append(source_text)
+
                     # if len(source_text.split()) == 1:
                     #     continue
                     # max_retry = 5
@@ -305,7 +308,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
         removed_items = []
         for index in sorted(empty_indices, reverse=True):
             removed_items.append(en_texts.pop(index))
-            en_texts.pop(index)
+            # en_texts.pop(index)
 
         # 逆序保存的 removed_items 列表，因为我们是从末尾开始移除的
         removed_items.reverse()
