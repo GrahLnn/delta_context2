@@ -141,7 +141,9 @@ def hand_repair(zh_list, en_list):
     check_en_list = []
     for zh, en in zip(zh_list, en_list):
         if not zh.strip():
-            check_en_list[-1] += (" " + en) if check_en_list else check_en_list.append(en)
+            check_en_list[-1] += (
+                (" " + en) if check_en_list else check_en_list.append(en)
+            )
         else:
             check_zh_list.append(zh)
             check_en_list.append(en)
@@ -263,10 +265,19 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
             stats=False,
             monitor=False,
         ) as bar:
-            result = get_json_completion(prompt)
-            # print(json.dumps(result, indent=4, ensure_ascii=False))
-            a_sentences = [pair["sentence_a"] for pair in result["pair"]]
-            b_sentences = [pair["sentence_b"] for pair in result["pair"]]
+            try_count = 0
+            while True:
+                try:
+                    result = get_json_completion(prompt)
+                    a_sentences = [pair["sentence_a"] for pair in result["pair"]]
+                    b_sentences = [pair["sentence_b"] for pair in result["pair"]]
+                    break
+                except Exception as e:
+                    print(e)
+                    print(json.dumps(result, indent=4, ensure_ascii=False))
+                    try_count += 1
+                    if try_count == 3:
+                        raise ValueError("can not get alignment")
 
             en_texts = []
             zh_texts = []
@@ -313,7 +324,9 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
         # 逆序保存的 removed_items 列表，因为我们是从末尾开始移除的
         removed_items.reverse()
 
-        not_belong_this_chunk_zh = " ".join(removed_items) + " " if removed_items else ""
+        not_belong_this_chunk_zh = (
+            " ".join(removed_items) + " " if removed_items else ""
+        )
 
         for en_src, zh_tsl in alive_it(
             zip(en_texts, zh_texts),

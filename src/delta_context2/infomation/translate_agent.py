@@ -444,7 +444,7 @@ Output only the new translation of the indicated part and nothing else.
         )
 
         translation_2 = get_completion(prompt, system_message=system_message)
-        translation_2 = "\n\n" + re.sub(r'<[^>]*>', '', translation_2).strip()
+        translation_2 = "\n\n" + re.sub(r"<[^>]*>", "", translation_2).strip()
         translation_2_chunks.append(translation_2)
 
         cache_data = {
@@ -561,8 +561,6 @@ def translate(
     check = read_metadata(dir, "chunk_translation")
     if check:
         return check
-
-    # source_text_chunks = ["".join(chunk) for chunk in sentences]
 
     translation_2_chunks = multichunk_translation(
         source_lang, target_lang, sentences, country

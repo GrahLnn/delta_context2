@@ -12,7 +12,7 @@ from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 from ..infomation.read_metadata import read_metadata
 from ..text.utils import split_text_into_chunks
 from ..utils.decorator import show_progress, update_metadata
-from ..utils.list import flatten
+from ..utils.list import drop_duplicate, flatten
 
 # def segment_audio(audio_path):
 #     # 使用 pyannote.audio 进行语音分割
@@ -143,7 +143,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
             raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
         checked_transcribtion = corect_transcription(ord_transcription)
         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
-        sentences = collect_sentences(trg_words)
+        sentences = drop_duplicate(collect_sentences(trg_words))
+        checked_transcribtion = " ".join(sentences)
 
     return {
         "text": checked_transcribtion,
