@@ -34,6 +34,8 @@ def compress_video(input_file):
             "30",
             "-preset",
             "superfast",
+            "-c:a",
+            "copy",
             output_file,
         ]
         # subprocess.run(cmd, check=True)
