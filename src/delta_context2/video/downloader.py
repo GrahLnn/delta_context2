@@ -1,3 +1,4 @@
+import glob
 import os
 import time
 from pathlib import Path
@@ -33,6 +34,7 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
         def error(self, msg):
             print(msg)
 
+    cost = 0
     max_retries = 10
     retry_count = 0
     out_name = str(out_name)
@@ -60,15 +62,19 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
             ) as bar:
                 ydl.download([video_url])
             return out_name + ".mp4"
-            # with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            #     ydl.download([video_url])
-            # return out_name + ".mp4"
 
         except Exception as e:
             print(f"Error during download: {e}")
             retry_count += 1
+            if cost == 3:
+                print("Failed to download after 3 times.")
+                exit(1)
             if retry_count < max_retries:
                 print(f"Retrying {video_url}... attempt {retry_count}")
                 time.sleep(5)
-            else:
-                raise Exception(f"Failed to download video: {video_url}")
+            elif retry_count == max_retries:
+                file_list = glob.glob(out_name + ".*")
+                for file in file_list:
+                    os.remove(file)
+                time.sleep(10)
+                cost += 1
