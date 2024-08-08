@@ -92,6 +92,9 @@ def render_video_with_subtitles(
     subtitles_path = Path(subtitles_path).as_posix()
     output_path = (Path(output_path) / f"{Path(video_path).stem}.mp4").as_posix()
 
+    if os.path.exists(output_path):
+        return output_path
+
     cmd = [
         "ffmpeg",
         "-i",
