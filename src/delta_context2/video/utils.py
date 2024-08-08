@@ -38,42 +38,43 @@ def compress_video(input_file):
             "copy",
             output_file,
         ]
-        # subprocess.run(cmd, check=True)
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            encoding="utf-8",
-            text=True,
-        )
+        subprocess.run(cmd, check=True)
+        os.remove(input_file)
+        # process = subprocess.Popen(
+        #     cmd,
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.STDOUT,
+        #     stdin=subprocess.PIPE,
+        #     encoding="utf-8",
+        #     text=True,
+        # )
 
-        duration = None
-        progress = 0
-        # 使用 alive_progress 显示进度条
-        with alive_bar(100, title="compressing", manual=True) as bar:
-            while True:
-                line = process.stdout.readline()
-                if not line and process.poll() is not None:
-                    break
+        # duration = None
+        # progress = 0
+        # # 使用 alive_progress 显示进度条
+        # with alive_bar(100, title="compressing", manual=True) as bar:
+        #     while True:
+        #         line = process.stdout.readline()
+        #         if not line and process.poll() is not None:
+        #             break
 
-                if duration is None:
-                    match = re.search(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2}),", line)
-                    if match:
-                        duration = get_seconds(match.group(1))
+        #         if duration is None:
+        #             match = re.search(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2}),", line)
+        #             if match:
+        #                 duration = get_seconds(match.group(1))
 
-                match = re.search(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", line)
-                if match:
-                    elapsed_time = get_seconds(match.group(1))
-                    if duration:
-                        progress = round(elapsed_time / duration, 2)
-                        bar(progress)
+        #         match = re.search(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", line)
+        #         if match:
+        #             elapsed_time = get_seconds(match.group(1))
+        #             if duration:
+        #                 progress = round(elapsed_time / duration, 2)
+        #                 bar(progress)
 
-        process.wait()
+        # process.wait()
 
-        if progress >= 1.0:
-            os.remove(input_file)
-            break
-        else:
-            if os.path.exists(output_file):
-                os.remove(output_file)
+        # if progress >= 1.0:
+        #     os.remove(input_file)
+        #     break
+        # else:
+        #     if os.path.exists(output_file):
+        #         os.remove(output_file)

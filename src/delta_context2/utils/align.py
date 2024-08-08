@@ -234,9 +234,10 @@ def move_commas(en_list):
 @update_metadata(("atomic_part", lambda result: result))
 def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_len=27):
     os.makedirs("cache", exist_ok=True)
-    check = read_metadata(dir, ["atomic_zhs", "atomic_ens"])
+    check = read_metadata(dir, ["atomic_part"])
     if check:
-        return check["atomic_zhs"], check["atomic_ens"]
+        shutil.rmtree("cache")
+        return check
     atomic_zhs = []
     atomic_ens = []
     done_idx = -1
