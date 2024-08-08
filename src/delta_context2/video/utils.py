@@ -18,60 +18,60 @@ def compress_video(input_file):
     if os.path.exists(output_file):
         os.remove(output_file)
 
-    while True:
-        # 构建ffmpeg命令
-        cmd = [
-            "ffmpeg",
-            "-i",
-            input_file,
-            '-c:v', 'libx264', 
-            "-movflags",
-            "faststart",
-            "-crf",
-            "30",
-            "-preset",
-            "superfast",
-            "-c:a",
-            "copy",
-            output_file,
-        ]
-        subprocess.run(cmd, check=True)
-        os.remove(input_file)
-        # process = subprocess.Popen(
-        #     cmd,
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.STDOUT,
-        #     stdin=subprocess.PIPE,
-        #     encoding="utf-8",
-        #     text=True,
-        # )
+    cmd = [
+        "ffmpeg",
+        "-i",
+        input_file,
+        "-c:v",
+        "libx264",
+        "-movflags",
+        "faststart",
+        "-crf",
+        "30",
+        "-preset",
+        "superfast",
+        "-c:a",
+        "copy",
+        output_file,
+    ]
+    subprocess.run(cmd, check=True)
+    os.remove(input_file)
 
-        # duration = None
-        # progress = 0
-        # # 使用 alive_progress 显示进度条
-        # with alive_bar(100, title="compressing", manual=True) as bar:
-        #     while True:
-        #         line = process.stdout.readline()
-        #         if not line and process.poll() is not None:
-        #             break
+    # process = subprocess.Popen(
+    #     cmd,
+    #     stdout=subprocess.PIPE,
+    #     stderr=subprocess.STDOUT,
+    #     stdin=subprocess.PIPE,
+    #     encoding="utf-8",
+    #     text=True,
+    # )
 
-        #         if duration is None:
-        #             match = re.search(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2}),", line)
-        #             if match:
-        #                 duration = get_seconds(match.group(1))
+    # duration = None
+    # progress = 0
+    # # 使用 alive_progress 显示进度条
+    # with alive_bar(100, title="compressing", manual=True) as bar:
+    #     while True:
+    #         line = process.stdout.readline()
+    #         if not line and process.poll() is not None:
+    #             break
 
-        #         match = re.search(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", line)
-        #         if match:
-        #             elapsed_time = get_seconds(match.group(1))
-        #             if duration:
-        #                 progress = round(elapsed_time / duration, 2)
-        #                 bar(progress)
+    #         if duration is None:
+    #             match = re.search(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2}),", line)
+    #             if match:
+    #                 duration = get_seconds(match.group(1))
 
-        # process.wait()
+    #         match = re.search(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", line)
+    #         if match:
+    #             elapsed_time = get_seconds(match.group(1))
+    #             if duration:
+    #                 progress = round(elapsed_time / duration, 2)
+    #                 bar(progress)
 
-        # if progress >= 1.0:
-        #     os.remove(input_file)
-        #     break
-        # else:
-        #     if os.path.exists(output_file):
-        #         os.remove(output_file)
+    # process.wait()
+
+    # if progress >= 1.0:
+    #     os.remove(input_file)
+    #     break
+    # else:
+    #     if os.path.exists(output_file):
+    #         os.remove(output_file)
