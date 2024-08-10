@@ -41,6 +41,7 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
     ydl_opts = {
         "format": "bestvideo+bestaudio/best",
         "outtmpl": out_name + ".%(ext)s",
+        "restrictfilenames": True,
         "postprocessors": [
             {
                 "key": "FFmpegVideoConvertor",
