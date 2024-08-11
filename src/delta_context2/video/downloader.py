@@ -35,7 +35,7 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
             print(msg)
 
     cost = 0
-    max_retries = 5
+    max_retries = 50
     retry_count = 0
     out_name = str(out_name)
     ydl_opts = {
