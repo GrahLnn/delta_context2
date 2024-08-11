@@ -18,6 +18,24 @@ def remove_illegal_chars(filename):
     sanitized_filename = re.sub(illegal_chars, "", filename)
     return sanitized_filename
 
+def sanitize_filename(filename):
+    # 定义非法字符的正则表达式
+    illegal_characters = r'[<>:"\\|?*]'
+    replacement_dict = {
+        "/": "-",
+        "\\": "-",
+        "|": "-",
+        "#": "-",
+    }
+
+    # 替换两个斜杠与竖线为 '-'
+    for char, replacement in replacement_dict.items():
+        filename = filename.replace(char, replacement)
+
+    # 替换其余非法字符为空
+    filename = re.sub(illegal_characters, "", filename)
+
+    return filename
 
 def abs_uni_len(s):
     chinese_chars = [c for c in s if unicodedata.category(c) == 'Lo']

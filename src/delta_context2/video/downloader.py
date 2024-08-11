@@ -6,6 +6,8 @@ from pathlib import Path
 import yt_dlp
 from alive_progress import alive_bar
 
+from ..text.utils import sanitize_filename
+
 
 def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
     """
@@ -37,7 +39,11 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
     cost = 0
     max_retries = 50
     retry_count = 0
-    out_name = str(out_name)
+    path = Path(out_name)
+    basename = path.name
+    file_name = sanitize_filename(basename)
+    out_name = str(path.parent / file_name)
+
     ydl_opts = {
         "format": "bestvideo+bestaudio/best",
         "outtmpl": out_name + ".%(ext)s",
