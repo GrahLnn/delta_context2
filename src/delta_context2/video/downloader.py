@@ -57,6 +57,7 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
         "progress_hooks": [progress_hook],
         "logger": MyLogger(),
         "quiet": True,
+        "nopart": True,
     }
 
     if os.path.exists(out_name + ".mp4"):
