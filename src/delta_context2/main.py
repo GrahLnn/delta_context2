@@ -26,7 +26,7 @@ class VideoProcessor:
         """
         video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
         formal_name = (
-            video_info["title"].replace(" ", "_").replace(",", "").replace("#", "")
+            video_info["title"].replace(" ", "_").replace(",", "").replace("#", "").replace("\'", "")
         )
         item_dir = self.DATA_DIR / "videos" / formal_name
         source_dir = item_dir / "source"
