@@ -5,6 +5,7 @@ from pathlib import Path
 
 import yt_dlp
 from alive_progress import alive_bar
+from yt_dlp.utils import DownloadError
 
 from ..text.utils import sanitize_filename
 
@@ -71,18 +72,41 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
                 ydl.download([video_url])
             return out_name + ".mp4"
 
-        except Exception as e:
-            print(f"Error during download: {e}")
+        except DownloadError as e:
+            error_message = str(e)
+            print(f"Download error: {error_message}")
             retry_count += 1
-            if cost == 3:
-                print("Failed to download after 3 times.")
-                exit(1)
+
+            # 如果错误消息包含特定的内容，表明需要删除文件重新下载
+            if (
+                "HTTP Error 416" in error_message
+                or "unable to download video data" in error_message
+            ):
+                print("Critical error, removing partial files and retrying...")
+                file_list = glob.glob(out_name + ".*")
+                for file in file_list:
+                    try:
+                        os.remove(file)
+                    except OSError as remove_error:
+                        print(f"Error removing file {file}: {remove_error}")
+            else:
+                print(f"Non-critical error, retrying without removing files...")
+
             if retry_count < max_retries:
                 print(f"Retrying {video_url}... attempt {retry_count}")
                 time.sleep(5)
             elif retry_count == max_retries:
+                print("Maximum retry attempts reached. Cleaning up.")
                 file_list = glob.glob(out_name + ".*")
                 for file in file_list:
-                    os.remove(file)
+                    try:
+                        os.remove(file)
+                    except OSError as remove_error:
+                        print(f"Error removing file {file}: {remove_error}")
                 time.sleep(10)
                 cost += 1
+                retry_count = 0  # 重置重试计数器，以便在清理后再次尝试
+
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            exit(1)
