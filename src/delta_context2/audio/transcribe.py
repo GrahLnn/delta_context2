@@ -1,5 +1,5 @@
 import difflib
-import re
+import regex as re
 
 import whisper
 
