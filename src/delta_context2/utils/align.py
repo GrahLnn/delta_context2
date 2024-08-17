@@ -82,6 +82,7 @@ def secend_split(zh_list, len_limit):
 @retry(tries=3, delay=2)
 def get_aligned_sentences(prompt):
     result = openai_completion(prompt)
+    print(result)
     pattern = re.compile(r"^json")
     result = demjson3.decode(pattern.sub("", result.strip("```")))["pair"]
     return result
