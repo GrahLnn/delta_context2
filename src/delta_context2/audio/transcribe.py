@@ -145,6 +145,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
         sentences = drop_duplicate(collect_sentences(trg_words))
         checked_transcribtion = " ".join(sentences)
+        pattern = r"(?<!\b(?:[A-Z]\.|[A-Z][a-z]\.|[A-Z][a-z]{2,}\.|[a-z]\.|[A-Z]\s[A-Z]\.))(?<=\.|\?|\!)\s*\"*(?=\s*[A-Z])"
+        sentences = re.split(pattern, checked_transcribtion)
 
     return {
         "text": checked_transcribtion,
@@ -188,7 +190,7 @@ def corect_transcription(transcription):
     for chunk in chunks:
         prompt = TRANSCRIBTION_CORECTION_PROMPT.format(TRANSCRIBED_TEXT=chunk)
         res = get_completion(prompt=prompt)
-        clean_text = re.sub(r'<[^>]*>', '', res)
+        clean_text = re.sub(r"<[^>]*>", "", res)
         texts.append(clean_text.strip())
     return " ".join(texts)
 
