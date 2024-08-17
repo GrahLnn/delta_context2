@@ -124,7 +124,7 @@ SUMMARY_SYS_MESSAGE = 'You are a summarizing assistant responsible for analyzing
 
 SPLIT_SMALL_SENTENCE_PROMPT = "Divide the following sentence into {PARTS_NUM} parts, connected by line break and return nothing else.\n\n{TEXT}"
 
-TRANSCRIBTION_CORECTION_PROMPT = """Fix the word recognition errors in the speaker transcription, avoid optimizing grammar, and refrain from making corrections at the granularity larger than words. It is essential to ensure the consistency between the transcription and the corresponding audio. Only return your repired text and nothing else.
+TRANSCRIBTION_CORECTION_PROMPT = """Fix the word recognition errors in the speaker transcription and punctuation errors, avoid optimizing grammar, and refrain from making corrections at the granularity larger than words. It is essential to ensure the consistency between the transcription and the corresponding audio. Only return your repired text and nothing else.
 
 Here is the transcribed text you will be working with:
 
