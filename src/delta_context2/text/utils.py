@@ -66,7 +66,10 @@ def split_sentences_into_chunks(sentences, max_tokens=1000):
             current_token_count += token_count
         else:
             # Save the current chunk and start a new one
-            chunks.append(" ".join(chunk))
+            chunk_text = " ".join(chunk)
+            if not chunk_text.strip():
+                raise ValueError("Chunk is empty")
+            chunks.append(chunk_text)
             chunk = [sentence]
             current_token_count = token_count
 
