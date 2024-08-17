@@ -124,11 +124,34 @@ SUMMARY_SYS_MESSAGE = 'You are a summarizing assistant responsible for analyzing
 
 SPLIT_SMALL_SENTENCE_PROMPT = "Divide the following sentence into {PARTS_NUM} parts, connected by line break and return nothing else.\n\n{TEXT}"
 
-TRANSCRIBTION_CORECTION_PROMPT = """Fix the word recognition errors in the speaker transcription and complete the necessary punctuation marks (punctuation is not considered grammar). Avoid optimizing grammar, and refrain from making corrections at the granularity larger than words. It is essential to ensure the consistency between the transcription and the corresponding audio. Only return your repired text and nothing else.
+TRANSCRIBTION_CORECTION_PROMPT = """You are tasked with fixing word recognition errors and completing necessary punctuation in a speaker transcription. Here is the transcription you will be working with:
 
-Here is the transcribed text you will be working with:
-
-<transcribed_text>
+<transcription>
 {TRANSCRIBED_TEXT}
-</transcribed_text>
+</transcription>
+
+Your goal is to correct any misrecognized words and add missing punctuation marks. However, you must adhere to the following constraints:
+
+1. Do not optimize or correct grammar.
+2. Do not make corrections at a level larger than individual words.
+3. Ensure consistency between the transcription and the corresponding audio (although you don't have access to the audio, assume the original transcription closely follows what was said).
+
+Follow these steps to complete the task:
+
+1. Read through the transcription carefully.
+2. Identify any words that seem to be misrecognized or out of place in the context.
+3. Replace these words with the most likely correct alternatives, considering the context and probable intended meaning.
+4. Add necessary punctuation marks where they are missing. This includes:
+   - Periods at the end of sentences
+   - Commas to separate clauses or items in a list
+   - Question marks at the end of questions
+   - Exclamation points for exclamations or emphasis
+   - Quotation marks around direct speech, if applicable
+
+Guidelines for punctuation:
+- Use punctuation conservatively. Only add punctuation where it's clearly necessary for understanding the text.
+- Do not add semicolons, colons, or dashes unless they're absolutely necessary for preserving the original meaning.
+- Be cautious with apostrophes. Only add them for clear contractions (e.g., "don't", "it's") or possessives.
+
+After making your corrections, provide only the repaired text as your output. Do not include any explanations, comments, or additional text. Your response should contain only the corrected transcription.
 """
