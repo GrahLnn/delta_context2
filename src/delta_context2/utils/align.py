@@ -82,11 +82,11 @@ def secend_split(zh_list, len_limit):
 @retry(tries=3, delay=2)
 def get_aligned_sentences(prompt):
     sys_msg = "You have a special preference for JSON, and all your responses will be in the form of ```json{...}``` for users."
-    # result = openai_completion(prompt, sys_msg)
-    result = get_json_completion(prompt, model="gemini-1.5-flash")
+    result = openai_completion(prompt, sys_msg)
+    # result = get_json_completion(prompt, model="gemini-1.5-flash")
     print(result)
-    # pattern = re.compile(r"^json")
-    # result = demjson3.decode(pattern.sub("", result.strip("```")))["pair"]
+    pattern = re.compile(r"^json")
+    result = demjson3.decode(pattern.sub("", result.strip("```")))["pair"]
     return result
 
 
@@ -345,6 +345,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 else:
                     new_t = [zh_tsl]
                 new_t = secend_split(new_t, subtitle_len)
+                [print(s, t) for s, t in zip(en_src, new_t)]
                 llm_align_zh_list, llm_align_en_list = llm_align_sentences(
                     en_src, new_t
                 )
