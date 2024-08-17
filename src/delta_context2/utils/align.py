@@ -81,7 +81,8 @@ def secend_split(zh_list, len_limit):
 
 @retry(tries=3, delay=2)
 def get_aligned_sentences(prompt):
-    result = openai_completion(prompt)
+    sys_msg = "You have a special preference for JSON, and all your responses will be in the form of ```json{...}``` for users."
+    result = openai_completion(prompt, sys_msg)
     print(result)
     pattern = re.compile(r"^json")
     result = demjson3.decode(pattern.sub("", result.strip("```")))["pair"]
