@@ -412,6 +412,8 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
         zh_stc = zh_stc.replace("，", " ").replace("。", "").replace("；", "").strip()
 
         if zh_stc:
+            if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
+                sentence_timestamps[-1]["end"], sentence_start = sentence_start, sentence_timestamps[-1]["end"]
             sentence_timestamps.append(
                 {
                     "text": zh_stc,

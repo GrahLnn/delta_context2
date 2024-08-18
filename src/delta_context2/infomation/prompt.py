@@ -46,10 +46,9 @@ Output your result in the following JSON format:
 
 Remember to maintain the original order of sentences and preserve all content from both texts. Your goal is to create the best possible match between the two texts while adhering to these constraints."""
 
-PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT = """
-    You are tasked with separating two paragraphs in different languages that contain the same content. Your goal is to match smaller sentences from each paragraph and present them in a specific JSON format. If a corresponding sentence cannot be found, you should add an appropriate translation based on the content and context.
+PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT = """You are tasked with aligning two paragraphs in different languages that contain the same content. Your goal is to match smaller sentences from each paragraph and present them in a specific JSON format. If a corresponding sentence cannot be found, you should leave it as an empty string.
 
-Here are the two paragraphs:
+Here are the two paragraphs you will be working with:
 
 Paragraph A:
 <paragraph_a>
@@ -63,12 +62,12 @@ Paragraph B:
 
 Follow these steps to complete the task:
 
-1. Read both paragraphs carefully.
+1. Carefully read both paragraphs.
 2. Identify corresponding sentences or phrases in both paragraphs that convey the same meaning.
 3. Split the paragraphs into smaller, matching sentences or phrases.
-4. If a corresponding sentence cannot be found in one paragraph, create an appropriate translation based on the content and context.
+4. If a corresponding sentence cannot be found in one paragraph, leave it as an empty string.
 5. Create a JSON object with a "pair" array containing objects for each matched sentence pair.
-6. Each object in the "pair" array should have two properties: "sentence_a" for the sentence from Paragraph A, and "sentence_b" for the corresponding sentence from Paragraph B (or the translation you created).
+6. Each object in the "pair" array should have two properties: "sentence_a" for the sentence from Paragraph A, and "sentence_b" for the corresponding sentence from Paragraph B (or an empty string if no match is found).
 
 Format your response as a JSON object with the following structure:
 
@@ -77,11 +76,11 @@ Format your response as a JSON object with the following structure:
   "pair": [
     {{
       "sentence_a": "Sentence from Paragraph A",
-      "sentence_b": "Corresponding sentence from Paragraph B or translation"
+      "sentence_b": "Corresponding sentence from Paragraph B or empty string"
     }},
     {{
       "sentence_a": "Next sentence from Paragraph A",
-      "sentence_b": "Next corresponding sentence from Paragraph B or translation"
+      "sentence_b": "Next corresponding sentence from Paragraph B or empty string"
     }}
   ]
 }}
@@ -98,19 +97,25 @@ Here's a simple example to illustrate the expected output:
     }},
     {{
       "sentence_a": "I hope you're doing well.",
-      "sentence_b": "" // Assuming this sentence is not found in Paragraph B, it should be empty, so the sentence_b here is empty string "".
+      "sentence_b": ""
     }},
     {{
       "sentence_a": "The weather is nice today.",
-      "sentence_b": "El clima está agradable hoy." 
+      "sentence_b": "El clima está agradable hoy."
     }}
   ]
 }}
 ```
 
-In this example, the last pair demonstrates a case where a direct corresponding sentence might not have been present in Paragraph B, so an appropriate translation was provided.
+In this example, the second pair demonstrates a case where a direct corresponding sentence was not present in Paragraph B, so an empty string was used.
 
-Please process the given paragraphs and provide your answer in the specified JSON format. Ensure that the sentences are properly matched, translations are added where necessary, and that the JSON is correctly formatted. Your entire response should be enclosed in ``` tags."""
+Additional guidelines:
+- Ensure that the sentences are properly matched and that there is no misalignment.
+- Do not add translations or create new sentences. If a match is not found, use an empty string.
+- Make sure the JSON is correctly formatted.
+- Your entire response should be enclosed in ``` tags.
+
+Process the given paragraphs and provide your answer in the specified JSON format."""
 
 SINGLE_TRANSLATION_PROMPT = """Translate the following sentence into Chinese in a colloquial way. Only return your translated text and nothing else.
 
