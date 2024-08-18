@@ -413,13 +413,16 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
 
         if zh_stc:
             if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
-                sentence_timestamps[-1]["end"], sentence_start = sentence_start, sentence_timestamps[-1]["end"]
+                sentence_timestamps[-1]["end"], sentence_start = (
+                    sentence_start,
+                    sentence_timestamps[-1]["end"],
+                )
             if sentence_start > sentence_end:
                 sentence_start, sentence_end = sentence_end, sentence_start
-            if sentence_end-sentence_start <1:
-                sentence_timestamps[-1]["end"] = sentence_end
-                sentence_timestamps[-1]["text"] += " " + zh_stc
-                continue
+            # if sentence_end - sentence_start < 1:
+            #     sentence_timestamps[-1]["end"] = sentence_end
+            #     sentence_timestamps[-1]["text"] += " " + zh_stc
+            #     continue
             sentence_timestamps.append(
                 {
                     "text": zh_stc,
