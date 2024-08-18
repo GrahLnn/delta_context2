@@ -20,7 +20,7 @@ class VideoProcessor:
         self.country = country
         self.DATA_DIR = Path("data")
 
-    def process(self, ytb_url: str) -> dict:
+    def process(self, ytb_url: str, compress: bool = True) -> dict:
         """
         return: the video dir
         """
@@ -61,5 +61,8 @@ class VideoProcessor:
         translate_video = render_video_with_subtitles(
             video_path, subtitle_path, item_dir
         )
-        compress_video(translate_video)
+        if compress:
+            compress_video(translate_video)
+        else:
+            os.rename(translate_video, item_dir / "translated_video.mp4")
         return item_dir
