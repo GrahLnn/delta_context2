@@ -151,7 +151,7 @@ Guidelines for translate:
 1. Translate ALL content between <TRANSLATE_THIS> and </TRANSLATE_THIS> part.
 2. Maintain paragraph structure and line breaks.
 3. Do not remove any single line from the <TRANSLATE_THIS> and </TRANSLATE_THIS> part.
-4. Because the text comes from a video podcast, please translate all the sentences as accurately as possible, unless there are significant errors.
+4. Every independent sentence must be translated, and none may be omitted.
 
 Output only the translation of the portion you are asked to translate, and nothing else.
 """
@@ -248,6 +248,7 @@ When writing suggestions, pay attention to whether there are ways to improve the
 (ii) fluency (by applying {target_lang} grammar, spelling and punctuation rules, and ensuring there are no unnecessary repetitions),\n\
 (iii) style (by ensuring the translations reflect the style of the source text and takes into account any cultural context),\n\
 (iv) terminology (by ensuring terminology use is consistent and reflects the source text domain; and by only ensuring you use equivalent idioms {target_lang}).\n\
+(v) Every independent sentence must be translated, and none may be omitted.
 
 Write a list of specific, helpful and constructive suggestions for improving the translation.
 Each suggestion should address one specific part of the translation.
@@ -278,7 +279,7 @@ When writing suggestions, pay attention to whether there are ways to improve the
 (ii) fluency (by applying {target_lang} grammar, spelling and punctuation rules, and ensuring there are no unnecessary repetitions),
 (iii) style (by ensuring the translations reflect the style of the source text and takes into account any cultural context),
 (iv) terminology (by ensuring terminology use is consistent and reflects the source text domain; and by only ensuring you use equivalent idioms {target_lang}).
-(v) because the text comes from a video podcast, please translate all the sentences as accurately as possible, unless there are significant errors.
+(v) Every independent sentence must be translated, and none may be omitted.
 
 Write a list of specific, helpful and constructive suggestions for improving the translation.
 Each suggestion should address one specific part of the translation.
@@ -402,7 +403,7 @@ to whether there are ways to improve the translation's
 4. terminology (inappropriate for context, inconsistent use)
 5. Do not remove any single line from the <TRANSLATE_THIS> and </TRANSLATE_THIS> part.
 6. do not translate the part outside of the <TRANSLATE_THIS> and <TRANSLATION> tags from <SOURCE_TEXT>.
-7. Because the text comes from a video podcast, please translate all the sentences as accurately as possible, unless there are significant errors.
+7. Every independent sentence must be translated, and none may be omitted.
 
 Output only the new translation of the indicated part and nothing else.
 """
