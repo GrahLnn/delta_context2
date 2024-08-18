@@ -64,5 +64,7 @@ class VideoProcessor:
         if compress:
             compress_video(translate_video)
         else:
+            if os.path.exists(item_dir / "translated_video.mp4"):
+                os.remove(item_dir / "translated_video.mp4")
             os.rename(translate_video, item_dir / "translated_video.mp4")
         return item_dir

@@ -152,6 +152,7 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         "text": checked_transcribtion,
         "ord_text": ord_transcription,
         "sentences": sentences,
+        "ord_words": words,
         "words": trg_words,
     }
 
