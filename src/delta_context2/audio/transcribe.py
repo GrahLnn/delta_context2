@@ -105,6 +105,7 @@ from ..utils.list import drop_duplicate, flatten
 @update_metadata(
     ("transcription", lambda result: result["text"]),
     ("words", lambda result: result["words"]),
+    ("ord_words", lambda result: result["ord_words"]),
     ("sentences", lambda result: result["sentences"]),
     ("ord_text", lambda result: result["ord_text"]),
 )
