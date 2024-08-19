@@ -365,12 +365,15 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     en_src, new_t
                 )
                 [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
-                print()
+                print("--------------")
                 zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
                 if abs_uni_len("".join(en_list)) == 0:
                     raise ValueError(f"empty translation\n{llm_align_en_list}")
                 en_list = en_large_diff_radio_repair(zh_list, en_list)
                 en_list = move_commas(en_list)
+
+                [print(s, t) for s, t in zip(zh_list, en_list)]
+                print("--------------")
 
                 atomic_zhs.extend(zh_list)
                 atomic_ens.extend(en_list)
