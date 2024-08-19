@@ -4,13 +4,13 @@ You are tasked with segmenting a paragraph of text in one language (B) to match 
 First, examine the array of pre-segmented sentences in language A:
 
 <segmented_sentences_a>
-{{SEGMENTED_SENTENCES_A}}
+{SEGMENTED_SENTENCES_A}
 </segmented_sentences_a>
 
 Next, carefully read the unsegmented paragraph of text in language B:
 
 <unsegmented_text_b>
-{{UNSEGMENTED_TEXT_B}}
+{UNSEGMENTED_TEXT_B}
 </unsegmented_text_b>
 
 To complete this task, follow these steps:
@@ -40,19 +40,19 @@ Output your result in the following JSON format:
 
 <output_format>
 ```json
-{
+{{
   "pair": [
-    {
+    {{
       "sentence_a": "First sentence from array A",
       "sentence_b": "Corresponding segmented sentence from text B"
-    },
-    {
+    }},
+    {{
       "sentence_a": "Second sentence from array A",
       "sentence_b": "Corresponding segmented sentence from text B"
-    }
+    }},
     // ... continue for all matched pairs
   ]
-}
+}}
 ```
 </output_format>
 
