@@ -39,7 +39,7 @@ def sanitize_filename(filename):
 
 def abs_uni_len(s):
     chinese_chars = [c for c in s if unicodedata.category(c) == 'Lo']
-    non_chinese_chars = [c for c in s if unicodedata.category(c) != 'Lo']
+    non_chinese_chars = [c for c in s if unicodedata.category(c) != 'Lo' and not unicodedata.category(c).startswith("Zs")]
 
     chinese_length = len(chinese_chars)
     non_chinese_length = sum(0.5 if unicodedata.category(c).startswith("L") else 1 for c in non_chinese_chars)
