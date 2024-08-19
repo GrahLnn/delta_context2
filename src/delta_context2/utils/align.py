@@ -133,7 +133,15 @@ def llm_align_sentences(source_text, translated_snetence_array):
     )
     result = get_aligned_sentences(prompt)
     zh_list = translated_snetence_array
+    seen = set()
     en_list = [pair["sentence_b"] for pair in result]
+
+    # 对列表进行处理，移除重复项，将重复的项替换为空字符串
+    for i in range(len(en_list)):
+        if en_list[i] in seen:
+            en_list[i] = ""  # 重复的项赋值为空字符串
+        else:
+            seen.add(en_list[i])  # 将未见过的项添加到set中
 
     len_split = abs_uni_len("".join(en_list))
     len_source = abs_uni_len(source_text)
@@ -357,6 +365,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     en_src, new_t
                 )
                 [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
+                print()
                 zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
                 if abs_uni_len("".join(en_list)) == 0:
                     raise ValueError(f"empty translation\n{llm_align_en_list}")
