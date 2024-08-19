@@ -160,3 +160,112 @@ Guidelines for punctuation:
 
 After making your corrections, provide only the repaired text as your output. Do not include any explanations, comments, or additional text. Your response should contain only the corrected transcription.
 """
+
+TA_INIT_TRANSLATION_PROMPT = """You are a professional translator tasked with translating a specific portion of text from {source_lang} to {target_lang}. Your goal is to provide an accurate and complete translation while maintaining the original structure and content.
+
+Here is the text you need to translate:
+
+<chunk_to_translate>
+{chunk_to_translate}
+</chunk_to_translate>
+
+Follow these guidelines for your translation:
+
+1. Translate ALL content within the <chunk_to_translate> tags.
+2. Maintain the original paragraph structure and line breaks.
+3. Do not remove or omit any single line from the original text.
+4. Ensure that every sentence is translated without leaving anything out.
+5. Preserve any formatting, such as bullet points or numbered lists, if present.
+6. Maintain the original tone and style of the text as much as possible.
+
+Provide your translation in the following format:
+
+<translation>
+[Your translated text goes here]
+</translation>
+
+Important: Make sure to translate every single word and sentence within the given chunk. Do not summarize or skip any part of the text, no matter how repetitive or unnecessary it may seem.
+
+To ensure the quality and completeness of your translation:
+
+1. After completing your translation, review it to make sure you haven't accidentally omitted any content.
+2. Compare the number of paragraphs and lines in your translation to the original to ensure structural consistency.
+3. If you encounter any terms or phrases that are particularly challenging to translate, make your best effort to convey the meaning accurately, and consider adding a brief explanation in parentheses if necessary.
+
+Remember, your task is to provide a professional and complete translation of the given text from {source_lang} to {target_lang}. Accuracy and thoroughness are crucial.
+"""
+
+TA_REFLECTION_PROMPT = """Your task is to carefully read a source text and part of a translation of that text from {source_lang} to {target_lang}, and then give constructive criticism and helpful suggestions for improving the translation.
+The final style and tone of the translation should match the style of {target_lang} colloquially spoken in {country}.
+
+The source text is below, delimited by XML tags <SOURCE_TEXT> and </SOURCE_TEXT>, and the part that has been translated
+is delimited by <TRANSLATE_THIS> and </TRANSLATE_THIS> within the source text. You can use the rest of the source text as context for critiquing the translated part. Retain all markdown image links, Latex code and multi-level title in their positions and relationships within the text.
+
+<SOURCE_TEXT>
+{tagged_text}
+</SOURCE_TEXT>
+
+To reiterate, only part of the text is being translated, shown here again between <TRANSLATE_THIS> and </TRANSLATE_THIS>:
+<TRANSLATE_THIS>
+{chunk_to_translate}
+</TRANSLATE_THIS>
+
+The translation of the indicated part, delimited below by <TRANSLATION> and </TRANSLATION>, is as follows:
+<TRANSLATION>
+{translation_1_chunk}
+</TRANSLATION>
+
+When writing suggestions, pay attention to whether there are ways to improve the translation's:\n\
+(i) accuracy (by correcting errors of addition, mistranslation, omission, or untranslated text, and the content needs to be consistent.),\n\
+(ii) fluency (by applying {target_lang} grammar, spelling and punctuation rules, and ensuring there are no unnecessary repetitions),\n\
+(iii) style (by ensuring the translations reflect the style of the source text and takes into account any cultural context),\n\
+(iv) terminology (by ensuring terminology use is consistent and reflects the source text domain; and by only ensuring you use equivalent idioms {target_lang}).\n\
+(v) Every independent sentence must be translated, and none may be omitted.
+
+Write a list of specific, helpful and constructive suggestions for improving the translation.
+Each suggestion should address one specific part of the translation.
+Output only the suggestions and nothing else."""
+
+TA_IMPROVEMENT_PROMPT = """You are tasked with improving a translation from {source_lang} to {target_lang}, taking into account expert suggestions and constructive criticisms. Your goal is to produce a high-quality, accurate, and fluent translation that reflects the style of the original text.
+
+First, carefully read the following:
+
+1. The source text, with the part to be translated marked:
+<source_text>
+{tagged_text}
+</source_text>
+
+The specific part to be translated is:
+<translate_this>
+{chunk_to_translate}
+</translate_this>
+
+2. The initial translation:
+<initial_translation>
+{translation_1_chunk}
+</initial_translation>
+
+3. Expert suggestions and criticisms:
+<expert_suggestions>
+{reflection_chunk}
+</expert_suggestions>
+
+Now, improve the translation by following these steps:
+
+1. Analyze the expert suggestions, noting areas for improvement in accuracy, fluency, style, and terminology.
+
+2. Compare the initial translation with the source text and expert suggestions.
+
+3. Rewrite the translation, focusing on:
+   a) Correcting any errors of addition, mistranslation, omission, or untranslated text
+   b) Improving fluency by applying proper {target_lang} grammar, spelling, and punctuation rules
+   c) Eliminating unnecessary repetitions
+   d) Ensuring the style reflects that of the source text
+   e) Using appropriate and consistent terminology for the context
+
+4. Double-check that you have translated every sentence from the <translate_this> section without omitting anything.
+
+5. Do not translate or modify any part of the source text outside the <translate_this> tags.
+
+Provide your improved translation inside <improved_translation> tags. Include only the translation of the specified part, without any additional comments or explanations.
+"""

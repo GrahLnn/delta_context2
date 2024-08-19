@@ -9,6 +9,11 @@ from typing import List
 import tiktoken
 from alive_progress import alive_it
 
+from ..infomation.prompt import (
+    TA_IMPROVEMENT_PROMPT,
+    TA_INIT_TRANSLATION_PROMPT,
+    TA_REFLECTION_PROMPT,
+)
 from ..infomation.read_metadata import read_metadata
 from ..utils.decorator import update_metadata
 from .llm import get_completion
@@ -140,21 +145,6 @@ def multichunk_initial_translation(
 
     system_message = f"You are an expert linguist, specializing in translation from {source_lang} to {target_lang}."
 
-    translation_prompt = """Your task is to provide a professional translation from {source_lang} to {target_lang} of PART of a text.
-
-To reiterate, you should translate only this part and ALL from this of the text, shown here between <TRANSLATE_THIS> and </TRANSLATE_THIS>:
-<TRANSLATE_THIS>
-{chunk_to_translate}
-</TRANSLATE_THIS>
-
-Guidelines for translate:
-1. Translate ALL content between <TRANSLATE_THIS> and </TRANSLATE_THIS> part.
-2. Maintain paragraph structure and line breaks.
-3. Do not remove any single line from the <TRANSLATE_THIS> and </TRANSLATE_THIS> part.
-4. Every independent sentence must be translated, and none may be omitted.
-
-Output only the translation of the portion you are asked to translate, and nothing else.
-"""
     done_idx = -1
     translation_chunks = []
 
@@ -171,20 +161,14 @@ Output only the translation of the portion you are asked to translate, and nothi
     for i in alive_it(
         range(done_idx + 1, len(source_text_chunks)), title="init translate"
     ):
-        prompt = translation_prompt.format(
+        prompt = TA_INIT_TRANSLATION_PROMPT.format(
             source_lang=source_lang,
             target_lang=target_lang,
             chunk_to_translate=source_text_chunks[i],
         )
 
-        translation = get_completion(prompt, system_message=system_message)
-        translation = (
-            translation.replace("<TRANSLATION>", "")
-            .replace("</TRANSLATION>", "")
-            .replace("</TRANSLATE_THIS>", "")
-            .replace("<TRANSLATE_THIS>", "")
-            .strip()
-        )
+        translation = get_completion(prompt)
+        translation = re.sub(r"<[^>]*>", "", translation)
 
         translation_chunks.append(translation)
 
@@ -222,69 +206,6 @@ def multichunk_reflect_on_translation(
     system_message = f"You are an expert linguist specializing in translation from {source_lang} to {target_lang}. \
 You will be provided with a source text and its translation and your goal is to improve the translation."
 
-    if country != "":
-        reflection_prompt = """Your task is to carefully read a source text and part of a translation of that text from {source_lang} to {target_lang}, and then give constructive criticism and helpful suggestions for improving the translation.
-The final style and tone of the translation should match the style of {target_lang} colloquially spoken in {country}.
-
-The source text is below, delimited by XML tags <SOURCE_TEXT> and </SOURCE_TEXT>, and the part that has been translated
-is delimited by <TRANSLATE_THIS> and </TRANSLATE_THIS> within the source text. You can use the rest of the source text as context for critiquing the translated part. Retain all markdown image links, Latex code and multi-level title in their positions and relationships within the text.
-
-<SOURCE_TEXT>
-{tagged_text}
-</SOURCE_TEXT>
-
-To reiterate, only part of the text is being translated, shown here again between <TRANSLATE_THIS> and </TRANSLATE_THIS>:
-<TRANSLATE_THIS>
-{chunk_to_translate}
-</TRANSLATE_THIS>
-
-The translation of the indicated part, delimited below by <TRANSLATION> and </TRANSLATION>, is as follows:
-<TRANSLATION>
-{translation_1_chunk}
-</TRANSLATION>
-
-When writing suggestions, pay attention to whether there are ways to improve the translation's:\n\
-(i) accuracy (by correcting errors of addition, mistranslation, omission, or untranslated text, and the content needs to be consistent.),\n\
-(ii) fluency (by applying {target_lang} grammar, spelling and punctuation rules, and ensuring there are no unnecessary repetitions),\n\
-(iii) style (by ensuring the translations reflect the style of the source text and takes into account any cultural context),\n\
-(iv) terminology (by ensuring terminology use is consistent and reflects the source text domain; and by only ensuring you use equivalent idioms {target_lang}).\n\
-(v) Every independent sentence must be translated, and none may be omitted.
-
-Write a list of specific, helpful and constructive suggestions for improving the translation.
-Each suggestion should address one specific part of the translation.
-Output only the suggestions and nothing else."""
-
-    else:
-        reflection_prompt = """Your task is to carefully read a source text and part of a translation of that text from {source_lang} to {target_lang}, and then give constructive criticism and helpful suggestions for improving the translation.
-
-The source text is below, delimited by XML tags <SOURCE_TEXT> and </SOURCE_TEXT>, and the part that has been translated
-is delimited by <TRANSLATE_THIS> and </TRANSLATE_THIS> within the source text. You can use the rest of the source text as context for critiquing the translated part. Retain all markdown image links, Latex code and multi-level title in their positions and relationships within the text. Retain all markdown image links, Latex code and multi-level title in their positions and relationships within the text.
-
-<SOURCE_TEXT>
-{tagged_text}
-</SOURCE_TEXT>
-
-To reiterate, only part of the text is being translated, shown here again between <TRANSLATE_THIS> and </TRANSLATE_THIS>:
-<TRANSLATE_THIS>
-{chunk_to_translate}
-</TRANSLATE_THIS>
-
-The translation of the indicated part, delimited below by <TRANSLATION> and </TRANSLATION>, is as follows:
-<TRANSLATION>
-{translation_1_chunk}
-</TRANSLATION>
-
-When writing suggestions, pay attention to whether there are ways to improve the translation's:
-(i) accuracy (by correcting errors of addition, mistranslation, omission, or untranslated text, and the content needs to be consistent.),
-(ii) fluency (by applying {target_lang} grammar, spelling and punctuation rules, and ensuring there are no unnecessary repetitions),
-(iii) style (by ensuring the translations reflect the style of the source text and takes into account any cultural context),
-(iv) terminology (by ensuring terminology use is consistent and reflects the source text domain; and by only ensuring you use equivalent idioms {target_lang}).
-(v) Every independent sentence must be translated, and none may be omitted.
-
-Write a list of specific, helpful and constructive suggestions for improving the translation.
-Each suggestion should address one specific part of the translation.
-Output only the suggestions and nothing else."""
-
     done_idx = -1
     reflection_chunks = []
 
@@ -314,25 +235,16 @@ Output only the suggestions and nothing else."""
                 else ""
             )
         )
-        if country != "":
-            prompt = reflection_prompt.format(
-                source_lang=source_lang,
-                target_lang=target_lang,
-                tagged_text=tagged_text,
-                chunk_to_translate=source_text_chunks[i],
-                translation_1_chunk=translation_1_chunks[i],
-                country=country,
-            )
-        else:
-            prompt = reflection_prompt.format(
-                source_lang=source_lang,
-                target_lang=target_lang,
-                tagged_text=tagged_text,
-                chunk_to_translate=source_text_chunks[i],
-                translation_1_chunk=translation_1_chunks[i],
-            )
+        prompt = TA_REFLECTION_PROMPT.format(
+            source_lang=source_lang,
+            target_lang=target_lang,
+            tagged_text=tagged_text,
+            chunk_to_translate=source_text_chunks[i],
+            translation_1_chunk=translation_1_chunks[i],
+            country=country,
+        )
 
-        reflection = get_completion(prompt, system_message=system_message)
+        reflection = get_completion(prompt)
         reflection_chunks.append(reflection)
 
         cache_data = {
@@ -368,46 +280,6 @@ def multichunk_improve_translation(
 
     system_message = f"You are an expert linguist, specializing in translation editing from {source_lang} to {target_lang}."
 
-    improvement_prompt = """Your task is to carefully read, then improve, a translation from {source_lang} to {target_lang}, taking into
-account a set of expert suggestions and constructive criticisms. Below, the source text, initial translation, and expert suggestions are provided.
-
-The source text is below, delimited by XML tags <SOURCE_TEXT> and </SOURCE_TEXT>, and the part that has been translated
-is delimited by <TRANSLATE_THIS> and </TRANSLATE_THIS> within the source text. You can use the rest of the source text
-as context, but need to provide a translation only of the part indicated by <TRANSLATE_THIS> and </TRANSLATE_THIS>.
-
-<SOURCE_TEXT>
-{tagged_text}
-</SOURCE_TEXT>
-
-To reiterate, only part of the text is being translated, shown here again between <TRANSLATE_THIS> and </TRANSLATE_THIS>:
-<TRANSLATE_THIS>
-{chunk_to_translate}
-</TRANSLATE_THIS>
-
-The translation of the indicated part, delimited below by <TRANSLATION> and </TRANSLATION>, is as follows:
-<TRANSLATION>
-{translation_1_chunk}
-</TRANSLATION>
-
-The expert translations of the indicated part, delimited below by <EXPERT_SUGGESTIONS> and </EXPERT_SUGGESTIONS>, are as follows:
-<EXPERT_SUGGESTIONS>
-{reflection_chunk}
-</EXPERT_SUGGESTIONS>
-
-Taking into account the expert suggestions rewrite the translation to improve it, paying attention
-to whether there are ways to improve the translation's
-
-1. accuracy (by correcting errors of addition, mistranslation, omission, or untranslated text),
-2. fluency (by applying {target_lang} grammar, spelling and punctuation rules and ensuring there are no unnecessary repetitions), \
-3. style (by ensuring the translations reflect the style of the source text)
-4. terminology (inappropriate for context, inconsistent use)
-5. Do not remove any single line from the <TRANSLATE_THIS> and </TRANSLATE_THIS> part.
-6. do not translate the part outside of the <TRANSLATE_THIS> and <TRANSLATION> tags from <SOURCE_TEXT>.
-7. Every independent sentence must be translated, and none may be omitted.
-
-Output only the new translation of the indicated part and nothing else.
-"""
-
     done_idx = -1
     translation_2_chunks = []
 
@@ -438,7 +310,7 @@ Output only the new translation of the indicated part and nothing else.
             )
         )
 
-        prompt = improvement_prompt.format(
+        prompt = TA_IMPROVEMENT_PROMPT.format(
             source_lang=source_lang,
             target_lang=target_lang,
             tagged_text=tagged_text,
@@ -447,7 +319,7 @@ Output only the new translation of the indicated part and nothing else.
             reflection_chunk=reflection_chunks[i],
         )
 
-        translation_2 = get_completion(prompt, system_message=system_message)
+        translation_2 = get_completion(prompt)
         translation_2 = "\n\n" + re.sub(r"<[^>]*>", "", translation_2).strip()
         translation_2_chunks.append(translation_2)
 
