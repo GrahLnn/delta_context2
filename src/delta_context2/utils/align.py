@@ -146,6 +146,7 @@ def llm_align_sentences(source_text, translated_snetence_array):
     len_split = abs_uni_len("".join(en_list))
     len_source = abs_uni_len(source_text)
     if len_split != len_source:
+        print("radio split", len_split, len_source)
         en_list = radio_split(source_text, zh_list)
 
     return zh_list, en_list
@@ -296,6 +297,8 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     try_count += 1
                     if try_count == 3:
                         raise ValueError("can not get alignment")
+                    
+            [print(s, t) for s, t in zip(a_sentences, b_sentences)]
 
             en_texts = []
             zh_texts = []
