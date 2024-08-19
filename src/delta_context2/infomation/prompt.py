@@ -1,50 +1,64 @@
 SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT = """
-You are tasked with segmenting a paragraph of text in one language (B) to match a pre-segmented array of sentences in another language (A), and then pairing them together. Follow these instructions carefully:
+You are tasked with segmenting a paragraph of text in one language (B) to match a pre-segmented array of sentences in another language (A), and then pairing them together. This task requires careful analysis and alignment of content between the two languages. Follow these instructions carefully to complete the task accurately.
 
-First, you will be given an array of pre-segmented sentences in language A:
+First, examine the array of pre-segmented sentences in language A:
+
 <segmented_sentences_a>
-{SEGMENTED_SENTENCES_A}
+{{SEGMENTED_SENTENCES_A}}
 </segmented_sentences_a>
 
-Next, you will be given an unsegmented paragraph of text in language B:
+Next, carefully read the unsegmented paragraph of text in language B:
+
 <unsegmented_text_b>
-{UNSEGMENTED_TEXT_B}
+{{UNSEGMENTED_TEXT_B}}
 </unsegmented_text_b>
 
-Your task is to segment the text in language B to match the sentences in language A as closely as possible, and then pair them together. Here are the steps to follow:
+To complete this task, follow these steps:
 
-1. Analyze the structure and content of the sentences in language A.
-2. Carefully read through the unsegmented text in language B.
-3. Identify logical break points in the text B that correspond to the sentence divisions in text A.
-4. Segment text B into the same number of sentences as text A, ensuring that each segment captures the equivalent meaning of its corresponding sentence in A.
-5. Pair each segmented sentence from B with its corresponding sentence from A.
+1. Analyze the structure and content of the sentences in language A, noting the number of sentences and their general meaning.
 
-Important constraints to remember:
-- Do not change the order of the sentences.
-- Do not repeat any content.
-- Do not remove any content from the original text.
-- Do not add any new content that wasn't in the original text.
-- If a perfect match is not possible, do your best to create segments that align as closely as possible with the sentences in A, while keeping the integrity of text B intact.
+2. Read through the unsegmented text in language B multiple times to understand its overall content and structure.
+
+3. Identify logical break points in text B that correspond to the sentence divisions in text A. Look for natural pauses, changes in topic, or punctuation that might indicate sentence boundaries.
+
+4. Segment text B into the same number of sentences as text A. Ensure that each segment captures the equivalent meaning of its corresponding sentence in A as closely as possible.
+
+5. Pair each segmented sentence from B with its corresponding sentence from A, maintaining the original order.
+
+6. Review your segmentation and pairing to ensure accuracy and completeness.
+
+Important guidelines and constraints:
+
+- Maintain the original order of the sentences in both languages.
+- Do not repeat any content from the original texts.
+- Do not remove any content from the original texts.
+- Do not add any new content that wasn't in the original texts.
+- If a perfect match is not possible, create segments that align as closely as possible with the sentences in A, while keeping the integrity of text B intact.
+- Ensure that all content from text B is included in the segmentation, even if it means creating slightly longer or shorter segments compared to text A.
 
 Output your result in the following JSON format:
 
+<output_format>
 ```json
-{{
+{
   "pair": [
-    {{
+    {
       "sentence_a": "First sentence from array A",
       "sentence_b": "Corresponding segmented sentence from text B"
-    }},
-    {{
+    },
+    {
       "sentence_a": "Second sentence from array A",
       "sentence_b": "Corresponding segmented sentence from text B"
-    }}
+    }
     // ... continue for all matched pairs
   ]
-}}
+}
 ```
+</output_format>
 
-Remember to maintain the original order of sentences and preserve all content from both texts. Your goal is to create the best possible match between the two texts while adhering to these constraints."""
+Before providing your final output, use a <scratchpad> to think through your segmentation process and alignment strategy. This will help ensure that you've considered all aspects of the task and optimized your segmentation for the best possible match between languages A and B.
+
+After completing your analysis and segmentation, provide your final output in the specified JSON format within ```json``` tags and nothing else."""
 
 PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT = """You are tasked with aligning two paragraphs in different languages that contain the same content. Your goal is to match smaller sentences from each paragraph and present them in a specific JSON format. If a corresponding sentence cannot be found, you should leave it as an empty string.
 
