@@ -85,8 +85,14 @@ def get_aligned_sentences(prompt):
     result = openai_completion(prompt, sys_msg)
     # result = get_json_completion(prompt, model="gemini-1.5-flash")
     print(result)
-    pattern = re.compile(r"^json")
-    result = demjson3.decode(pattern.sub("", result.strip("```")))["pair"]
+    pattern = re.compile(r"```json\s*(.*?)\s*```", re.DOTALL)
+    match = pattern.search(result)
+
+    if match:
+        json_content = match.group(1)  # 获取匹配到的内容
+        result = demjson3.decode(json_content)["pair"]
+    else:
+        raise ValueError(f"No JSON content found in the response:\n{result}")
     return result
 
 
