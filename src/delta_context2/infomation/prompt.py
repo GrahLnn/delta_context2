@@ -117,13 +117,27 @@ Additional guidelines:
 
 Process the given paragraphs and provide your answer in the specified JSON format."""
 
-SINGLE_TRANSLATION_PROMPT = """Translate the following sentence into Chinese in a colloquial way. Only return your translated text and nothing else.
+SINGLE_TRANSLATION_PROMPT = """You are tasked with translating a sentence into Chinese in a colloquial manner. Your goal is to produce a translation that sounds natural and conversational in Chinese, while accurately conveying the meaning of the original text.
 
-Here is the original text you will be working with:
+Here is the original text you will be translating:
 
 <original_text>
 {ORIGINAL_TEXT}
-</original_text>"""
+</original_text>
+
+To help guide your translation, consider the following context:
+
+<context>
+{CONTEXT}
+</context>
+
+When translating, follow these guidelines:
+1. Focus on conveying the meaning rather than providing a word-for-word translation.
+2. Use everyday Chinese expressions and idioms where appropriate to make the translation sound more natural and colloquial.
+3. Consider the context provided to ensure the tone and style of the translation are suitable.
+4. If there are cultural references or idioms in the original text, try to find equivalent Chinese expressions that capture the same idea.
+
+Provide your translation of the original text, and nothing else. Do not include any explanations, notes, or the original text in your response. Your entire response should be enclosed in <translation> tags."""
 
 SUMMARY_SYS_MESSAGE = 'You are a summarizing assistant responsible for analyzing the content of YouTube videos. The user will feed you transcriptions but you should always refer to the content in your response as "the video". Focus on accurately summarizing the main points and key details of the videos. Do not comment on the style of the video (e.g., whether it is a voiceover or conversational). Do never mention or imply the existence of text, transcription, or any written format. Use phrases like "The video discusses..." or "According to the video...". Strive to be the best summarizer possible, providing clear, and informative summaries that exclusively reference the video content.'
 

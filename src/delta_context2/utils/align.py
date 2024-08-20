@@ -14,10 +14,11 @@ from ..infomation.llm import get_json_completion, openai_completion
 from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
+    SINGLE_TRANSLATION_PROMPT,
     SPLIT_SMALL_SENTENCE_PROMPT,
 )
 from ..infomation.read_metadata import read_metadata
-from ..text.utils import abs_uni_len, normalize_to_10
+from ..text.utils import abs_uni_len, extract_zh_char, normalize_to_10
 from ..utils.decorator import update_metadata
 from ..utils.list import flatten
 
@@ -362,18 +363,19 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
 
                     # if len(source_text.split()) == 1:
                     #     continue
-                    # max_retry = 5
-                    # for count in range(max_retry):
-                    #     prompt = SINGLE_TRANSLATION_PROMPT.format(
-                    #         ORIGINAL_TEXT=source_text
-                    #     )
-                    #     res = openai_completion(prompt)
-                    #     print("补偿：", source_text, "->", res)
-                    #     if len(extract_zh_char(res)) != 0:
-                    #         b_sentences[idx] = res
-                    #         break
-                    #     if count + 1 == max_retry:
-                    #         raise ValueError("sentence can not translate")
+                    max_retry = 5
+                    for count in range(max_retry):
+                        prompt = SINGLE_TRANSLATION_PROMPT.format(
+                            ORIGINAL_TEXT=source_text
+                        )
+                        res = openai_completion(prompt)
+                        res = re.sub(r"<[^>]*>", "", res).strip()
+                        print("补偿：", source_text, "->", res)
+                        if len(extract_zh_char(res)) != 0:
+                            zh_texts.append(res)
+                            break
+                        if count + 1 == max_retry:
+                            raise ValueError("sentence can not translate")
                 else:
                     en_texts.append(source_text)
                     zh_texts.append(translated_text)
