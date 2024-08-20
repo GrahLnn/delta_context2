@@ -18,6 +18,7 @@ def remove_illegal_chars(filename):
     sanitized_filename = re.sub(illegal_chars, "", filename)
     return sanitized_filename
 
+
 def sanitize_filename(filename):
     # 定义非法字符的正则表达式
     illegal_characters = r'[<>:"\\|?*]'
@@ -37,15 +38,34 @@ def sanitize_filename(filename):
 
     return filename
 
-def abs_uni_len(s):
-    chinese_chars = [c for c in s if unicodedata.category(c) == 'Lo']
-    non_chinese_chars = [c for c in s if unicodedata.category(c) != 'Lo' and not unicodedata.category(c).startswith("Zs")]
 
+def abs_uni_len(s):
+    # 过滤出中文字符
+    chinese_chars = [c for c in s if unicodedata.category(c) == "Lo"]
+
+    # 过滤出非中文字符，并排除空白字符、标点符号和其他符号
+    non_chinese_chars = [
+        c
+        for c in s
+        if unicodedata.category(c) != "Lo"
+        and not unicodedata.category(c).startswith("Zs")
+        and not unicodedata.category(c).startswith("P")
+        and not unicodedata.category(c).startswith("S")
+    ]
+
+    # 计算中文字符的长度
     chinese_length = len(chinese_chars)
-    non_chinese_length = sum(0.5 if unicodedata.category(c).startswith("L") else 1 for c in non_chinese_chars)
-    
+
+    # 计算非中文字符的长度，字母字符计为0.5，其他字符计为1
+    non_chinese_length = sum(
+        0.5 if unicodedata.category(c).startswith("L") else 1 for c in non_chinese_chars
+    )
+
+    # 总长度
     total_length = chinese_length + non_chinese_length
+
     return int(total_length)
+
 
 def split_sentences_into_chunks(sentences, max_tokens=1000):
     chunks = []
