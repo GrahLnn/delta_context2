@@ -161,36 +161,47 @@ SPLIT_SMALL_SENTENCE_PROMPT = """Your task is to divide a given sentence into a 
 
 Provide your answer within <answer> tags, with each part on a new line."""
 
-TRANSCRIBTION_CORECTION_PROMPT = """You are tasked with fixing word recognition errors and completing necessary punctuation in a speaker transcription. Here is the transcription you will be working with:
+TRANSCRIBTION_CORECTION_PROMPT = """You are an AI assistant tasked with fixing word recognition errors and completing necessary punctuation in a speaker transcription. Your goal is to improve the readability and accuracy of the transcription while maintaining its original meaning and style.
+
+Here is the transcription you will be working with:
 
 <transcription>
 {TRANSCRIBED_TEXT}
 </transcription>
 
-Your goal is to correct any misrecognized words and add missing punctuation marks. However, you must adhere to the following constraints:
+Please follow these instructions carefully:
 
-1. Do not optimize or correct grammar.
-2. Do not make corrections at a level larger than individual words.
-3. Ensure consistency between the transcription and the corresponding audio (although you don't have access to the audio, assume the original transcription closely follows what was said).
+1. Correcting Word Recognition Errors:
+   - Read through the transcription carefully.
+   - Identify words that seem misrecognized or out of place in the context.
+   - Replace these words with the most likely correct alternatives, considering the context and probable intended meaning.
+   - Do not make corrections at a level larger than individual words.
+   - Do not optimize or correct grammar.
+   - Ensure consistency between the transcription and what was likely said in the original audio.
 
-Follow these steps to complete the task:
+2. Adding Punctuation:
+   - Add necessary punctuation marks where they are missing. This includes:
+     a) Periods at the end of sentences
+     b) Commas to separate clauses or items in a list
+     c) Question marks at the end of questions
+     d) Exclamation points for exclamations or emphasis
+     e) Quotation marks around direct speech, if applicable
+   - Use punctuation conservatively. Only add punctuation where it's clearly necessary for understanding the text.
+   - Do not add semicolons, colons, or dashes unless they're absolutely necessary for preserving the original meaning.
+   - Be cautious with apostrophes. Only add them for clear contractions (e.g., "don't", "it's") or possessives.
 
-1. Read through the transcription carefully.
-2. Identify any words that seem to be misrecognized or out of place in the context.
-3. Replace these words with the most likely correct alternatives, considering the context and probable intended meaning.
-4. Add necessary punctuation marks where they are missing. This includes:
-   - Periods at the end of sentences
-   - Commas to separate clauses or items in a list
-   - Question marks at the end of questions
-   - Exclamation points for exclamations or emphasis
-   - Quotation marks around direct speech, if applicable
+3. Handling Repeated Sequences:
+   - Identify and remove non-disfluency repeated sequences in the transcript.
+   - Disfluencies (such as "um", "uh", stutters) should be left as they are.
+   - Only remove exact repetitions of phrases or sentences that do not serve a purpose in the speech.
 
-Guidelines for punctuation:
-- Use punctuation conservatively. Only add punctuation where it's clearly necessary for understanding the text.
-- Do not add semicolons, colons, or dashes unless they're absolutely necessary for preserving the original meaning.
-- Be cautious with apostrophes. Only add them for clear contractions (e.g., "don't", "it's") or possessives.
+4. Final Output:
+   - Provide only the repaired text as your output.
+   - Do not include any explanations, comments, or additional text.
+   - Your response should contain only the corrected transcription.
+   - Enclose your final corrected transcription within <corrected_transcription> tags.
 
-After making your corrections, provide only the repaired text as your output. Do not include any explanations, comments, or additional text. Your response should contain only the corrected transcription.
+Remember, your goal is to improve the transcription while maintaining its original meaning and style. Do not add or remove information beyond the scope of these instructions.
 """
 
 TA_INIT_TRANSLATION_PROMPT = """You are a professional translator tasked with translating a specific portion of text. Your goal is to provide an accurate and complete translation while maintaining the original structure and content.
