@@ -14,7 +14,7 @@ from ..infomation.llm import get_json_completion, openai_completion
 from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
-    SINGLE_TRANSLATION_PROMPT,
+    SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT,
     SPLIT_SMALL_SENTENCE_PROMPT,
 )
 from ..infomation.read_metadata import read_metadata
@@ -365,7 +365,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     #     continue
                     max_retry = 5
                     for count in range(max_retry):
-                        prompt = SINGLE_TRANSLATION_PROMPT.format(
+                        prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
                             ORIGINAL_TEXT=source_text,
                             CONTEXT = " ".join(b_sentences)
                         )

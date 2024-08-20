@@ -125,6 +125,21 @@ Here is the original text you will be translating:
 {ORIGINAL_TEXT}
 </original_text>
 
+When translating, follow these guidelines:
+1. Focus on conveying the meaning rather than providing a word-for-word translation.
+2. Use everyday Chinese expressions and idioms where appropriate to make the translation sound more natural and colloquial.
+3. If there are cultural references or idioms in the original text, try to find equivalent Chinese expressions that capture the same idea.
+
+Provide your translation of the original text, and nothing else."""
+
+SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT = """You are tasked with translating a sentence into Chinese in a colloquial manner. Your goal is to produce a translation that sounds natural and conversational in Chinese, while accurately conveying the meaning of the original text.
+
+Here is the original text you will be translating:
+
+<original_text>
+{ORIGINAL_TEXT}
+</original_text>
+
 To help guide your translation, consider the following context:
 
 <context>
