@@ -356,10 +356,10 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 zip(a_sentences, b_sentences)
             ):
                 if translated_text.strip() == "":
-                    if en_texts:
-                        en_texts[-1] += " " + source_text
-                    else:
-                        en_texts.append(source_text)
+                    # if en_texts:
+                    #     en_texts[-1] += " " + source_text
+                    # else:
+                    #     en_texts.append(source_text)
 
                     # if len(source_text.split()) == 1:
                     #     continue
