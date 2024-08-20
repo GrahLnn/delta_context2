@@ -366,7 +366,8 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     max_retry = 5
                     for count in range(max_retry):
                         prompt = SINGLE_TRANSLATION_PROMPT.format(
-                            ORIGINAL_TEXT=source_text
+                            ORIGINAL_TEXT=source_text,
+                            CONTEXT = " ".join(b_sentences)
                         )
                         res = openai_completion(prompt)
                         res = re.sub(r"<[^>]*>", "", res).strip()
