@@ -59,17 +59,19 @@ def custom_mod(x, y):
     return div
 
 
-def secend_split(zh_list, len_limit):
+def second_split(zh_list, len_limit):
     new_list = []
     bar_len_check = [abs_uni_len(t) for t in zh_list]
 
     for idx, bar_len in enumerate(bar_len_check):
         if bar_len > len_limit:
             mod = custom_mod(bar_len, len_limit)
+            print(mod)
             prompt = SPLIT_SMALL_SENTENCE_PROMPT.format(
                 PARTS_NUM=mod, TEXT=zh_list[idx]
             )
             result = openai_completion(prompt)
+            result = re.sub(r"<[^>]*>", "", result).strip()
 
             result = result.split("\n")
             result = [r.strip() for r in result]
@@ -146,10 +148,13 @@ def llm_align_sentences(source_text, translated_snetence_array):
 
     en_list = insert_deletions_into_sentences(en_list, source_text)
 
-    len_split = abs_uni_len("".join(en_list))
-    len_source = abs_uni_len(source_text)
-    if len_split != len_source:
-        print("radio split", len_split, len_source)
+    # zh_len_r = abs_uni_len("".join(translated_snetence_array))
+    # zh_len_s = abs_uni_len("".join())
+
+    en_len_split = abs_uni_len("".join(en_list))
+    en_len_source = abs_uni_len(source_text)
+    if en_len_split != en_len_source:
+        print("radio split", en_len_split, en_len_source)
         en_list = radio_split(source_text, zh_list)
 
     return zh_list, en_list
@@ -400,13 +405,14 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
             title=f"split chunk {i + 1}/{len(source_text_chunks)}",
         ):
             if abs_uni_len(zh_tsl) > subtitle_len:
+                print(zh_tsl)
                 if "，" in zh_tsl:
                     split_text = re.split("，|；", zh_tsl)
                     split_text = [s for s in split_text if s]
                     new_t = modify_zh_list(split_text)
                 else:
                     new_t = [zh_tsl]
-                new_t = secend_split(new_t, subtitle_len)
+                new_t = second_split(new_t, subtitle_len)
                 print(en_src)
                 print(new_t)
                 llm_align_zh_list, llm_align_en_list = llm_align_sentences(

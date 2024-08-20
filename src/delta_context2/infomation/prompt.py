@@ -127,7 +127,25 @@ Here is the original text you will be working with:
 
 SUMMARY_SYS_MESSAGE = 'You are a summarizing assistant responsible for analyzing the content of YouTube videos. The user will feed you transcriptions but you should always refer to the content in your response as "the video". Focus on accurately summarizing the main points and key details of the videos. Do not comment on the style of the video (e.g., whether it is a voiceover or conversational). Do never mention or imply the existence of text, transcription, or any written format. Use phrases like "The video discusses..." or "According to the video...". Strive to be the best summarizer possible, providing clear, and informative summaries that exclusively reference the video content.'
 
-SPLIT_SMALL_SENTENCE_PROMPT = "Divide the following sentence into {PARTS_NUM} parts, connected by line break and return nothing else.\n\n{TEXT}"
+SPLIT_SMALL_SENTENCE_PROMPT = """Your task is to divide a given sentence into a specified number of parts. Follow these steps:
+
+1. You will be provided with a sentence in the following XML tags:
+<text>
+{TEXT}
+</text>
+
+2. The number of parts to divide the sentence into will be provided as:
+{PARTS_NUM}
+
+3. Divide the sentence into {PARTS_NUM} parts as evenly as possible. Try to keep the parts grammatically coherent, but prioritize even division if necessary.
+
+4. Present each part on a new line, without any additional text, numbering, or formatting.
+
+5. Ensure that when combined, the parts recreate the original sentence exactly, including all punctuation and spacing.
+
+6. Do not add any explanations, comments, or additional text to your response. Only output the divided parts of the sentence.
+
+Provide your answer within <answer> tags, with each part on a new line."""
 
 TRANSCRIBTION_CORECTION_PROMPT = """You are tasked with fixing word recognition errors and completing necessary punctuation in a speaker transcription. Here is the transcription you will be working with:
 
