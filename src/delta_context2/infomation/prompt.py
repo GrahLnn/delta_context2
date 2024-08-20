@@ -179,7 +179,9 @@ Guidelines for punctuation:
 After making your corrections, provide only the repaired text as your output. Do not include any explanations, comments, or additional text. Your response should contain only the corrected transcription.
 """
 
-TA_INIT_TRANSLATION_PROMPT = """You are a professional translator tasked with translating a specific portion of text from {source_lang} to {target_lang}. Your goal is to provide an accurate and complete translation while maintaining the original structure and content.
+TA_INIT_TRANSLATION_PROMPT = """You are a professional translator tasked with translating a specific portion of text. Your goal is to provide an accurate and complete translation while maintaining the original structure and content.
+
+You will be translating from <source_lang>{source_lang}</source_lang> to <target_lang>{target_lang}</target_lang>.
 
 Here is the text you need to translate:
 
@@ -202,15 +204,13 @@ Provide your translation in the following format:
 [Your translated text goes here]
 </translation>
 
-Important: Make sure to translate every single word and sentence within the given chunk. Do not summarize or skip any part of the text, no matter how repetitive or unnecessary it may seem.
-
 To ensure the quality and completeness of your translation:
 
 1. After completing your translation, review it to make sure you haven't accidentally omitted any content.
 2. Compare the number of paragraphs and lines in your translation to the original to ensure structural consistency.
 3. If you encounter any terms or phrases that are particularly challenging to translate, make your best effort to convey the meaning accurately, and consider adding a brief explanation in parentheses if necessary.
 
-Remember, your task is to provide a professional and complete translation of the given text from {source_lang} to {target_lang}. Accuracy and thoroughness are crucial.
+Remember, your task is to provide a professional and complete translation of the given text from {source_lang} to {target_lang}. Accuracy and thoroughness are crucial. Do not summarize or skip any part of the text, no matter how repetitive or unnecessary it may seem.
 """
 
 TA_REFLECTION_PROMPT = """Your task is to carefully read a source text and part of a translation of that text from {source_lang} to {target_lang}, and then give constructive criticism and helpful suggestions for improving the translation.
