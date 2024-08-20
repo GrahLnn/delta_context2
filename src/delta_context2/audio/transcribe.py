@@ -146,6 +146,7 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
             ]
             raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
         checked_transcribtion = corect_transcription(ord_transcription)
+        trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
         sentences = drop_duplicate(collect_sentences(trg_words))
         checked_transcribtion = rm_repeated_sequences(" ".join(sentences))
         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
