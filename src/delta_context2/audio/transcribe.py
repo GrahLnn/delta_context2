@@ -10,7 +10,7 @@ from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 # from pydub import AudioSegment
 # from alive_progress import alive_bar, alive_it
 from ..infomation.read_metadata import read_metadata
-from ..text.utils import split_text_into_chunks
+from ..text.utils import rm_repeated_sequences, split_text_into_chunks
 from ..utils.decorator import show_progress, update_metadata
 from ..utils.list import drop_duplicate, flatten
 
@@ -146,9 +146,9 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
             ]
             raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
         checked_transcribtion = corect_transcription(ord_transcription)
-        trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
         sentences = drop_duplicate(collect_sentences(trg_words))
-        checked_transcribtion = " ".join(sentences)
+        checked_transcribtion = rm_repeated_sequences(" ".join(sentences))
+        trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
         pattern = r"(?<!\b(?:[A-Z]\.|[A-Z][a-z]\.|[A-Z][a-z]{2,}\.|[a-z]\.|[A-Z]\s[A-Z]\.))(?<=\.|\?|\!)\s*\"*(?=\s*[A-Z])"
         sentences = re.split(pattern, checked_transcribtion)
 

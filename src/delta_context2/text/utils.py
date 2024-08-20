@@ -158,3 +158,19 @@ def split_paragraph_regex(paragraph):
     sentences = [sentence.strip() for sentence in sentences]
 
     return sentences
+
+def rm_repeated_sequences(text):
+    words = text.split()
+    new_words = words[:]
+    
+    for idx, word in enumerate(words):
+        for iidx, ww in enumerate(words):
+            if iidx <= idx:
+                continue
+            if iidx - idx > 100:
+                break
+            if ww == word:
+                if words[idx:iidx] == words[iidx : iidx + (iidx - idx)]:
+                    new_words[iidx : iidx + (iidx - idx)] = [None] * (iidx - idx)
+    new_text = " ".join([w for w in new_words if w])
+    return new_text
