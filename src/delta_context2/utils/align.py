@@ -374,6 +374,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                         print("补偿：", source_text, "->", res)
                         if len(extract_zh_char(res)) != 0:
                             zh_texts.append(res)
+                            en_texts.append(source_text)
                             break
                         if count + 1 == max_retry:
                             raise ValueError("sentence can not translate")
