@@ -159,13 +159,14 @@ def llm_align_sentences(source_text, translated_snetence_array):
 
     return zh_list, en_list
 
+
 def insert_deletions_into_sentences(sentences, original_text):
     # 将句子数组中的句子组合成一个字符串
     combined_text = " ".join(sentences)
-    
+
     # 获取句子数组中每个句子的长度（以单词数计算）
     len_senb = [len(sentence.split()) for sentence in sentences]
-    
+
     # 将原文字符串和组合后的字符串分割成单词列表
     words1 = original_text.split()
     words2 = combined_text.split()
@@ -197,10 +198,15 @@ def insert_deletions_into_sentences(sentences, original_text):
                     # 计算插入位置在该句子中的具体索引
                     insert_position = i1 - start
                     senb_words = updated_sentences[idx].split()
-                    updated_sentences[idx] = " ".join(senb_words[:insert_position] + delete_words + senb_words[insert_position:])
+                    updated_sentences[idx] = " ".join(
+                        senb_words[:insert_position]
+                        + delete_words
+                        + senb_words[insert_position:]
+                    )
                     break
 
     return updated_sentences
+
 
 def hand_repair(zh_list, en_list):
     en_check = [abs_uni_len(en) for en in en_list]
@@ -347,7 +353,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     try_count += 1
                     if try_count == 3:
                         raise ValueError("can not get alignment")
-                    
+
             [print(s, t) for s, t in zip(a_sentences, b_sentences)]
 
             en_texts = []
@@ -366,8 +372,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     max_retry = 5
                     for count in range(max_retry):
                         prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
-                            ORIGINAL_TEXT=source_text,
-                            CONTEXT = " ".join(b_sentences)
+                            ORIGINAL_TEXT=source_text, CONTEXT=" ".join(b_sentences)
                         )
                         res = openai_completion(prompt)
                         res = re.sub(r"<[^>]*>", "", res).strip()
@@ -489,13 +494,17 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
         zh_stc = re.sub(r"[。；,]", "", zh_stc)
 
         if zh_stc:
-            if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
-                sentence_timestamps[-1]["end"], sentence_start = (
-                    sentence_start,
-                    sentence_timestamps[-1]["end"],
-                )
             if sentence_start > sentence_end:
                 sentence_start, sentence_end = sentence_end, sentence_start
+            if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
+                if sentence_start > sentence_timestamps[-1]["start"]:
+                    sentence_timestamps[-1]["end"], sentence_start = (
+                        sentence_start,
+                        sentence_timestamps[-1]["end"],
+                    )
+                else:
+                    sentence_start = sentence_timestamps[-1]["end"]
+
             # if sentence_end - sentence_start < 1:
             #     sentence_timestamps[-1]["end"] = sentence_end
             #     sentence_timestamps[-1]["text"] += " " + zh_stc
