@@ -66,7 +66,6 @@ def second_split(zh_list, len_limit):
     for idx, bar_len in enumerate(bar_len_check):
         if bar_len > len_limit:
             mod = custom_mod(bar_len, len_limit)
-            print(mod)
             prompt = SPLIT_SMALL_SENTENCE_PROMPT.format(
                 PARTS_NUM=mod, TEXT=zh_list[idx]
             )
