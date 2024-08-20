@@ -505,7 +505,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
                 else:
                     sentence_start = sentence_timestamps[-1]["end"]
             
-            if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_timestamps[-1]["start"]:
+            if sentence_timestamps and sentence_timestamps[-1]["end"] < sentence_timestamps[-1]["start"]:
                 sentence_timestamps[-1]["end"] = sentence_start
 
             # if sentence_end - sentence_start < 1:
