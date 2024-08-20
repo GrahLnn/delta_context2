@@ -164,6 +164,8 @@ def rm_repeated_sequences(text):
     new_words = words[:]
     
     for idx, word in enumerate(words):
+        if not re.search('[a-zA-Z]', word):
+            continue
         for iidx, ww in enumerate(words):
             if iidx <= idx:
                 continue
