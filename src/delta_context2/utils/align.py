@@ -494,8 +494,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
         zh_stc = re.sub(r"[。；,]", "", zh_stc)
 
         if zh_stc:
-            if sentence_start > sentence_end:
-                sentence_start, sentence_end = sentence_end, sentence_start
+            
             if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
                 if sentence_start > sentence_timestamps[-1]["start"]:
                     sentence_timestamps[-1]["end"], sentence_start = (
@@ -504,7 +503,8 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
                     )
                 else:
                     sentence_start = sentence_timestamps[-1]["end"]
-            
+            if sentence_start > sentence_end:
+                sentence_start, sentence_end = sentence_end, sentence_start
             if sentence_timestamps and sentence_timestamps[-1]["end"] < sentence_timestamps[-1]["start"]:
                 sentence_timestamps[-1]["end"] = sentence_start
 
