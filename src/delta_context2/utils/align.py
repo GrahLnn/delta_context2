@@ -1,3 +1,4 @@
+import difflib
 import json
 import os
 import re
@@ -143,6 +144,8 @@ def llm_align_sentences(source_text, translated_snetence_array):
         else:
             seen.add(en_list[i])  # 将未见过的项添加到set中
 
+    en_list = insert_deletions_into_sentences(en_list, source_text)
+
     len_split = abs_uni_len("".join(en_list))
     len_source = abs_uni_len(source_text)
     if len_split != len_source:
@@ -151,6 +154,48 @@ def llm_align_sentences(source_text, translated_snetence_array):
 
     return zh_list, en_list
 
+def insert_deletions_into_sentences(sentences, original_text):
+    # 将句子数组中的句子组合成一个字符串
+    combined_text = " ".join(sentences)
+    
+    # 获取句子数组中每个句子的长度（以单词数计算）
+    len_senb = [len(sentence.split()) for sentence in sentences]
+    
+    # 将原文字符串和组合后的字符串分割成单词列表
+    words1 = original_text.split()
+    words2 = combined_text.split()
+
+    # 使用SequenceMatcher比较两个单词列表
+    s = difflib.SequenceMatcher(None, words1, words2)
+    diff = s.get_opcodes()
+
+    # 计算句子数组中每个句子的起始和结束位置
+    start_positions = []
+    end_positions = []
+    current_pos = 0
+    for length in len_senb:
+        start_positions.append(current_pos)
+        current_pos += length
+        end_positions.append(current_pos)
+
+    # 用于收集更新后的句子
+    updated_sentences = sentences[:]
+
+    # 处理diff，将delete的部分插入到对应的句子中
+    for tag, i1, i2, j1, j2 in diff:
+        if tag == "delete":
+            delete_words = words1[i1:i2]
+
+            # 找到对应的句子
+            for idx, (start, end) in enumerate(zip(start_positions, end_positions)):
+                if start <= i1 < end:
+                    # 计算插入位置在该句子中的具体索引
+                    insert_position = i1 - start
+                    senb_words = updated_sentences[idx].split()
+                    updated_sentences[idx] = " ".join(senb_words[:insert_position] + delete_words + senb_words[insert_position:])
+                    break
+
+    return updated_sentences
 
 def hand_repair(zh_list, en_list):
     en_check = [abs_uni_len(en) for en in en_list]
