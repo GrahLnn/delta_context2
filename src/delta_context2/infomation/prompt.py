@@ -24,6 +24,7 @@ Important constraints to remember:
 - Do not repeat any content from the original texts.
 - Do not remove any content from the original text.
 - Do not add any new content that wasn't in the original text.
+- sentence_a can not be empty!
 - If a perfect match is not possible, do your best to create segments that align as closely as possible with the sentences in A, while keeping the integrity of text B intact.
 
 Output your result in the following JSON format:
