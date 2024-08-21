@@ -511,33 +511,33 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
             min_duration = (abs_uni_len(zh_stc) // 6) * 1.0
 
             # 调整时间戳以确保连续性和一致性
-            sentence_start, sentence_end = adjust_timestamps(
-                sentence_timestamps, sentence_start, sentence_end
-            )
-            if sentence_start > sentence_end:
-                sentence_start, sentence_end = sentence_end, sentence_start
-            sentence_start, sentence_end = adjust_timestamps(
-                sentence_timestamps, sentence_start, sentence_end
-            )
-            # 确保没有时间倒退的情况
-            if (
-                sentence_timestamps
-                and sentence_timestamps[-1]["end"] < sentence_timestamps[-1]["start"]
-            ):
-                sentence_timestamps[-1]["end"] = sentence_start
+            # sentence_start, sentence_end = adjust_timestamps(
+            #     sentence_timestamps, sentence_start, sentence_end
+            # )
+            # if sentence_start > sentence_end:
+            #     sentence_start, sentence_end = sentence_end, sentence_start
+            # sentence_start, sentence_end = adjust_timestamps(
+            #     sentence_timestamps, sentence_start, sentence_end
+            # )
+            # # 确保没有时间倒退的情况
+            # if (
+            #     sentence_timestamps
+            #     and sentence_timestamps[-1]["end"] < sentence_timestamps[-1]["start"]
+            # ):
+            #     sentence_timestamps[-1]["end"] = sentence_start
 
-            if (
-                sentence_timestamps
-                and (
-                    dx := sentence_timestamps[-1]["end"]
-                    - sentence_timestamps[-1]["start"]
-                )
-                < min_duration
-            ):
-                dtime = min_duration - dx
-                sentence_timestamps[-1]["end"] += dtime
-                if sentence_start < sentence_timestamps[-1]["end"]:
-                    sentence_start = sentence_timestamps[-1]["end"]
+            # if (
+            #     sentence_timestamps
+            #     and (
+            #         dx := sentence_timestamps[-1]["end"]
+            #         - sentence_timestamps[-1]["start"]
+            #     )
+            #     < min_duration
+            # ):
+            #     dtime = min_duration - dx
+            #     sentence_timestamps[-1]["end"] += dtime
+            #     if sentence_start < sentence_timestamps[-1]["end"]:
+            #         sentence_start = sentence_timestamps[-1]["end"]
             sentence_timestamps.append(
                 {
                     "text": zh_stc,
