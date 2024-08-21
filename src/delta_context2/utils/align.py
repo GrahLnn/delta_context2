@@ -517,7 +517,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
             if sentence_timestamps and (dx := sentence_timestamps[-1]["end"] - sentence_timestamps[-1]["start"]) < min_duration:
                 dtime = min_duration - dx
                 sentence_timestamps[-1]["end"] += dtime
-                sentence_start -= dtime
+                sentence_start = sentence_timestamps[-1]["end"]
             sentence_timestamps.append(
                 {
                     "text": zh_stc,
