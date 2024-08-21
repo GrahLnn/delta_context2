@@ -470,6 +470,14 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
     shutil.rmtree("cache")
     return atomic_part
 
+def adjust_timestamps(sentence_timestamps, start, end):
+    """调整时间戳以确保连续性和一致性"""
+    if sentence_timestamps and sentence_timestamps[-1]["end"] > start:
+        if start > sentence_timestamps[-1]["start"]:
+            sentence_timestamps[-1]["end"], start = start, sentence_timestamps[-1]["end"]
+        else:
+            start = sentence_timestamps[-1]["end"]
+    return start, end
 
 @update_metadata(("sentence_timestamps", lambda result: result))
 def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
@@ -488,38 +496,28 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
 
     for sentence, zh_stc in zip(split_atomic_ens, atomic_zhs):
         sentence_start = words[word_index]["start"]
-
         sentence_end = words[word_index + len(sentence) - 1]["end"]
+
+        # 处理中文句子的标点符号
         zh_stc = re.sub(r"[，]", " ", zh_stc).strip()
         zh_stc = re.sub(r"[。；,]", "", zh_stc)
 
         if zh_stc:
-            
-            if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
-                if sentence_start > sentence_timestamps[-1]["start"]:
-                    sentence_timestamps[-1]["end"], sentence_start = (
-                        sentence_start,
-                        sentence_timestamps[-1]["end"],
-                    )
-                else:
-                    sentence_start = sentence_timestamps[-1]["end"]
+            min_duration = (abs_uni_len(zh_stc) // 6) * 1.0
+
+            # 调整时间戳以确保连续性和一致性
+            sentence_start, sentence_end = adjust_timestamps(sentence_timestamps, sentence_start, sentence_end)
             if sentence_start > sentence_end:
                 sentence_start, sentence_end = sentence_end, sentence_start
-            if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
-                if sentence_start > sentence_timestamps[-1]["start"]:
-                    sentence_timestamps[-1]["end"], sentence_start = (
-                        sentence_start,
-                        sentence_timestamps[-1]["end"],
-                    )
-                else:
-                    sentence_start = sentence_timestamps[-1]["end"]
+            sentence_start, sentence_end = adjust_timestamps(sentence_timestamps, sentence_start, sentence_end)
+            # 确保没有时间倒退的情况
             if sentence_timestamps and sentence_timestamps[-1]["end"] < sentence_timestamps[-1]["start"]:
                 sentence_timestamps[-1]["end"] = sentence_start
 
-            # if sentence_end - sentence_start < 1:
-            #     sentence_timestamps[-1]["end"] = sentence_end
-            #     sentence_timestamps[-1]["text"] += " " + zh_stc
-            #     continue
+            if sentence_timestamps and (dx := sentence_timestamps[-1]["end"] - sentence_timestamps[-1]["start"]) < min_duration:
+                dtime = min_duration - dx
+                sentence_timestamps[-1]["end"] += dtime
+                sentence_start -= dtime
             sentence_timestamps.append(
                 {
                     "text": zh_stc,
