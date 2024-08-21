@@ -206,12 +206,7 @@ Please follow these instructions carefully:
    - Do not add semicolons, colons, or dashes unless they're absolutely necessary for preserving the original meaning.
    - Be cautious with apostrophes. Only add them for clear contractions (e.g., "don't", "it's") or possessives.
 
-3. Handling Repeated Sequences:
-   - Identify and remove non-disfluency repeated sequences in the transcript.
-   - Disfluencies (such as "um", "uh", stutters) should be left as they are.
-   - Only remove exact repetitions of phrases or sentences that do not serve a purpose in the speech.
-
-4. Final Output:
+3. Final Output:
    - Provide only the repaired text as your output.
    - Do not include any explanations, comments, or additional text.
    - Your response should contain only the corrected transcription.
