@@ -229,8 +229,8 @@ def align_diff_words(ord_words: list, text1: str, text2: str) -> list:
                 for text in inserted_words:
                     data = {
                         "word": " " + text,
-                        "start": round(formwords[j1]["start"], 2),
-                        "end": round(formwords[j1]["end"], 2),
+                        "start": round(trg_words[-1]["start"], 2),
+                        "end": round(trg_words[-1]["end"], 2),
                     }
                     trg_words.append(data)
 
