@@ -97,10 +97,14 @@ def render_video_with_subtitles(
 
     cmd = [
         "ffmpeg",
+        "-hwaccel",
+        "cuda",  # 启用 CUDA 硬件加速
         "-i",
         video_path,  # 输入视频文件
         "-vf",
         f"ass={subtitles_path}",  # 添加字幕滤镜
+        "-c:v",
+        "h264_nvenc",  # 使用 NVIDIA GPU 编码器
         "-c:a",
         "copy",  # 复制音频（不重新编码）
         "-y",  # 覆盖输出文件（如果存在）
