@@ -542,6 +542,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
             sentence_timestamps.append(
                 {
                     "text": zh_stc,
+                    "en_text": " ".join(sentence),
                     "start": sentence_start,
                     "end": sentence_end,
                     "words": words[word_index : word_index + len(sentence) - 1],
