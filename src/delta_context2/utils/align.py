@@ -501,8 +501,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
 
     for sentence, zh_stc in zip(split_atomic_ens, atomic_zhs):
         sentence_start = words[word_index]["start"]
-        sentence_end = words[word_index + len(sentence) - 1]["end"]
-        print(words[word_index : word_index + len(sentence) - 1])
+        sentence_end = words[word_index + len(sentence)]["end"]
 
         # 处理中文句子的标点符号
         zh_stc = re.sub(r"[，]", " ", zh_stc).strip()
@@ -545,7 +544,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
                     "en_text": " ".join(sentence),
                     "start": sentence_start,
                     "end": sentence_end,
-                    "words": words[word_index : word_index + len(sentence) - 1],
+                    "words": words[word_index : word_index + len(sentence)],
                 }
             )
 
