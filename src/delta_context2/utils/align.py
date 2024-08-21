@@ -10,7 +10,7 @@ from alive_progress import alive_bar, alive_it
 from retry import retry
 
 from ..audio.transcribe import align_diff_words
-from ..infomation.llm import get_json_completion, openai_completion
+from ..infomation.llm import get_completion, get_json_completion, openai_completion
 from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
@@ -372,9 +372,13 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     max_retry = 5
                     for count in range(max_retry):
                         prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
-                            ORIGINAL_TEXT=source_text, CONTEXT=" ".join(b_sentences)
+                            ORIGINAL_TEXT=source_text,
+                            CONTEXT=str(
+                                [(a, b) for a, b in zip(a_sentences, b_sentences)]
+                            ),
                         )
                         res = openai_completion(prompt)
+                        # res = get_completion(prompt)
                         res = re.sub(r"<[^>]*>", "", res).strip()
                         print("补偿：", source_text, "->", res)
                         if len(extract_zh_char(res)) != 0:
