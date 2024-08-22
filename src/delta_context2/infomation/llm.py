@@ -72,7 +72,7 @@ def call_api_without_authhead(url, data):
     headers = {
         "Content-Type": "application/json",
     }
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, json=data, timeout=300)  # Added 5-minute timeout
     response.raise_for_status()  # Raise HTTPError for bad responses (4xx and 5xx)
     res = response.json()
     return res
@@ -193,7 +193,7 @@ def call_api(url, access_token, data):
         "Content-Type": "application/json",
     }
 
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, json=data, timeout=300)  # 添加5分钟超时
     response.raise_for_status()
     res = response.json()
     return res
