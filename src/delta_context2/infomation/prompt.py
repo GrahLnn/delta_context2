@@ -249,36 +249,45 @@ To ensure the quality and completeness of your translation:
 Remember, your task is to provide a professional and complete translation of the given text from {source_lang} to {target_lang}. Accuracy and thoroughness are crucial. Do not summarize or skip any part of the text, no matter how repetitive or unnecessary it may seem.
 """
 
-TA_REFLECTION_PROMPT = """Your task is to carefully read a source text and part of a translation of that text from {source_lang} to {target_lang}, and then give constructive criticism and helpful suggestions for improving the translation.
-The final style and tone of the translation should match the style of {target_lang} colloquially spoken in {country}.
+TA_REFLECTION_PROMPT = """You are a professional translator and language expert. Your task is to carefully read a source text and part of its translation, then provide constructive criticism and helpful suggestions for improving the translation. The goal is to ensure the translation is accurate, fluent, and stylistically appropriate for the target language and region.
 
-The source text is below, delimited by XML tags <SOURCE_TEXT> and </SOURCE_TEXT>, and the part that has been translated
-is delimited by <TRANSLATE_THIS> and </TRANSLATE_THIS> within the source text. You can use the rest of the source text as context for critiquing the translated part. Retain all markdown image links, Latex code and multi-level title in their positions and relationships within the text.
+Here's the source text, with the part to be translated marked:
 
-<SOURCE_TEXT>
+<source_text>
 {tagged_text}
-</SOURCE_TEXT>
+</source_text>
 
-To reiterate, only part of the text is being translated, shown here again between <TRANSLATE_THIS> and </TRANSLATE_THIS>:
-<TRANSLATE_THIS>
+The specific part to be translated is:
+
+<translate_this>
 {chunk_to_translate}
-</TRANSLATE_THIS>
+</translate_this>
 
-The translation of the indicated part, delimited below by <TRANSLATION> and </TRANSLATION>, is as follows:
-<TRANSLATION>
+Now, here's the translation of that part that you need to critique:
+
+<translation>
 {translation_1_chunk}
-</TRANSLATION>
+</translation>
 
-When writing suggestions, pay attention to whether there are ways to improve the translation's:\n\
-(i) accuracy (by correcting errors of addition, mistranslation, omission, or untranslated text, and the content needs to be consistent.),\n\
-(ii) fluency (by applying {target_lang} grammar, spelling and punctuation rules, and ensuring there are no unnecessary repetitions),\n\
-(iii) style (by ensuring the translations reflect the style of the source text and takes into account any cultural context),\n\
-(iv) terminology (by ensuring terminology use is consistent and reflects the source text domain; and by only ensuring you use equivalent idioms {target_lang}).\n\
-(v) Every independent sentence must be translated, and none may be omitted.
+When evaluating the translation, consider the following aspects:
 
-Write a list of specific, helpful and constructive suggestions for improving the translation.
-Each suggestion should address one specific part of the translation.
-Output only the suggestions and nothing else."""
+1. Accuracy: Check for errors of addition, mistranslation, omission, or untranslated text. Ensure the content is consistent with the source.
+2. Fluency: Verify that the translation follows {target_lang} grammar, spelling, and punctuation rules. Look for unnecessary repetitions.
+3. Style: Ensure the translation reflects the style of the source text and takes into account the cultural context of {country}.
+4. Terminology: Check that terminology use is consistent and reflects the source text domain. Use equivalent idioms in {target_lang} where appropriate.
+5. Completeness: Verify that every independent sentence has been translated, with none omitted.
+
+Provide a list of specific, helpful, and constructive suggestions for improving the translation. Each suggestion should address one specific part of the translation. Format your suggestions as follows:
+
+<suggestions>
+1. [Brief description of the issue]: [Explanation and suggestion for improvement]
+2. [Brief description of the issue]: [Explanation and suggestion for improvement]
+[Continue with numbered suggestions as needed]
+</suggestions>
+
+Important: As this is a podcast transcript, it's crucial to check if any sentences are missing. Every statement made by the speaker needs to be retained. If you notice any omissions, provide suggestions for translating the missing content using the same format as above.
+
+Your final output should contain only the numbered list of suggestions within the <suggestions> tags. Do not include any other text or explanations outside of these tags."""
 
 TA_IMPROVEMENT_PROMPT = """You are tasked with improving a translation from {source_lang} to {target_lang}, taking into account expert suggestions and constructive criticisms. Your goal is to produce a high-quality, accurate, and fluent translation that reflects the style of the original text.
 
