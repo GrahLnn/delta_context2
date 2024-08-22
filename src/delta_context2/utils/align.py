@@ -354,13 +354,20 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     if try_count == 3:
                         raise ValueError("can not get alignment")
 
-            [print(s, t) for s, t in zip(a_sentences, b_sentences)]
+            nas = []
+            nbs = []
+            for a, b in zip(a_sentences, b_sentences):
+                if a.strip() == "":
+                    nbs[-1] += " " + b.strip()
+                    continue
+                nas.append(a)
+                nbs.append(b)
+
+            [print(s, t) for s, t in zip(nas, nbs)]
 
             en_texts = []
             zh_texts = []
-            for idx, (source_text, translated_text) in enumerate(
-                zip(a_sentences, b_sentences)
-            ):
+            for idx, (source_text, translated_text) in enumerate(zip(nas, nbs)):
                 if translated_text.strip() == "":
                     # if en_texts:
                     #     en_texts[-1] += " " + source_text
