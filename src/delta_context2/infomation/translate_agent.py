@@ -127,9 +127,11 @@ def num_tokens_in_string(input_str: str, encoding_name: str = "cl100k_base") -> 
     num_tokens = len(encoding.encode(input_str))
     return num_tokens
 
-
+@update_metadata(
+    ("chunk_translation_init", lambda r: r),
+)
 def multichunk_initial_translation(
-    source_lang: str, target_lang: str, source_text_chunks: List[str]
+    dir, source_lang: str, target_lang: str, source_text_chunks: List[str]
 ) -> List[str]:
     """
     Translate a text in multiple chunks from the source language to the target language.
@@ -181,8 +183,11 @@ def multichunk_initial_translation(
 
     return translation_chunks
 
-
+@update_metadata(
+    ("chunk_translation_reflect", lambda r: r),
+)
 def multichunk_reflect_on_translation(
+    dir,
     source_lang: str,
     target_lang: str,
     source_text_chunks: List[str],
@@ -257,7 +262,11 @@ You will be provided with a source text and its translation and your goal is to 
     return reflection_chunks
 
 
+@update_metadata(
+    ("chunk_translation_improve", lambda r: r),
+)
 def multichunk_improve_translation(
+    dir,
     source_lang: str,
     target_lang: str,
     source_text_chunks: List[str],
@@ -334,7 +343,7 @@ def multichunk_improve_translation(
 
 
 def multichunk_translation(
-    source_lang, target_lang, source_text_chunks, country: str = ""
+    dir, source_lang, target_lang, source_text_chunks, country: str = ""
 ):
     """
     Improves the translation of multiple text chunks based on the initial translation and reflection.
@@ -351,10 +360,11 @@ def multichunk_translation(
     """
 
     translation_1_chunks = multichunk_initial_translation(
-        source_lang, target_lang, source_text_chunks
+        dir, source_lang, target_lang, source_text_chunks
     )
 
     reflection_chunks = multichunk_reflect_on_translation(
+        dir,
         source_lang,
         target_lang,
         source_text_chunks,
@@ -363,6 +373,7 @@ def multichunk_translation(
     )
 
     translation_2_chunks = multichunk_improve_translation(
+        dir,
         source_lang,
         target_lang,
         source_text_chunks,
@@ -439,7 +450,7 @@ def translate(
         return check
 
     translation_2_chunks = multichunk_translation(
-        source_lang, target_lang, sentences, country
+        dir, source_lang, target_lang, sentences, country
     )
 
     translation_2_chunks = [chunk.replace("\n", "") for chunk in translation_2_chunks]
