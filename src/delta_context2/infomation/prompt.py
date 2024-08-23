@@ -218,10 +218,7 @@ Remember, your goal is to improve the transcription while maintaining its origin
 
 TA_INIT_TRANSLATION_PROMPT = """You are a professional translator tasked with translating a specific portion of text. Your goal is to provide an accurate and complete translation while maintaining the original structure and content.
 
-You will be translating from:
-<source_lang>{SOURCE_LANG}</source_lang>
-to:
-<target_lang>{TARGET_LANG}</target_lang>
+You will be translating from <source_lang>{SOURCE_LANG}</source_lang> to <target_lang>{TARGET_LANG}</target_lang>.
 
 Here is the text you need to translate:
 
@@ -231,7 +228,7 @@ Here is the text you need to translate:
 
 Follow these guidelines for your translation:
 
-1. Translate ALL content within the chunk_to_translate tags.
+1. Translate ALL content within the <chunk_to_translate> tags.
 2. Maintain the original paragraph structure and line breaks.
 3. Do not remove or omit any single line from the original text.
 4. Ensure that every sentence is translated without leaving anything out.
@@ -240,25 +237,17 @@ Follow these guidelines for your translation:
 
 Provide your translation in the following format:
 
-[
-  {{
-    "sentence": "First sentence or clause in source language",
-    "translation": "Translation of first sentence or clause in target language"
-  }},
-  {{
-    "sentence": "Second sentence or clause in source language",
-    "translation": "Translation of second sentence or clause in target language"
-  }},
-  ...
-]
+<translation>
+[Your translated text goes here]
+</translation>
 
 To ensure the quality and completeness of your translation:
 
 1. After completing your translation, review it to make sure you haven't accidentally omitted any content.
-2. Compare the number of sentences or clauses in your translation to the original to ensure structural consistency.
+2. Compare the number of paragraphs and lines in your translation to the original to ensure structural consistency.
 3. If you encounter any terms or phrases that are particularly challenging to translate, make your best effort to convey the meaning accurately, and consider adding a brief explanation in parentheses if necessary.
 
-Remember, your task is to provide a professional and complete translation of the given text from SOURCE_LANG to TARGET_LANG. Accuracy and thoroughness are crucial. Do not summarize or skip any part of the text, no matter how repetitive or unnecessary it may seem. Ensure that each sentence or clause from the original text has a corresponding entry in your JSON-formatted output in ```json``` tag.
+Remember, your task is to provide a professional and complete translation of the given text from {SOURCE_LANG} to {TARGET_LANG}. Accuracy and thoroughness are crucial. Do not summarize or skip any part of the text, no matter how repetitive or unnecessary it may seem.
 """
 
 TA_REFLECTION_PROMPT = """You are a professional translator and language expert. Your task is to carefully read a source text and part of its translation, then provide constructive criticism and helpful suggestions for improving the translation. The goal is to ensure the translation is accurate, fluent, and stylistically appropriate for the target language and region.
