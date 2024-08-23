@@ -192,20 +192,19 @@ Please follow these instructions carefully:
    - Read through the transcription carefully.
    - Identify words that seem misrecognized or out of place in the context.
    - Replace these words with the most likely correct alternatives, considering the context and probable intended meaning.
-   - Only make corrections at the individual word level.
-   - Do not alter grammar or sentence structure.
-   - Ensure the corrected text remains consistent with what was likely said in the original audio.
-   - You may remove modal particles (such as "um", "uh", "like") to keep sentences complete, but only if they significantly impair readability.
+   - Do not make corrections at a level larger than individual words.
+   - Do not optimize or correct grammar.
+   - Ensure consistency between the transcription and what was likely said in the original audio.
 
 2. Adding Punctuation:
-   - Add necessary punctuation marks where they are clearly missing. This includes:
+   - Add necessary punctuation marks where they are missing. This includes:
      a) Periods at the end of sentences
      b) Commas to separate clauses or items in a list
      c) Question marks at the end of questions
-     d) Exclamation points for clear exclamations or emphasis
+     d) Exclamation points for exclamations or emphasis
      e) Quotation marks around direct speech, if applicable
    - Use punctuation conservatively. Only add punctuation where it's clearly necessary for understanding the text.
-   - Do not add semicolons, colons, or dashes unless they're absolutely essential for preserving the original meaning.
+   - Do not add semicolons, colons, or dashes unless they're absolutely necessary for preserving the original meaning.
    - Be cautious with apostrophes. Only add them for clear contractions (e.g., "don't", "it's") or possessives.
 
 3. Final Output:
@@ -214,7 +213,7 @@ Please follow these instructions carefully:
    - Your response should contain only the corrected transcription.
    - Enclose your final corrected transcription within <corrected_transcription> tags.
 
-Remember, your primary goal is to improve the transcription's readability and accuracy while maintaining its original meaning and style. Do not add or remove information beyond the scope of these instructions.
+Remember, your goal is to improve the transcription while maintaining its original meaning and style. Do not add or remove information beyond the scope of these instructions.
 """
 
 TA_INIT_TRANSLATION_PROMPT = """You are a professional translator tasked with translating a specific portion of text. Your goal is to provide an accurate and complete translation while maintaining the original structure and content.
