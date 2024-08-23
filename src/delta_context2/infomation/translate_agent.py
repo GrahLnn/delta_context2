@@ -164,9 +164,9 @@ def multichunk_initial_translation(
         range(done_idx + 1, len(source_text_chunks)), title="init translate"
     ):
         prompt = TA_INIT_TRANSLATION_PROMPT.format(
-            source_lang=source_lang,
-            target_lang=target_lang,
-            chunk_to_translate=source_text_chunks[i],
+            SOURCE_LANG=source_lang,
+            TARGET_LANG=target_lang,
+            CHUNK_TO_TRANSLATE=source_text_chunks[i],
         )
 
         translation = get_completion(prompt)
