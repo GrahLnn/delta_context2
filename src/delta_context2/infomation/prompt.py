@@ -53,12 +53,12 @@ Here are the two paragraphs you will be working with:
 
 Paragraph A:
 <paragraph_a>
-{{PARAGRAPH_A}}
+{PARAGRAPH_A}
 </paragraph_a>
 
 Paragraph B:
 <paragraph_b>
-{{PARAGRAPH_B}}
+{PARAGRAPH_B}
 </paragraph_b>
 
 Follow these steps to complete the task:
@@ -73,39 +73,39 @@ Follow these steps to complete the task:
 Format your response as a JSON object with the following structure:
 
 ```json
-{
+{{
   "pair": [
-    {
+    {{
       "sentence_a": "Sentence from Paragraph A",
       "sentence_b": "Corresponding sentence from Paragraph B or empty string"
-    },
-    {
+    }},
+    {{
       "sentence_a": "Next sentence from Paragraph A",
       "sentence_b": "Next corresponding sentence from Paragraph B or empty string"
-    }
+    }}
   ]
-}
+}}
 ```
 
 Here's a simple example to illustrate the expected output:
 
 ```json
-{
+{{
   "pair": [
-    {
+    {{
       "sentence_a": "Hello, how are you?",
       "sentence_b": "Hola, ¿cómo estás?"
-    },
-    {
+    }},
+    {{
       "sentence_a": "I hope you're doing well.",
       "sentence_b": ""
-    },
-    {
+    }},
+    {{
       "sentence_a": "The weather is nice today.",
       "sentence_b": "El clima está agradable hoy."
-    }
+    }},
   ]
-}
+}}
 ```
 
 In this example, the second pair demonstrates a case where a direct corresponding sentence was not present in Paragraph B, so an empty string was used.
