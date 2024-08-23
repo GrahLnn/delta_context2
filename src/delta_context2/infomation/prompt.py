@@ -47,18 +47,18 @@ Output your result in the following JSON format:
 
 Remember to maintain the original order of sentences and preserve all content from both texts. Your goal is to create the best possible match between the two texts while adhering to these constraints."""
 
-PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT = """You are tasked with aligning two paragraphs in different languages that contain the same content. Your goal is to match smaller sentences from each paragraph and present them in a specific JSON format. If a corresponding sentence cannot be found, you should leave it as an empty string.
+PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT = """You are an AI assistant tasked with aligning two paragraphs in different languages that contain the same content. Your goal is to match smaller sentences from each paragraph and present them in a specific JSON format. If a corresponding sentence cannot be found, you should leave it as an empty string.
 
 Here are the two paragraphs you will be working with:
 
 Paragraph A:
 <paragraph_a>
-{PARAGRAPH_A}
+{{PARAGRAPH_A}}
 </paragraph_a>
 
 Paragraph B:
 <paragraph_b>
-{PARAGRAPH_B}
+{{PARAGRAPH_B}}
 </paragraph_b>
 
 Follow these steps to complete the task:
@@ -73,39 +73,39 @@ Follow these steps to complete the task:
 Format your response as a JSON object with the following structure:
 
 ```json
-{{
+{
   "pair": [
-    {{
+    {
       "sentence_a": "Sentence from Paragraph A",
       "sentence_b": "Corresponding sentence from Paragraph B or empty string"
-    }},
-    {{
+    },
+    {
       "sentence_a": "Next sentence from Paragraph A",
       "sentence_b": "Next corresponding sentence from Paragraph B or empty string"
-    }}
+    }
   ]
-}}
+}
 ```
 
 Here's a simple example to illustrate the expected output:
 
 ```json
-{{
+{
   "pair": [
-    {{
+    {
       "sentence_a": "Hello, how are you?",
       "sentence_b": "Hola, ¿cómo estás?"
-    }},
-    {{
+    },
+    {
       "sentence_a": "I hope you're doing well.",
       "sentence_b": ""
-    }},
-    {{
+    },
+    {
       "sentence_a": "The weather is nice today.",
       "sentence_b": "El clima está agradable hoy."
-    }}
+    }
   ]
-}}
+}
 ```
 
 In this example, the second pair demonstrates a case where a direct corresponding sentence was not present in Paragraph B, so an empty string was used.
@@ -115,8 +115,9 @@ Additional guidelines:
 - Do not add translations or create new sentences. If a match is not found, use an empty string.
 - Make sure the JSON is correctly formatted.
 - Your entire response should be enclosed in ``` tags.
+- Considering the integrity of sentences, if there are variations in word order due to clauses and other factors, it is permissible to combine multiple sentence_a into one sentence for alignment with the corresponding translation.
 
-Process the given paragraphs and provide your answer in the specified JSON format."""
+Process the given paragraphs and provide your answer in the specified JSON format. Enclose your entire response in ``` tags."""
 
 SINGLE_TRANSLATION_PROMPT = """You are tasked with translating a sentence into Chinese in a colloquial manner. Your goal is to produce a translation that sounds natural and conversational in Chinese, while accurately conveying the meaning of the original text.
 
