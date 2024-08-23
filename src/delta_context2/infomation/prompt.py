@@ -240,14 +240,14 @@ Follow these guidelines for your translation:
 Provide your translation in the following format:
 
 [
-  {
+  {{
     "sentence": "First sentence or clause in source language",
     "translation": "Translation of first sentence or clause in target language"
-  },
-  {
+  }},
+  {{
     "sentence": "Second sentence or clause in source language",
     "translation": "Translation of second sentence or clause in target language"
-  },
+  }},
   ...
 ]
 
