@@ -559,6 +559,6 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
                 }
             )
 
-        word_index += len(sentence)
+        word_index += len(sentence) - 1
 
     return sentence_timestamps
