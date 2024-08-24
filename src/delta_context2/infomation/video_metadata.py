@@ -7,7 +7,7 @@ import yt_dlp
 from alive_progress import alive_bar
 from PIL import Image
 
-from ..text.utils import remove_illegal_chars
+from ..text.utils import formal_file_name, remove_illegal_chars
 from .llm import openai_completion
 from .prompt import SINGLE_TRANSLATION_PROMPT
 
@@ -43,9 +43,7 @@ def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
                     description = info_dict.get("description", None)
                     uploader = info_dict.get("uploader", None)
                     thumbnail = info_dict.get("thumbnail", None)
-                    name_formal = (
-                        title.replace(" ", "_").replace(",", "").replace("#", "")
-                    )
+                    name_formal = formal_file_name(title)
                     data_path = data_dir / "videos" / name_formal / "metadata.json"
                     if data_path.exists():
                         with open(data_path, "r", encoding="utf-8") as file:

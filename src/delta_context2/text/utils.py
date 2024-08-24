@@ -176,3 +176,6 @@ def rm_repeated_sequences(text):
                     new_words[iidx : iidx + (iidx - idx)] = [None] * (iidx - idx)
     new_text = " ".join([w for w in new_words if w])
     return new_text
+
+def formal_file_name(name):
+    return name.replace(" ", "_").replace(",", "").replace("#", "").replace("\'", "")
