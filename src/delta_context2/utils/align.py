@@ -520,7 +520,10 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
         zh_stc = re.sub(r"[。；,]", "", zh_stc)
 
         if zh_stc:
-            min_duration = (abs_uni_len(zh_stc) // 6) * 1.0
+            min_duration = (abs_uni_len(zh_stc) // 6) * 1.0\
+            
+            if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
+                sentence_start = sentence_timestamps[-1]["end"]
 
             # 调整时间戳以确保连续性和一致性
             # sentence_start, sentence_end = adjust_timestamps(
