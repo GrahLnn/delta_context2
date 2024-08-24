@@ -511,7 +511,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
     word_index = 0
 
     for sentence, zh_stc in zip(split_atomic_ens, atomic_zhs):
-        print(word_index)
+        print(word_index, word_index + len(sentence) - 1)
         sentence_start = words[word_index]["start"]
         sentence_end = words[word_index + len(sentence) - 1]["end"]
 
