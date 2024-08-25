@@ -331,7 +331,10 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
         not_belong_this_chunk_zh = ""
         prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
             PARAGRAPH_A="".join(sentence),
-            PARAGRAPH_B=translation.strip().replace("。", " ").replace("，", " "),
+            PARAGRAPH_B=translation.strip()
+            .replace("。", " ")
+            .replace("，", " ")
+            .replace('"', '\\"'),
         )
         with alive_bar(
             1,
@@ -520,8 +523,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
         zh_stc = re.sub(r"[。；,]", "", zh_stc)
 
         if zh_stc:
-            min_duration = (abs_uni_len(zh_stc) // 6) * 1.0\
-            
+            min_duration = (abs_uni_len(zh_stc) // 6) * 1.0
             if sentence_timestamps and sentence_timestamps[-1]["end"] > sentence_start:
                 sentence_start = sentence_timestamps[-1]["end"]
 
