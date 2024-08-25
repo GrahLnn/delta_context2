@@ -130,6 +130,9 @@ def radio_split(target_str, reference_list):
 
 @retry(tries=3, delay=2, exceptions=ValueError)
 def llm_align_sentences(source_text, translated_snetence_array):
+    translated_snetence_array = [
+        t.replace('"', "\\'") for t in translated_snetence_array
+    ]
     prompt = SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT.format(
         SEGMENTED_SENTENCES_A=str(translated_snetence_array),
         UNSEGMENTED_TEXT_B=source_text,
@@ -331,10 +334,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
         not_belong_this_chunk_zh = ""
         prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
             PARAGRAPH_A="".join(sentence),
-            PARAGRAPH_B=translation.strip()
-            .replace("。", " ")
-            .replace("，", " ")
-            .replace('"', '\\"'),
+            PARAGRAPH_B=translation.strip().replace("。", " ").replace("，", " "),
         )
         with alive_bar(
             1,
