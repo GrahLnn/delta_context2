@@ -41,13 +41,14 @@ class VideoProcessor:
         sentences = transcribe["sentences"]
         words = transcribe["words"]
         source_text_chunks = split_sentences_into_chunks(sentences)
-        translated_chunks = translate(
+        result = translate(
             item_dir,
             self.source_lang,
             self.target_lang,
             source_text_chunks,
             self.country,
         )
+        translated_chunks = [chunk["translation"] for chunk in result]
         atomic_part = split_to_atomic_part(
             item_dir, source_text_chunks, translated_chunks
         )

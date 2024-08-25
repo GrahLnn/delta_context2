@@ -127,6 +127,7 @@ def num_tokens_in_string(input_str: str, encoding_name: str = "cl100k_base") -> 
     num_tokens = len(encoding.encode(input_str))
     return num_tokens
 
+
 @update_metadata(
     ("chunk_translation_init", lambda r: r),
 )
@@ -182,6 +183,7 @@ def multichunk_initial_translation(
             json.dump(cache_data, f, ensure_ascii=False, indent=4)
 
     return translation_chunks
+
 
 @update_metadata(
     ("chunk_translation_reflect", lambda r: r),
@@ -456,6 +458,14 @@ def translate(
 
     translation_2_chunks = [chunk.replace("\n", "") for chunk in translation_2_chunks]
 
+    result = [
+        {
+            "source": sentences[i],
+            "translation": translation_2_chunks[i],
+        }
+        for i in range(len(sentences))
+    ]
+
     shutil.rmtree("cache")
 
-    return translation_2_chunks
+    return result

@@ -68,9 +68,6 @@ def abs_uni_len(s):
 
     return int(total_length)
 
-@update_metadata(
-    ("chunks", lambda r: r),
-)
 def split_sentences_into_chunks(sentences, max_tokens=1000):
     chunks = []
     chunk = []
