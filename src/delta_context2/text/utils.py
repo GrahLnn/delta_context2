@@ -3,6 +3,8 @@ import unicodedata
 
 import tiktoken
 
+from ..utils.decorator import update_metadata
+
 
 def extract_zh_char(text):
     # 使用正则表达式匹配中文字符
@@ -66,7 +68,9 @@ def abs_uni_len(s):
 
     return int(total_length)
 
-
+@update_metadata(
+    ("chunks", lambda r: r),
+)
 def split_sentences_into_chunks(sentences, max_tokens=1000):
     chunks = []
     chunk = []

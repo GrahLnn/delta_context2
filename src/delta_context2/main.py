@@ -25,7 +25,7 @@ class VideoProcessor:
         return: the video dir
         """
         video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
-        print("processing", video_info["title"])
+        print("processing: ", video_info["title"])
         formal_name = formal_file_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
         source_dir = item_dir / "source"
