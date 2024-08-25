@@ -188,4 +188,7 @@ def formal_file_name(name):
         .replace("#", "")
         .replace("'", "")
         .replace("!", "")
+        .replace("?", "")
+        .replace("[", "")
+        .replace("]", "")
     )
