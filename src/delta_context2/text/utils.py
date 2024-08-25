@@ -68,6 +68,7 @@ def abs_uni_len(s):
 
     return int(total_length)
 
+
 def split_sentences_into_chunks(sentences, max_tokens=1000):
     chunks = []
     chunk = []
@@ -160,12 +161,13 @@ def split_paragraph_regex(paragraph):
 
     return sentences
 
+
 def rm_repeated_sequences(text):
     words = text.split()
     new_words = words[:]
-    
+
     for idx, word in enumerate(words):
-        if not re.search('[a-zA-Z]', word):
+        if not re.search("[a-zA-Z]", word):
             continue
         for iidx, ww in enumerate(words):
             if iidx <= idx:
@@ -178,5 +180,12 @@ def rm_repeated_sequences(text):
     new_text = " ".join([w for w in new_words if w])
     return new_text
 
+
 def formal_file_name(name):
-    return name.replace(" ", "_").replace(",", "").replace("#", "").replace("\'", "")
+    return (
+        name.replace(" ", "_")
+        .replace(",", "")
+        .replace("#", "")
+        .replace("'", "")
+        .replace("!", "")
+    )
