@@ -170,7 +170,7 @@ def multichunk_initial_translation(
         )
 
         translation = get_completion(prompt)
-        translation = re.sub(r"<[^>]*>", "", translation)
+        translation = re.sub(r"<[^>]*>|\n", "", translation)
 
         translation_chunks.append(translation)
 
@@ -250,6 +250,7 @@ You will be provided with a source text and its translation and your goal is to 
         )
 
         reflection = get_completion(prompt)
+        reflection = re.sub(r"<[^>]*>", "", reflection)
         reflection_chunks.append(reflection)
 
         cache_data = {
@@ -329,7 +330,7 @@ def multichunk_improve_translation(
         )
 
         translation_2 = get_completion(prompt)
-        translation_2 = "\n\n" + re.sub(r"<[^>]*>", "", translation_2).strip()
+        translation_2 = "\n\n" + re.sub(r"<[^>]*>|\n", "", translation_2).strip()
         translation_2_chunks.append(translation_2)
 
         cache_data = {
