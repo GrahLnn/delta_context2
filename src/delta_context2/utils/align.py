@@ -435,6 +435,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 else:
                     new_t = [zh_tsl]
                 new_t = second_split(new_t, subtitle_len)
+                new_t = second_split(new_t, subtitle_len)
                 print(en_src)
                 print(new_t)
                 llm_align_zh_list, llm_align_en_list = llm_align_sentences(
