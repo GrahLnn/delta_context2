@@ -324,5 +324,5 @@ d) Maintaining the original meaning and tone
 Double-check that you have translated every sentence from the <translate_this> section without omitting or adding information.
 Do not translate or modify any part of the source text outside the <translate_this> tags.
 
-Provide your improved translation inside <improved_translation> tags.
+Provide your improved translation inside <improved_translation> tags. Include only the translation of the specified part, without any additional comments or explanations.
 """
