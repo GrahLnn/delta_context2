@@ -10,6 +10,8 @@ def update_metadata(*fields):
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
+            if args[0] is None:
+                return result
             data_file = Path(args[0]) / "metadata.json"
 
             with open(data_file, encoding="utf-8") as f:
