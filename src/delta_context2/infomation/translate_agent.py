@@ -310,17 +310,7 @@ def multichunk_improve_translation(
         title="improve translate",
     ):
         # Will translate chunk i
-        tagged_text = (
-            ("".join(source_text_chunks[max(i - 2, 0) : i]) if i > 0 else "")
-            + "<TRANSLATE_THIS>"
-            + source_text_chunks[i]
-            + "</TRANSLATE_THIS>"
-            + (
-                "".join(source_text_chunks[i + 1 : min(i + 2, len(source_text_chunks))])
-                if i < len(source_text_chunks) - 1
-                else ""
-            )
-        )
+        tagged_text = "<TRANSLATE_THIS>" + source_text_chunks[i] + "</TRANSLATE_THIS>"
 
         prompt = TA_IMPROVEMENT_PROMPT.format(
             source_lang=source_lang,

@@ -321,9 +321,8 @@ a) Improving sentence structure and flow
 b) Using natural and idiomatic {target_lang} expressions
 c) Ensuring clarity and coherence
 d) Maintaining the original meaning and tone
-e) Do not add any additional text or comments or explanations to your response.
 Double-check that you have translated every sentence from the <translate_this> section without omitting or adding information.
 Do not translate or modify any part of the source text outside the <translate_this> tags.
 
-Provide your improved translation inside <improved_translation> tags. Include only the translation of the specified part, without any additional comments or explanations.
+Provide your improved translation inside <improved_translation> tags.
 """
