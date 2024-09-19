@@ -290,11 +290,10 @@ Important: As this is a podcast transcript, it's crucial to check if any sentenc
 
 Your final output should contain only the numbered list of suggestions within the <suggestions> tags. Do not include any other text or explanations outside of these tags."""
 
-TA_IMPROVEMENT_PROMPT = """You are tasked with improving a translation from {source_lang} to {target_lang}, taking into account expert suggestions and constructive criticisms. Your goal is to produce a high-quality, accurate, and fluent translation that reflects the style of the original text.
-
+TA_IMPROVEMENT_PROMPT = """You are tasked with improving a translation from {source_lang} to {target_lang}, focusing on readability and fluency while maintaining accuracy. Your goal is to produce a high-quality translation that is easy to read and understand.
 First, carefully read the following:
 
-1. The source text, with the part to be translated marked:
+The source text, with the part to be translated marked:
 <source_text>
 {tagged_text}
 </source_text>
@@ -304,32 +303,27 @@ The specific part to be translated is:
 {chunk_to_translate}
 </translate_this>
 
-2. The initial translation:
+The initial translation:
 <initial_translation>
 {translation_1_chunk}
 </initial_translation>
-
-3. Expert suggestions and criticisms:
+Expert suggestions and criticisms:
 <expert_suggestions>
 {reflection_chunk}
 </expert_suggestions>
 
 Now, improve the translation by following these steps:
 
-1. Analyze the expert suggestions, noting areas for improvement in accuracy, fluency, style, and terminology.
-
-2. Compare the initial translation with the source text and expert suggestions.
-
-3. Rewrite the translation, focusing on:
-   a) Correcting any errors of addition, mistranslation, omission, or untranslated text
-   b) Improving fluency by applying proper {target_lang} grammar, spelling, and punctuation rules
-   c) Eliminating unnecessary repetitions
-   d) Ensuring the style reflects that of the source text
-   e) Using appropriate and consistent terminology for the context
-
-4. Double-check that you have translated every sentence from the <translate_this> section without omitting anything.
-
-5. Do not translate or modify any part of the source text outside the <translate_this> tags.
+Analyze the expert suggestions, focusing on areas that can improve readability and fluency.
+Compare the initial translation with the source text and expert suggestions.
+Rewrite the translation, focusing on:
+a) Improving sentence structure and flow
+b) Using natural and idiomatic {target_lang} expressions
+c) Ensuring clarity and coherence
+d) Maintaining the original meaning and tone
+e) Do not add any additional text or comments or explanations to your response.
+Double-check that you have translated every sentence from the <translate_this> section without omitting or adding information.
+Do not translate or modify any part of the source text outside the <translate_this> tags.
 
 Provide your improved translation inside <improved_translation> tags. Include only the translation of the specified part, without any additional comments or explanations.
 """
