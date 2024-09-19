@@ -321,7 +321,7 @@ a) Improving sentence structure and flow
 b) Using natural and idiomatic {target_lang} expressions
 c) Ensuring clarity and coherence
 d) Maintaining the original meaning and tone
-e) You can't allow to add any additional text, extra comments or explanations to your response.
+e) You are not allowed to add any additional text, extra comments or explanations to your response.
 Double-check that you have translated every sentence from the <translate_this> section without omitting or adding information.
 Do not translate or modify any part of the source text outside the <translate_this> tags.
 
