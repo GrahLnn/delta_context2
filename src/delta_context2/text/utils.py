@@ -192,3 +192,16 @@ def formal_file_name(name):
         .replace("[", "")
         .replace("]", "")
     )
+
+def formal_folder_name(name):
+    return (
+        name.replace(" ", "_")
+        .replace(",", "")
+        .replace("#", "")
+        .replace("'", "")
+        .replace("!", "")
+        .replace("?", "")
+        .replace("[", "")
+        .replace("]", "")
+        .replace(".", "")
+    )
