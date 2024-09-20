@@ -43,8 +43,9 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
     path = Path(out_name)
     basename = path.name
     file_name = sanitize_filename(basename)
-    parent_path = formal_file_name(str(path.parent))
-    out_name = str(parent_path / file_name)
+    # parent_path = formal_file_name(str(path.parent))
+    out_name = str(path.parent / file_name)
+    out_name = formal_file_name(out_name)
 
     ydl_opts = {
         "format": "bestvideo+bestaudio/best",
