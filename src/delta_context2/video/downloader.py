@@ -7,7 +7,7 @@ import yt_dlp
 from alive_progress import alive_bar
 from yt_dlp.utils import DownloadError
 
-from ..text.utils import sanitize_filename
+from ..text.utils import formal_file_name, sanitize_filename
 
 
 def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
@@ -43,6 +43,7 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
     path = Path(out_name)
     basename = path.name
     file_name = sanitize_filename(basename)
+    parent_path = formal_file_name(str(path.parent))
     out_name = str(path.parent / file_name)
 
     ydl_opts = {
