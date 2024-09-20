@@ -6,7 +6,7 @@ from .audio.transcribe import get_transcribe
 from .infomation.llm import get_summary, get_tags
 from .infomation.translate_agent import translate
 from .infomation.video_metadata import get_ytb_video_info
-from .text.utils import formal_file_name, split_sentences_into_chunks
+from .text.utils import formal_file_name, formal_folder_name, split_sentences_into_chunks
 from .utils.align import get_sentence_timestamps, split_to_atomic_part
 from .utils.subtitle import render_video_with_subtitles, save_to_ass
 from .video.downloader import download_ytb_mp4
@@ -26,7 +26,7 @@ class VideoProcessor:
         """
         video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
         print("processing: ", video_info["title"])
-        formal_name = formal_file_name(video_info["title"])
+        formal_name = formal_folder_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
         source_dir = item_dir / "source"
         save_name = source_dir / formal_name
