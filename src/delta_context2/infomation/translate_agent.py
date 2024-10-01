@@ -321,8 +321,15 @@ def multichunk_improve_translation(
             reflection_chunk=reflection_chunks[i],
         )
 
-        translation_2 = get_completion(prompt)
-        translation_2 = "\n\n" + re.sub(r"<[^>]*>|\n", "", translation_2).strip()
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            translation_2 = get_completion(prompt)
+            cleaned_translation = re.sub(r"<[^>]*>|\n", "", translation_2).strip()
+            if cleaned_translation:
+                break
+            if attempt == max_attempts - 1:
+                raise ValueError("Failed to get a valid translation.")
+
         translation_2_chunks.append(translation_2)
 
         cache_data = {
