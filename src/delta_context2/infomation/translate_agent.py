@@ -169,11 +169,16 @@ def multichunk_initial_translation(
             TARGET_LANG=target_lang,
             CHUNK_TO_TRANSLATE=source_text_chunks[i],
         )
+        max_retry = 3
+        for attempt in range(max_retry):
+            translation = get_completion(prompt)
+            cleaned_translation = re.sub(r"<[^>]*>|\n", "", translation)
+            if cleaned_translation:
+                break
+            if attempt == max_retry - 1:
+                raise ValueError("Failed to get a valid translation.")
 
-        translation = get_completion(prompt)
-        translation = re.sub(r"<[^>]*>|\n", "", translation)
-
-        translation_chunks.append(translation)
+        translation_chunks.append(cleaned_translation)
 
         cache_data = {
             "done_idx": i,
