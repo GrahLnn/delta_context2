@@ -122,7 +122,7 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         words = check["ord_words"]
 
     else:
-        model = whisper.load_model("large-v3")
+        model = whisper.load_model("turbo")
         # segments = segment_audio(audio_path)
         # result = transcribe_audio(audio_path, segments, model)
 
