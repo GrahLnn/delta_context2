@@ -251,9 +251,16 @@ You will be provided with a source text and its translation and your goal is to 
             country=country,
         )
 
-        reflection = get_completion(prompt)
-        reflection = re.sub(r"<[^>]*>", "", reflection)
-        reflection_chunks.append(reflection)
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            reflection = get_completion(prompt)
+            cleaned_reflection = re.sub(r"<[^>]*>", "", reflection).strip()
+            if cleaned_reflection:
+                break
+            if attempt == max_attempts - 1:
+                raise ValueError("Failed to get a valid reflection.")
+
+        reflection_chunks.append(cleaned_reflection)
 
         cache_data = {
             "done_idx": i,
@@ -330,7 +337,7 @@ def multichunk_improve_translation(
             if attempt == max_attempts - 1:
                 raise ValueError("Failed to get a valid translation.")
 
-        translation_2_chunks.append(translation_2)
+        translation_2_chunks.append(cleaned_translation)
 
         cache_data = {
             "done_idx": i,
