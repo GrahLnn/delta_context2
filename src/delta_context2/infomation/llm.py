@@ -53,7 +53,6 @@ def get_tags(idir, summary: str) -> dict:
 
 def choose_key():
     random.shuffle(GEMINI_KEYS)
-
     return GEMINI_KEYS[0]
 
 
