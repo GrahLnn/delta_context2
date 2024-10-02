@@ -352,7 +352,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     break
                 except Exception as e:
                     print(e)
-                    print(prompt)
+                    # print(prompt)
                     try_count += 1
                     if try_count == 3:
                         raise ValueError("can not get alignment")

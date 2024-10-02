@@ -63,6 +63,7 @@ def get_json_completion(prompt, model=TRANSLATION_MODEL):
     print(result)
     pattern = re.compile(r"^json")
     json_str = pattern.sub("", result.strip("```"))
+    print(json_str)
     result = demjson3.decode(json_str)
 
     return result
