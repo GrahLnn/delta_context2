@@ -60,10 +60,8 @@ def choose_key():
 @retry(tries=3, delay=2)
 def get_json_completion(prompt, model=TRANSLATION_MODEL):
     result = get_completion(prompt, model=model)
-    print(result)
     pattern = re.compile(r"^json")
     json_str = pattern.sub("", result.strip().strip("```"))
-    print(json_str)
     result = demjson3.decode(json_str)
 
     return result
@@ -74,7 +72,9 @@ def call_api_without_authhead(url, data):
     headers = {
         "Content-Type": "application/json",
     }
-    response = requests.post(url, headers=headers, json=data, timeout=300)  # Added 5-minute timeout
+    response = requests.post(
+        url, headers=headers, json=data, timeout=300
+    )  # Added 5-minute timeout
     response.raise_for_status()  # Raise HTTPError for bad responses (4xx and 5xx)
     res = response.json()
     return res
@@ -195,7 +195,9 @@ def call_api(url, access_token, data):
         "Content-Type": "application/json",
     }
 
-    response = requests.post(url, headers=headers, json=data, timeout=300)  # 添加5分钟超时
+    response = requests.post(
+        url, headers=headers, json=data, timeout=300
+    )  # 添加5分钟超时
     response.raise_for_status()
     res = response.json()
     return res
