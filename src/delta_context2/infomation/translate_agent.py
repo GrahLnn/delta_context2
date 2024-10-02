@@ -176,7 +176,7 @@ def multichunk_initial_translation(
             if cleaned_translation:
                 break
             if attempt == max_retry - 1:
-                raise ValueError("Failed to get a valid translation.")
+                raise ValueError(f"Failed to get a valid translation.\n{translation}")
 
         translation_chunks.append(cleaned_translation)
 
@@ -263,7 +263,7 @@ You will be provided with a source text and its translation and your goal is to 
             if cleaned_reflection:
                 break
             if attempt == max_attempts - 1:
-                raise ValueError("Failed to get a valid reflection.")
+                raise ValueError(f"Failed to get a valid reflection.\n{reflection}")
 
         reflection_chunks.append(cleaned_reflection)
 
@@ -340,7 +340,7 @@ def multichunk_improve_translation(
             if cleaned_translation:
                 break
             if attempt == max_attempts - 1:
-                raise ValueError("Failed to get a valid translation.")
+                raise ValueError(f"Failed to get a valid translation.\n{translation_2}")
 
         translation_2_chunks.append(cleaned_translation)
 
