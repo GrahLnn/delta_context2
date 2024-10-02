@@ -195,8 +195,14 @@ def corect_transcription(transcription):
     texts = []
     for chunk in chunks:
         prompt = TRANSCRIBTION_CORECTION_PROMPT.format(TRANSCRIBED_TEXT=chunk)
-        res = get_completion(prompt=prompt)
-        clean_text = re.sub(r"<[^>]*>", "", res)
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            res = get_completion(prompt=prompt)
+            clean_text = re.sub(r"<[^>]*>", "", res)
+            if clean_text:
+                break
+            if attempt == max_attempts - 1:
+                raise ValueError(f"Failed to get a valid transcription.\n{res}")
         texts.append(clean_text.strip())
     return " ".join(texts)
 
