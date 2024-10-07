@@ -6,6 +6,7 @@ from typing import Dict, List, TextIO
 
 from alive_progress import alive_bar
 from dotenv import load_dotenv
+from ..utils.decorator import update_metadata
 
 load_dotenv()
 ASS_STYLE = os.getenv("ASS_STYLE")
@@ -91,10 +92,11 @@ def render_video_with_subtitles(
     video_path = Path(video_path).as_posix()
     subtitles_path = Path(subtitles_path).as_posix()
     output_path = (Path(output_path) / f"{Path(video_path).stem}.mp4").as_posix()
-
+    final_video_path = (Path(output_path) / "translated_video.mp4").as_posix()
     if os.path.exists(output_path):
         return output_path
-
+    if os.path.exists(final_video_path):
+        return final_video_path
     cmd = [
         "ffmpeg",
         "-hwaccel",

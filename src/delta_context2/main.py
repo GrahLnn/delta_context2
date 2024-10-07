@@ -6,7 +6,11 @@ from .audio.transcribe import get_transcribe
 from .infomation.llm import get_summary, get_tags
 from .infomation.translate_agent import translate
 from .infomation.video_metadata import get_ytb_video_info
-from .text.utils import formal_file_name, formal_folder_name, split_sentences_into_chunks
+from .text.utils import (
+    formal_file_name,
+    formal_folder_name,
+    split_sentences_into_chunks,
+)
 from .utils.align import get_sentence_timestamps, split_to_atomic_part
 from .utils.subtitle import render_video_with_subtitles, save_to_ass
 from .video.downloader import download_ytb_mp4
@@ -61,6 +65,8 @@ class VideoProcessor:
         translate_video = render_video_with_subtitles(
             video_path, subtitle_path, item_dir
         )
+        if translate_video == (item_dir / "translated_video.mp4").as_posix():
+            return item_dir
         if compress:
             compress_video(translate_video)
         else:
