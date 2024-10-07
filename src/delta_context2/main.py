@@ -62,11 +62,11 @@ class VideoProcessor:
             item_dir, atomic_ens, words, atomic_zhs
         )
         subtitle_path = save_to_ass(sentences_timestamps, "subtitle", item_dir)
+        if os.path.exists(item_dir / "translated_video.mp4"):
+            return item_dir
         translate_video = render_video_with_subtitles(
             video_path, subtitle_path, item_dir
         )
-        if translate_video == (item_dir / "translated_video.mp4").as_posix():
-            return item_dir
         if compress:
             compress_video(translate_video)
         else:
