@@ -73,4 +73,6 @@ class VideoProcessor:
             if os.path.exists(item_dir / "translated_video.mp4"):
                 os.remove(item_dir / "translated_video.mp4")
             os.rename(translate_video, item_dir / "translated_video.mp4")
+        os.remove(audio_path)
+        os.remove(video_path)
         return item_dir
