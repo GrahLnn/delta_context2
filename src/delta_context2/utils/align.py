@@ -8,6 +8,7 @@ from pathlib import Path
 import demjson3
 from alive_progress import alive_bar, alive_it
 from retry import retry
+import tiktoken
 
 from ..audio.transcribe import align_diff_words
 from ..infomation.llm import get_completion, get_json_completion, openai_completion
@@ -311,6 +312,7 @@ def move_commas(en_list):
 @update_metadata(("atomic_part", lambda result: result))
 def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_len=27):
     os.makedirs("cache", exist_ok=True)
+    encoding = tiktoken.encoding_for_model("gpt-4o")
     check = read_metadata(dir, ["atomic_part"])
     if check:
         shutil.rmtree("cache")
@@ -451,8 +453,22 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
 
                 [print(s, t) for s, t in zip(zh_list, en_list)]
                 print("--------------")
-
-                atomic_zhs.extend(zh_list)
+                nzh_list = []
+                for item in zh_list:
+                    if len(item) > 27:
+                        token_integers = encoding.encode(item)
+                        parts = len(item) // 27
+                        tokens_per_part = len(token_integers) // parts
+                        fix_item = ""
+                        for i in range(parts):
+                            start = i * tokens_per_part
+                            end = (i + 1) * tokens_per_part if i < parts - 1 else None
+                            part = encoding.decode(token_integers[start:end])
+                            fix_item += part + " "
+                        nzh_list.append(fix_item.strip())
+                    else:
+                        nzh_list.append(item)
+                atomic_zhs.extend(nzh_list)
                 atomic_ens.extend(en_list)
 
             else:

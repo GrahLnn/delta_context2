@@ -105,13 +105,13 @@ def save_cache(dir, text, name):
         output_file.write(text)
 
 
-def num_tokens_in_string(input_str: str, encoding_name: str = "cl100k_base") -> int:
+def num_tokens_in_string(input_str: str, encoding_name: str = "o200k_base") -> int:
     """
     Calculate the number of tokens in a given string using a specified encoding.
 
     Args:
         str (str): The input string to be tokenized.
-        encoding_name (str, optional): The name of the encoding to use. Defaults to "cl100k_base",
+        encoding_name (str, optional): The name of the encoding to use. Defaults to "o200k_base",
             which is the most commonly used encoder (used by GPT-4).
 
     Returns:

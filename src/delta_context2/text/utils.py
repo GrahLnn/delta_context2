@@ -193,6 +193,7 @@ def formal_file_name(name):
         .replace("]", "")
     )
 
+
 def formal_folder_name(name):
     return (
         name.replace(" ", "_")
