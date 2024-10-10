@@ -429,7 +429,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
             title=f"split chunk {i + 1}/{len(source_text_chunks)}",
         ):
             if abs_uni_len(zh_tsl) > subtitle_len:
-                print(zh_tsl)
+                # print(zh_tsl)
                 if "，" in zh_tsl:
                     split_text = re.split("，|；", zh_tsl)
                     split_text = [s for s in split_text if s]
@@ -438,24 +438,25 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                     new_t = [zh_tsl]
                 new_t = second_split(new_t, subtitle_len)
                 new_t = second_split(new_t, subtitle_len)
-                print(en_src)
-                print(new_t)
+                # print(en_src)
+                # print(new_t)
                 llm_align_zh_list, llm_align_en_list = llm_align_sentences(
                     en_src, new_t
                 )
-                [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
-                print("--------------")
+                # [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
+                # print("--------------")
                 zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
                 if abs_uni_len("".join(en_list)) == 0:
                     raise ValueError(f"empty translation\n{llm_align_en_list}")
                 en_list = en_large_diff_radio_repair(zh_list, en_list)
                 en_list = move_commas(en_list)
 
-                [print(s, t) for s, t in zip(zh_list, en_list)]
-                print("--------------")
+                # [print(s, t) for s, t in zip(zh_list, en_list)]
+                # print("--------------")
                 nzh_list = []
                 for item in zh_list:
                     if len(item) > 27:
+                        print(">27",item)
                         token_integers = encoding.encode(item)
                         parts = len(item) // 27
                         tokens_per_part = len(token_integers) // parts
@@ -465,6 +466,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                             end = (i + 1) * tokens_per_part if i < parts - 1 else None
                             part = encoding.decode(token_integers[start:end])
                             fix_item += part + " "
+                        print(">27f",fix_item.strip())
                         nzh_list.append(fix_item.strip())
                     else:
                         nzh_list.append(item)
