@@ -88,7 +88,7 @@ def get_aligned_sentences(prompt):
     sys_msg = "You have a special preference for JSON, and all your responses will be in the form of ```json{...}``` for users."
     result = openai_completion(prompt, sys_msg)
     # result = get_json_completion(prompt, model="gemini-1.5-flash")
-    print(result)
+    # print(result)
     pattern = re.compile(r"```json\s*(.*?)\s*```", re.DOTALL)
     match = pattern.search(result)
 
@@ -456,9 +456,9 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 nzh_list = []
                 for item in zh_list:
                     if len(item) > 27:
-                        print(">27",item)
+                        print(">27", item)
                         token_integers = encoding.encode(item)
-                        parts = len(item) // 27
+                        parts = len(item) // 27 + 1
                         tokens_per_part = len(token_integers) // parts
                         fix_item = ""
                         for i in range(parts):
@@ -466,7 +466,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                             end = (i + 1) * tokens_per_part if i < parts - 1 else None
                             part = encoding.decode(token_integers[start:end])
                             fix_item += part + " "
-                        print(">27f",fix_item.strip())
+                        print(">27f", fix_item.strip())
                         nzh_list.append(fix_item.strip())
                     else:
                         nzh_list.append(item)
