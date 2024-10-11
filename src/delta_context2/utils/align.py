@@ -368,7 +368,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 nas.append(a)
                 nbs.append(b)
 
-            [print(s, t) for s, t in zip(nas, nbs)]
+            # [print(s, t) for s, t in zip(nas, nbs)]
 
             en_texts = []
             zh_texts = []
@@ -392,7 +392,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                         res = openai_completion(prompt)
                         # res = get_completion(prompt)
                         res = re.sub(r"<[^>]*>", "", res).strip()
-                        print("补偿：", source_text, "->", res)
+                        # print("补偿：", source_text, "->", res)
                         if len(extract_zh_char(res)) != 0:
                             zh_texts.append(res)
                             en_texts.append(source_text)
