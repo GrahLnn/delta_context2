@@ -456,25 +456,29 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
                 nzh_list = []
                 for item in zh_list:
                     if len(item) > subtitle_len:
-                        print(">27", item)
+                        # print(">27", item)
                         split_t = item.split(" ")
                         fix_item = ""
                         for s in split_t:
                             if len(s) > subtitle_len:
-                                print(">27s", s)
+                                # print(">27s", s)
                                 token_integers = encoding.encode(s)
                                 parts = len(s) // subtitle_len + 1
                                 tokens_per_part = len(token_integers) // parts
                                 ffix_item = ""
                                 for i in range(parts):
                                     start = i * tokens_per_part
-                                    end = (i + 1) * tokens_per_part if i < parts - 1 else None
+                                    end = (
+                                        (i + 1) * tokens_per_part
+                                        if i < parts - 1
+                                        else None
+                                    )
                                     part = encoding.decode(token_integers[start:end])
                                     ffix_item += part + " "
                                 fix_item += ffix_item
                             else:
                                 fix_item += s + " "
-                        print(">27f", fix_item.strip())
+                        # print(">27f", fix_item.strip())
                         nzh_list.append(fix_item.strip())
                     else:
                         nzh_list.append(item)
