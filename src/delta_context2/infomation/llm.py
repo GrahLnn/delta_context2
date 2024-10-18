@@ -130,7 +130,7 @@ def gemini_completion(prompt, system_message, temperature, model, key):
 
 def get_completion(
     prompt: str,
-    system_message: str = "You are a helpful assistant.",
+    system_message: str = "",
     model: str = TRANSLATION_MODEL,
     temperature: float = 0.3,
 ) -> str:
