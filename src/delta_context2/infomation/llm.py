@@ -135,12 +135,12 @@ def get_completion(
     temperature: float = 0.3,
 ) -> str:
     answer = ""
-    failed_key = ""
+    failed_key = []
     for _ in range(len(GEMINI_KEYS) + 1):
         if "gemini" in model:
             while True:
                 key = choose_key()
-                if key != failed_key:
+                if key not in failed_key:
                     break
             try:
                 answer = gemini_completion(
@@ -152,7 +152,7 @@ def get_completion(
                 )
             except Exception as e:
                 print(f"key failed, Error: {e}")
-                failed_key = key
+                failed_key.append(key)
                 continue
         else:
             answer = openai_completion(
@@ -163,6 +163,7 @@ def get_completion(
             )
 
         return answer
+    raise Exception("Failed to get completion.")
 
 
 def openai_completion(
