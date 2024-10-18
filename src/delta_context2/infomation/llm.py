@@ -1,14 +1,14 @@
-import demjson3
 import os
 import random
 import re
 
+import demjson3
 import requests
 from dotenv import load_dotenv
 from retry import retry
 
 from ..infomation.read_metadata import read_metadata
-from ..utils.decorator import update_metadata, show_progress
+from ..utils.decorator import show_progress, update_metadata
 from .prompt import SINGLE_TRANSLATION_PROMPT, SUMMARY_SYS_MESSAGE
 
 load_dotenv()
@@ -151,8 +151,9 @@ def get_completion(
                     key=key,
                 )
             except Exception as e:
-                print(f"Error: {e}")
+                print(f"key failed, Error: {e}")
                 failed_key = key
+                continue
         else:
             answer = openai_completion(
                 prompt=prompt,
