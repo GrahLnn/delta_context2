@@ -140,6 +140,8 @@ def get_completion(
         if "gemini" in model:
             while True:
                 key = choose_key()
+                if len(failed_key) == len(GEMINI_KEYS):
+                    raise Exception("Failed to get completion. No available key.")
                 if key not in failed_key:
                     break
             try:
