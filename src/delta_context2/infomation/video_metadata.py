@@ -12,7 +12,9 @@ from .llm import openai_completion
 from .prompt import SINGLE_TRANSLATION_PROMPT
 
 
-def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
+def get_ytb_video_info(
+    url: str, data_dir: Path, ytb_cookies: Path, max_retries=3
+) -> dict:
     """
     Fetches metadata for a YouTube video.
 
@@ -31,6 +33,8 @@ def get_ytb_video_info(url: str, data_dir: Path, max_retries=3) -> dict:
         "extract_flat": True,
         "force_generic_extractor": True,
     }
+    if ytb_cookies:
+        options["cookiefile"] = ytb_cookies
     attempts = 0
     with alive_bar(1, bar=None, title="fetch video info", monitor=False) as bar:
         while attempts < max_retries:

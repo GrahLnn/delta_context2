@@ -18,17 +18,20 @@ from .video.utils import compress_video
 
 
 class VideoProcessor:
-    def __init__(self, source_lang: str, target_lang: str, country: str):
+    def __init__(
+        self, source_lang: str, target_lang: str, country: str, ytb_cookies: Path = None
+    ):
         self.source_lang = source_lang
         self.target_lang = target_lang
         self.country = country
         self.DATA_DIR = Path("data")
+        self.ytb_cookies = ytb_cookies
 
     def process(self, ytb_url: str, compress: bool = True) -> dict:
         """
         return: the video dir
         """
-        video_info = get_ytb_video_info(ytb_url, self.DATA_DIR)
+        video_info = get_ytb_video_info(ytb_url, self.DATA_DIR, self.ytb_cookies)
         print("processing: ", video_info["title"])
         formal_name = formal_folder_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
@@ -36,7 +39,7 @@ class VideoProcessor:
         save_name = source_dir / formal_name
         os.makedirs(source_dir, exist_ok=True)
 
-        video_path = download_ytb_mp4(ytb_url, save_name)
+        video_path = download_ytb_mp4(ytb_url, save_name, self.ytb_cookies)
         audio_path = separate_audio_from_video(video_path)
         audio_path = extract_vocal(audio_path)
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])

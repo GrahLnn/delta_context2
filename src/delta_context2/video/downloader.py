@@ -10,7 +10,9 @@ from yt_dlp.utils import DownloadError
 from ..text.utils import sanitize_filename
 
 
-def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
+def download_ytb_mp4(
+    video_url: str, out_name: str | Path, ytb_cookies: Path = None
+) -> str:
     """
     下载 YouTube 视频并转换为 MP4 格式，显示下载进度条。
 
@@ -60,6 +62,8 @@ def download_ytb_mp4(video_url: str, out_name: str | Path) -> str:
         "quiet": True,
         "nopart": True,
     }
+    if ytb_cookies:
+        ydl_opts["cookiefile"] = ytb_cookies
 
     if os.path.exists(out_name + ".mp4"):
         return out_name + ".mp4"
