@@ -1,5 +1,6 @@
-from pathlib import Path
 import hashlib
+import os
+from pathlib import Path
 
 import httpx
 from alive_progress import alive_bar
@@ -74,7 +75,8 @@ def download_and_verify(url: str, save_path: Path, expected_sha256: str):
 
     if not verify_file(save_path, expected_sha256):
         print(f"文件 {save_path} 哈希值不匹配，尝试恢复下载...")
-        resume_download(url, save_path)
+        os.remove(save_path)
+        download_file(url, save_path)
 
         if not verify_file(save_path, expected_sha256):
             raise ValueError(f"下载的文件 {save_path} 哈希值仍然不正确")
@@ -86,20 +88,3 @@ def verify_file(file_path: Path, expected_sha256: str) -> bool:
         for byte_block in iter(lambda: f.read(4096), b""):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest().lower() == expected_sha256.lower()
-
-
-def resume_download(url: str, save_path: Path):
-    file_size = save_path.stat().st_size
-    headers = {"Range": f"bytes={file_size}-"}
-
-    with httpx.stream("GET", url, headers=headers, follow_redirects=True) as response:
-        response.raise_for_status()
-        total_size = int(response.headers.get("content-length", 0)) + file_size
-
-        with open(save_path, "ab") as file:
-            with alive_bar(
-                total_size, title=f"恢复下载 {save_path.name}", start=file_size
-            ) as bar:
-                for chunk in response.iter_bytes(chunk_size=8192):
-                    size = file.write(chunk)
-                    bar(size)
