@@ -12,6 +12,8 @@ def download_file(url: str, save_path: Path):
     :param save_path: 保存下载文件的路径
     """
     save_path.parent.mkdir(parents=True, exist_ok=True)
+    if save_path.exists():
+        return str(save_path)
 
     with httpx.stream("GET", url, follow_redirects=True) as response:
         response.raise_for_status()
@@ -45,8 +47,8 @@ def check_model_exist(model_type: str) -> tuple[Path, Path]:
     local_weight_path = cache_dir / weight_url.split("/")[-1]
     local_config_path = cache_dir / config_url.split("/")[-1]
 
-    if not cache_dir.exists():
-        download_file(weight_url, local_weight_path)
-        download_file(config_url, local_config_path)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    download_file(weight_url, local_weight_path)
+    download_file(config_url, local_config_path)
 
     return local_weight_path, local_config_path
