@@ -74,12 +74,12 @@ def download_and_verify(url: str, save_path: Path, expected_sha256: str):
     download_file(url, save_path)
 
     if not verify_file(save_path, expected_sha256):
-        print(f"文件 {save_path} 哈希值不匹配，尝试恢复下载...")
+        print(f"model {save_path} hash not match, try to download again...")
         os.remove(save_path)
         download_file(url, save_path)
 
         if not verify_file(save_path, expected_sha256):
-            raise ValueError(f"下载的文件 {save_path} 哈希值仍然不正确")
+            raise ValueError(f"downloaded model {save_path} hash not match")
 
 
 def verify_file(file_path: Path, expected_sha256: str) -> bool:
