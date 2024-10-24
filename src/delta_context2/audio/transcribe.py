@@ -132,6 +132,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         )
         ord_transcription = result["text"]
         segments = result["segments"]
+        # language = result["language"]
+        # audio = whisper.load_audio(audio_path)
         # texts = [seg["text"] for seg in segments]
         words = flatten([seg["words"] for seg in segments])
         # Somtimes the transcription is not correct with segments words
@@ -149,6 +151,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
         sentences = drop_duplicate(collect_sentences(trg_words))
         checked_transcribtion = rm_repeated_sequences(" ".join(sentences))
+
+        print("diff len", len(checked_transcribtion) - len(ord_transcription))
         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
         pattern = r"(?<!\b(?:[A-Z]\.|[A-Z][a-z]\.|[A-Z][a-z]{2,}\.|[a-z]\.|[A-Z]\s[A-Z]\.))(?<=\.|\?|\!)\s*\"*(?=\s*[A-Z])"
         sentences = re.split(pattern, checked_transcribtion)

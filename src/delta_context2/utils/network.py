@@ -24,28 +24,26 @@ def download_file(url: str, save_path: Path):
                     bar(size)
 
 
-def check_model_exist() -> tuple[Path, Path]:
+def check_model_exist(model_type: str) -> tuple[Path, Path]:
     """
     检查模型文件是否存在，如果不存在则下载。
 
     :return: 本地模型权重文件路径和配置文件路径
     """
-    weight_name = "model_bs_roformer_ep_317_sdr_12.9755.ckpt"
-    config_name = "model_bs_roformer_ep_317_sdr_12.9755.yaml"
-
-    weight_url = (
-        "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/"
-        + weight_name
-    )
-    config_url = (
-        "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/viperx/"
-        + config_name
-    )
+    match model_type:
+        case "bs_roformer":
+            weight_url = "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_bs_roformer_ep_317_sdr_12.9755.ckpt"
+            config_url = "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/viperx/model_bs_roformer_ep_317_sdr_12.9755.yaml"
+        case "mel_band_roformer":
+            weight_url = "https://huggingface.co/KimberleyJSN/melbandroformer/resolve/main/MelBandRoformer.ckpt"
+            config_url = "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/KimberleyJensen/config_vocals_mel_band_roformer_kj.yaml"
+        case _:
+            raise ValueError(f"Invalid model type: {model_type}")
 
     # 使用用户主目录下的缓存目录
-    cache_dir = Path.home() / ".cache" / "delta_context2" / "bs_roformer"
-    local_weight_path = cache_dir / weight_name
-    local_config_path = cache_dir / config_name
+    cache_dir = Path.home() / ".cache" / "delta_context2" / model_type
+    local_weight_path = cache_dir / weight_url.split("/")[-1]
+    local_config_path = cache_dir / config_url.split("/")[-1]
 
     if not cache_dir.exists():
         download_file(weight_url, local_weight_path)
