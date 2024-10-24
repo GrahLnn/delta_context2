@@ -51,10 +51,15 @@ def separate_audio_from_video(video_path: str, output_audio_path: str = None) ->
     return str(output_audio_path)
 
 
-@show_progress("Extracting")
 def extract_vocal(audio_path: str) -> str:
     model_type = "mel_band_roformer"
     weight, config = check_model_exist(model_type)
+    audio = separate(audio_path, model_type, weight, config)
+    return str(audio)
+
+
+@show_progress("Extracting")
+def separate(audio_path: str, model_type: str, weight: Path, config: Path) -> str:
     audio_path: Path = Path(audio_path)
     model_give_name = audio_path.with_name(f"{audio_path.stem}_vocals.wav")
     target_audio_path = audio_path.with_name("vocal.wav")
@@ -75,5 +80,4 @@ def extract_vocal(audio_path: str) -> str:
 
     shutil.move(model_give_name, target_audio_path)
     os.remove(audio_path)
-
     return str(target_audio_path)
