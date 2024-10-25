@@ -110,10 +110,10 @@ from ..utils.list import drop_duplicate, flatten
     ("ord_text", lambda result: result["ord_text"]),
     ("language", lambda result: result["language"]),
 )
-
 def get_transcribe(item_dir, audio_path, description: str) -> dict:
     check = read_metadata(
-        item_dir, ["transcription", "sentences", "words", "ord_text", "ord_words"]
+        item_dir,
+        ["transcription", "sentences", "words", "ord_text", "ord_words", "language"],
     )
     model = whisper.load_model("turbo")
     audio = whisper.load_audio(audio_path)
