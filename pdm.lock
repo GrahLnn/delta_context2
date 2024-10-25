@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:7cb4a6e3e61bb18437c4cc8601c0dd9dc5c8c2969bc0f391a1afb48882a20736"
+content_hash = "sha256:1b2e840d2967b7b401a338edeb7b00a4ff7b802ae35639f9f133d344ecb5571d"
 
 [[metadata.targets]]
 requires_python = "==3.11.*"
@@ -1383,7 +1383,7 @@ version = "0.2.12"
 requires_python = ">=3.9"
 summary = "C version of reader, parser and emitter for ruamel.yaml derived from libyaml"
 groups = ["default"]
-marker = "platform_python_implementation == \"CPython\""
+marker = "platform_python_implementation == \"CPython\" and python_version < \"3.13\""
 files = [
     {file = "ruamel.yaml.clib-0.2.12-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:4a6679521a58256a90b0d89e03992c15144c5f3858f40d7c18886023d7943db6"},
     {file = "ruamel.yaml.clib-0.2.12-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:d84318609196d6bd6da0edfa25cedfbabd8dbde5140a0a23af29ad4b8f91fb1e"},
@@ -1901,7 +1901,7 @@ files = [
 
 [[package]]
 name = "werkzeug"
-version = "3.0.4"
+version = "3.0.5"
 requires_python = ">=3.8"
 summary = "The comprehensive WSGI web application library."
 groups = ["default"]
@@ -1909,8 +1909,8 @@ dependencies = [
     "MarkupSafe>=2.1.1",
 ]
 files = [
-    {file = "werkzeug-3.0.4-py3-none-any.whl", hash = "sha256:02c9eb92b7d6c06f31a782811505d2157837cea66aaede3e217c7c27c039476c"},
-    {file = "werkzeug-3.0.4.tar.gz", hash = "sha256:34f2371506b250df4d4f84bfe7b0921e4762525762bbd936614909fe25cd7306"},
+    {file = "werkzeug-3.0.5-py3-none-any.whl", hash = "sha256:6e589e0b303561b8b1a61d363ee05b1d7de6ca12f27a3a25269ae6ee93e363fd"},
+    {file = "werkzeug-3.0.5.tar.gz", hash = "sha256:033bc3783777078517f32ae3ba9e86e9bc38bdbf139b1a5a3af9679a64ed1293"},
 ]
 
 [[package]]

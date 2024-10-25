@@ -13,6 +13,8 @@ dependencies = [
     "openai-whisper>=20231117",
     "museper @ git+https://github.com/GrahLnn/museper.git",
     "demjson3>=3.0.6",
+    "ctc-forced-aligner @ git+https://github.com/MahmoudAshraf97/ctc-forced-aligner.git",
+    "nemo-toolkit[asr]==2.0.0rc0",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"

@@ -108,32 +108,33 @@ from ..utils.list import drop_duplicate, flatten
     ("ord_words", lambda result: result["ord_words"]),
     ("sentences", lambda result: result["sentences"]),
     ("ord_text", lambda result: result["ord_text"]),
+    ("language", lambda result: result["language"]),
 )
+
 def get_transcribe(item_dir, audio_path, description: str) -> dict:
     check = read_metadata(
         item_dir, ["transcription", "sentences", "words", "ord_text", "ord_words"]
     )
-
+    model = whisper.load_model("turbo")
+    audio = whisper.load_audio(audio_path)
     if check:
         checked_transcribtion = check["transcription"]
         ord_transcription = check["ord_text"]
         trg_words = check["words"]
         sentences = check["sentences"]
         words = check["ord_words"]
-
+        language = check["language"]
     else:
-        model = whisper.load_model("turbo")
         # segments = segment_audio(audio_path)
         # result = transcribe_audio(audio_path, segments, model)
 
         result = model.transcribe(
-            audio=audio_path,
+            audio=audio,
             word_timestamps=True,
         )
         ord_transcription = result["text"]
         segments = result["segments"]
-        # language = result["language"]
-        # audio = whisper.load_audio(audio_path)
+        language = result["language"]
         # texts = [seg["text"] for seg in segments]
         words = flatten([seg["words"] for seg in segments])
         # Somtimes the transcription is not correct with segments words
@@ -163,6 +164,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         "sentences": sentences,
         "ord_words": words,
         "words": trg_words,
+        "audio": audio,
+        "language": language,
     }
 
 

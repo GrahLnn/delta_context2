@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from .audio.align import force_align
 from .audio.separator import extract_vocal, separate_audio_from_video
 from .audio.transcribe import get_transcribe
 from .infomation.llm import get_summary, get_tags
@@ -43,6 +44,7 @@ class VideoProcessor:
         audio_path = separate_audio_from_video(video_path)
         audio_path = extract_vocal(audio_path)
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
+        language, audio_waveform = transcribe["language"], transcribe["audio"]
         summary = get_summary(item_dir, transcribe["text"])
         get_tags(item_dir, summary["summary"])
         sentences = transcribe["sentences"]
@@ -61,6 +63,7 @@ class VideoProcessor:
         )
         atomic_zhs = [part["zh"] for part in atomic_part]
         atomic_ens = [part["en"] for part in atomic_part]
+        words = force_align(audio_waveform, " ".join(atomic_ens), language)
         sentences_timestamps = get_sentence_timestamps(
             item_dir, atomic_ens, words, atomic_zhs
         )
