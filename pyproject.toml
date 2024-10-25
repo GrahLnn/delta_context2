@@ -15,6 +15,7 @@ dependencies = [
     "demjson3>=3.0.6",
     "ctc-forced-aligner @ git+https://github.com/MahmoudAshraf97/ctc-forced-aligner.git",
     "nemo-toolkit[asr]==2.0.0rc0",
+    "huggingface-hub==0.23.2",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from .audio.align import force_align
+from .audio.force_align import force_align
 from .audio.separator import extract_vocal, separate_audio_from_video
 from .audio.transcribe import get_transcribe
 from .infomation.llm import get_summary, get_tags
