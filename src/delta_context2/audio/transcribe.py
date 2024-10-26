@@ -10,7 +10,7 @@ from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 # from pydub import AudioSegment
 # from alive_progress import alive_bar, alive_it
 from ..infomation.read_metadata import read_metadata
-from ..text.utils import rm_repeated_sequences, split_text_into_chunks
+from ..text.utils import rm_repeated_sequences, split_para, split_text_into_chunks
 from ..utils.decorator import show_progress, update_metadata
 from ..utils.list import drop_duplicate, flatten
 
@@ -155,8 +155,7 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
 
         print("diff len", len(checked_transcribtion) - len(ord_transcription))
         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
-        pattern = r"(?<!\b(?:[A-Z]\.|[A-Z][a-z]\.|[A-Z][a-z]{2,}\.|[a-z]\.|[A-Z]\s[A-Z]\.))(?<=\.|\?|\!)\s*\"*(?=\s*[A-Z])"
-        sentences = re.split(pattern, checked_transcribtion)
+        sentences = split_para(checked_transcribtion)
 
     return {
         "text": checked_transcribtion,

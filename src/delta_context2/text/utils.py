@@ -69,6 +69,13 @@ def abs_uni_len(s):
     return int(total_length)
 
 
+def split_para(para):
+    return re.split(
+        r"(?<!\b(?:[A-Z]\.|[A-Z][a-z]\.|[A-Z][a-z]{2,}\.|[a-z]\.|[A-Z]\s[A-Z]\.))(?<=\.|\?|\!)\s*\"*(?=\s*[A-Z])",
+        para,
+    )
+
+
 def split_sentences_into_chunks(sentences, max_tokens=1000):
     chunks = []
     chunk = []

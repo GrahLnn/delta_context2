@@ -19,7 +19,7 @@ from ..infomation.prompt import (
     SPLIT_SMALL_SENTENCE_PROMPT,
 )
 from ..infomation.read_metadata import read_metadata
-from ..text.utils import abs_uni_len, extract_zh_char, normalize_to_10
+from ..text.utils import abs_uni_len, extract_zh_char, normalize_to_10, split_para
 from ..utils.decorator import update_metadata
 from ..utils.list import flatten
 
@@ -335,7 +335,7 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
         translation = not_belong_this_chunk_zh + translated_chunks[i]
         not_belong_this_chunk_zh = ""
         prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
-            PARAGRAPH_A="".join(sentence),
+            PARAGRAPH_A="\n".join(split_para(sentence)),
             PARAGRAPH_B=translation.strip().replace("。", " ").replace("，", " "),
         )
         with alive_bar(
