@@ -1,6 +1,6 @@
-import re
 import unicodedata
 
+import regex as re
 import tiktoken
 
 from ..utils.decorator import update_metadata
