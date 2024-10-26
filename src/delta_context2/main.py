@@ -20,13 +20,19 @@ from .video.utils import compress_video
 
 class VideoProcessor:
     def __init__(
-        self, source_lang: str, target_lang: str, country: str, ytb_cookies: Path = None
+        self,
+        source_lang: str,
+        target_lang: str,
+        country: str,
+        ytb_cookies: Path = None,
+        save_temp_file: bool = False,
     ):
         self.source_lang = source_lang
         self.target_lang = target_lang
         self.country = country
         self.DATA_DIR = Path("data")
         self.ytb_cookies = ytb_cookies
+        self.save_temp_file = save_temp_file
 
     def process(self, ytb_url: str, compress: bool = True) -> dict:
         """
@@ -79,6 +85,7 @@ class VideoProcessor:
             if os.path.exists(item_dir / "translated_video.mp4"):
                 os.remove(item_dir / "translated_video.mp4")
             os.rename(translate_video, item_dir / "translated_video.mp4")
-        os.remove(audio_path)
-        os.remove(video_path)
+        if not self.save_temp_file:
+            os.remove(audio_path)
+            os.remove(video_path)
         return item_dir
