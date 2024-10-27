@@ -76,7 +76,7 @@ def split_para(para):
     )
 
 
-def split_sentences_into_chunks(sentences, max_tokens=1000):
+def split_sentences_into_chunks(sentences, max_tokens=500):
     chunks = []
     chunk = []
     current_token_count = 0
@@ -109,7 +109,7 @@ def split_sentences_into_chunks(sentences, max_tokens=1000):
     return chunks
 
 
-def split_text_into_chunks(text, max_tokens=5000, delimiter="."):
+def split_text_into_chunks(text, max_tokens=3000, delimiter="."):
     parts = re.split(f"({re.escape(delimiter)})", text)
     # 将分隔符和前面的字符串合并
     combined_parts = [parts[i] + parts[i + 1] for i in range(0, len(parts) - 1, 2)]
