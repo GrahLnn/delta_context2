@@ -310,7 +310,9 @@ def move_commas(en_list):
 
 
 @update_metadata(("atomic_part", lambda result: result))
-def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_len=27):
+def split_to_atomic_part(
+    dir, source_text_chunks, translated_chunks, subtitle_len=27, keep_cache=False
+):
     os.makedirs("cache", exist_ok=True)
     encoding = tiktoken.encoding_for_model("gpt-4o")
     check = read_metadata(dir, ["atomic_part"])
@@ -502,17 +504,19 @@ def split_to_atomic_part(dir, source_text_chunks, translated_chunks, subtitle_le
         ) as file:
             json.dump(cache_data, file, ensure_ascii=False, indent=4)
 
-    with open(Path(dir) / "metadata.json", encoding="utf-8") as file:
-        data = json.load(file)
-    with open(Path(dir) / "metadata.json", "w", encoding="utf-8") as file:
-        final_transcribe = " ".join(atomic_ens)
-        data["final_transcribe"] = final_transcribe
-        json.dump(data, file, ensure_ascii=False, indent=4)
+    if dir:
+        with open(Path(dir) / "metadata.json", encoding="utf-8") as file:
+            data = json.load(file)
+        with open(Path(dir) / "metadata.json", "w", encoding="utf-8") as file:
+            final_transcribe = " ".join(atomic_ens)
+            data["final_transcribe"] = final_transcribe
+            json.dump(data, file, ensure_ascii=False, indent=4)
 
     atomic_part = []
     for zh, en in zip(atomic_zhs, atomic_ens):
         atomic_part.append({"zh": zh, "en": en})
-    shutil.rmtree("cache")
+    if not keep_cache:
+        shutil.rmtree("cache")
     return atomic_part
 
 
