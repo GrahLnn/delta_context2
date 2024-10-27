@@ -333,12 +333,12 @@ def split_to_atomic_part(
         done_idx = cache_data.get("done_idx")
     not_belong_this_chunk_zh = ""
     for i in range(done_idx + 1, len(source_text_chunks)):
-        sentence = source_text_chunks[i]
+        chunk = source_text_chunks[i]
         translation = not_belong_this_chunk_zh + translated_chunks[i]
         not_belong_this_chunk_zh = ""
         prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
-            PARAGRAPH_A="\n".join(split_para(sentence)),
-            PARAGRAPH_B=translation.strip().replace("。", " ").replace("，", " "),
+            PARAGRAPH_A=chunk,
+            PARAGRAPH_B=translation,
         )
         with alive_bar(
             1,
@@ -376,31 +376,26 @@ def split_to_atomic_part(
             zh_texts = []
             for idx, (source_text, translated_text) in enumerate(zip(nas, nbs)):
                 if translated_text.strip() == "":
-                    # if en_texts:
-                    #     en_texts[-1] += " " + source_text
-                    # else:
-                    #     en_texts.append(source_text)
+                    en_texts[-1] += " " + source_text
 
-                    # if len(source_text.split()) == 1:
-                    #     continue
-                    max_retry = 5
-                    for count in range(max_retry):
-                        prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
-                            ORIGINAL_TEXT=source_text,
-                            CONTEXT=str(
-                                [(a, b) for a, b in zip(a_sentences, b_sentences)]
-                            ),
-                        )
-                        res = openai_completion(prompt)
-                        # res = get_completion(prompt)
-                        res = re.sub(r"<[^>]*>", "", res).strip()
-                        # print("补偿：", source_text, "->", res)
-                        if len(extract_zh_char(res)) != 0:
-                            zh_texts.append(res)
-                            en_texts.append(source_text)
-                            break
-                        if count + 1 == max_retry:
-                            raise ValueError("sentence can not translate")
+                    # max_retry = 5
+                    # for count in range(max_retry):
+                    #     prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
+                    #         ORIGINAL_TEXT=source_text,
+                    #         CONTEXT=str(
+                    #             [(a, b) for a, b in zip(a_sentences, b_sentences)]
+                    #         ),
+                    #     )
+                    #     res = openai_completion(prompt)
+                    #     # res = get_completion(prompt)
+                    #     res = re.sub(r"<[^>]*>", "", res).strip()
+                    #     # print("补偿：", source_text, "->", res)
+                    #     if len(extract_zh_char(res)) != 0:
+                    #         zh_texts.append(res)
+                    #         en_texts.append(source_text)
+                    #         break
+                    #     if count + 1 == max_retry:
+                    #         raise ValueError("sentence can not translate")
                 else:
                     en_texts.append(source_text)
                     zh_texts.append(translated_text)

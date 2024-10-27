@@ -47,30 +47,26 @@ Output your result in the following JSON format:
 
 Remember to maintain the original order of sentences and preserve all content from both texts. Your goal is to create the best possible match between the two texts while adhering to these constraints."""
 
-PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT = """You are an AI assistant tasked with aligning two paragraphs in different languages that contain the same content. Your goal is to match smaller sentences from each paragraph and present them in a specific JSON format. If a corresponding sentence cannot be found, you should leave it as an empty string.
+PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT = """You are an AI assistant specializing in aligning multilingual text. Your task is to match corresponding sentences or phrases between two paragraphs in different languages and present them in a specific JSON format.
 
 Here are the two paragraphs you will be working with:
 
-Paragraph A:
 <paragraph_a>
 {PARAGRAPH_A}
 </paragraph_a>
 
-Paragraph B:
 <paragraph_b>
 {PARAGRAPH_B}
 </paragraph_b>
 
-Follow these steps to complete the task:
+Please follow these steps strictly to complete the task:
 
-1. Carefully read both paragraphs.
-2. Identify corresponding sentences or phrases in both paragraphs that convey the same meaning.
-3. Split the paragraphs into smaller, matching sentences or phrases.
-4. If a corresponding sentence cannot be found in one paragraph, leave it as an empty string.
-5. Create a JSON object with a "pair" array containing objects for each matched sentence pair.
-6. Each object in the "pair" array should have two properties: "sentence_a" for the sentence from Paragraph A, and "sentence_b" for the corresponding sentence from Paragraph B (or an empty string if no match is found).
+1. Analyze both paragraphs carefully.
+2. Identify individual sentences or phrases in each paragraph.
+3. Match corresponding sentences or phrases between Paragraph A and Paragraph B.
+4. Each sentence_a must have a corresponding translation sentence_b.
 
-Format your response as a JSON object with the following structure:
+The final output should be a JSON object with the following structure:
 
 ```json
 {{
@@ -80,44 +76,21 @@ Format your response as a JSON object with the following structure:
       "sentence_b": "Corresponding sentence from Paragraph B or empty string"
     }},
     {{
-      "sentence_a": "Next sentence from Paragraph A",
-      "sentence_b": "Next corresponding sentence from Paragraph B or empty string"
+      "sentence_a": "Another sentence from Paragraph A",
+      "sentence_b": "Another corresponding sentence from Paragraph B or empty string"
     }}
   ]
 }}
 ```
 
-Here's a simple example to illustrate the expected output:
+Important notes:
+- Strictly maintain the original order of sentences
+- Ensure every sentence from Paragraph A has a match
+- Ensure all sentences from Paragraph B are used
+- Avoid cross-matching or reordering
+- If unsure about a match, prefer using an empty string rather than an incorrect match
 
-```json
-{{
-  "pair": [
-    {{
-      "sentence_a": "Hello, how are you?",
-      "sentence_b": "Hola, ¿cómo estás?"
-    }},
-    {{
-      "sentence_a": "I hope you're doing well.",
-      "sentence_b": ""
-    }},
-    {{
-      "sentence_a": "The weather is nice today.",
-      "sentence_b": "El clima está agradable hoy."
-    }},
-  ]
-}}
-```
-
-In this example, the second pair demonstrates a case where a direct corresponding sentence was not present in Paragraph B, so an empty string was used.
-
-Additional guidelines:
-- Ensure that the sentences are properly matched and that there is no misalignment.
-- Do not add translations or create new sentences. If a match is not found, use an empty string.
-- Make sure the JSON is correctly formatted.
-- Your entire response should be enclosed in ``` tags.
-- Considering the integrity of sentences, if there are variations in word order due to clauses and other factors, it is permissible to combine multiple sentence_a into one sentence for alignment with the corresponding translation.
-
-Process the given paragraphs and provide your answer in the specified JSON format. Enclose your entire response in ``` tags."""
+Please proceed with your analysis and provide the final JSON output."""
 
 SINGLE_TRANSLATION_PROMPT = """You are tasked with translating a sentence into Chinese in a colloquial manner. Your goal is to produce a translation that sounds natural and conversational in Chinese, while accurately conveying the meaning of the original text.
 

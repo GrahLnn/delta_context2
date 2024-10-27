@@ -1,7 +1,7 @@
 import os
 import random
 import re
-
+import sys
 import demjson3
 import requests
 from dotenv import load_dotenv
@@ -88,7 +88,7 @@ def gemini_completion(prompt, system_message, temperature, model, key):
             "role": "system",
             "parts": [{"text": system_message}],
         },
-        "generationConfig": {"temperature": temperature},
+        "generationConfig": {"temperature": temperature, "topP": 0.95},
         "safetySettings": [
             {
                 "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
@@ -132,7 +132,7 @@ def get_completion(
     prompt: str,
     system_message: str = "",
     model: str = TRANSLATION_MODEL,
-    temperature: float = 0.3,
+    temperature: float = 1.0,
 ) -> str:
     answer = ""
     failed_key = []
