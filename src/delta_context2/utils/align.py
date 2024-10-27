@@ -490,9 +490,9 @@ def split_to_atomic_part(
                     atomic_ens.append(en_src)
                 else:
                     atomic_zhs[-1] += "，" + zh_tsl
-
+        done_idx += 1
         cache_data = {
-            "done_idx": i,
+            "done_idx": done_idx,
             "atomic_zhs": atomic_zhs,
             "atomic_ens": atomic_ens,
         }
