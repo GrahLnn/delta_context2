@@ -315,7 +315,7 @@ def split_to_atomic_part(
 ):
     os.makedirs("cache", exist_ok=True)
     encoding = tiktoken.encoding_for_model("gpt-4o")
-    check = read_metadata(dir, ["atomic_part"])
+    check = read_metadata(dir, ["atomic_part"]) if dir else None
     if check:
         shutil.rmtree("cache")
         return check
