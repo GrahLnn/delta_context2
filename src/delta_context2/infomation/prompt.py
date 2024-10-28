@@ -59,14 +59,14 @@ Here are the two paragraphs you will be working with:
 {PARAGRAPH_B}
 </paragraph_b>
 
-Please follow these steps strictly to complete the task:
+Follow these steps to complete the task:
 
-1. Analyze both paragraphs carefully.
+1. Carefully analyze both paragraphs.
 2. Identify individual sentences or phrases in each paragraph.
 3. Match corresponding sentences or phrases between Paragraph A and Paragraph B.
-4. Each sentence_a must have a corresponding translation sentence_b.
+4. Create a JSON object with the matched pairs.
 
-The final output should be a JSON object with the following structure:
+Your output should be a JSON object with the following structure:
 
 ```json
 {{
@@ -83,14 +83,15 @@ The final output should be a JSON object with the following structure:
 }}
 ```
 
-Important notes:
-- Strictly maintain the original order of sentences
-- Ensure every sentence from Paragraph A has a match
-- Ensure all sentences from Paragraph B are used
-- Avoid cross-matching or reordering
-- If unsure about a match, prefer using an empty string rather than an incorrect match
+Important rules to follow:
+- Maintain the original order of sentences strictly.
+- Ensure every sentence from Paragraph A has a corresponding entry in the JSON structure.
+- Use all sentences from Paragraph B.
+- Do not cross-match or reorder sentences.
+- If you are unsure about a match, use an empty string for sentence_b instead of an incorrect match.
+- If sentence_a cannot be matched with a correct translation, you must leave sentence_b empty. Do not include any incorrect content in sentence_b.
 
-Please proceed with your analysis and provide the final JSON output."""
+Provide your final output as a valid JSON object inside ```json tags. Do not include any explanations or additional text outside of these tags."""
 
 SINGLE_TRANSLATION_PROMPT = """You are tasked with translating a sentence into Chinese in a colloquial manner. Your goal is to produce a translation that sounds natural and conversational in Chinese, while accurately conveying the meaning of the original text.
 

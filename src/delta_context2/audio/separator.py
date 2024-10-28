@@ -70,6 +70,24 @@ def extract_vocal(audio_path: str) -> str:
             model_type=model_type,
         )
 
-    shutil.move(model_give_name, target_audio_path)
+    # 使用ffmpeg只保留音频数据
+    temp_audio_path = audio_path.with_name(f"{audio_path.stem}_temp.wav")
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-i",
+            str(model_give_name),
+            "-map",
+            "0:a",
+            "-c",
+            "copy",
+            str(temp_audio_path),
+        ],
+        check=True,
+    )
+
+    shutil.move(temp_audio_path, target_audio_path)
+    os.remove(model_give_name)
     os.remove(audio_path)
+
     return str(target_audio_path)

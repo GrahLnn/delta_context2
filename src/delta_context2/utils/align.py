@@ -338,8 +338,9 @@ def split_to_atomic_part(
         not_belong_this_chunk_zh = ""
         prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
             PARAGRAPH_A=chunk,
-            PARAGRAPH_B=translation,
+            PARAGRAPH_B=translation.translate(str.maketrans("。，;", "   ")),
         )
+        print(prompt)
         with alive_bar(
             1,
             title=f"align chunk {i + 1}/{len(source_text_chunks)}",
@@ -351,6 +352,7 @@ def split_to_atomic_part(
             while True:
                 try:
                     result = get_json_completion(prompt)
+                    print(json.dumps(result, ensure_ascii=False, indent=4))
                     a_sentences = [pair["sentence_a"] for pair in result["pair"]]
                     b_sentences = [pair["sentence_b"] for pair in result["pair"]]
                     break
