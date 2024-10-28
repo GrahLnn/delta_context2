@@ -11,7 +11,7 @@ from retry import retry
 import tiktoken
 
 from ..audio.transcribe import align_diff_words
-from ..infomation.llm import get_completion, get_json_completion, openai_completion
+from ..infomation.llm import get_completion, get_json_completion, openai_completion, tokenize
 from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
@@ -352,6 +352,11 @@ def split_to_atomic_part(
             while True:
                 try:
                     result = get_json_completion(prompt)
+                    
+                    for r in result["pair"]:
+                        len_sena_int = len(tokenize(r["sentence_a"]))
+                        len_senb_int = len(tokenize(r["sentence_b"]))
+                        r["ratio"] = len_sena_int / len_senb_int if len_senb_int > 0 else 0
                     print(json.dumps(result, ensure_ascii=False, indent=4))
                     a_sentences = [pair["sentence_a"] for pair in result["pair"]]
                     b_sentences = [pair["sentence_b"] for pair in result["pair"]]

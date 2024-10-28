@@ -2,8 +2,10 @@ import os
 import random
 import re
 import sys
+
 import demjson3
 import requests
+import tiktoken
 from dotenv import load_dotenv
 from retry import retry
 
@@ -64,6 +66,12 @@ def get_json_completion(prompt, model=TRANSLATION_MODEL):
     result = demjson3.decode(json_str)
 
     return result
+
+
+def tokenize(text: str):
+    encoding = tiktoken.encoding_for_model("gpt-4o")
+    token_integers = encoding.encode(text)
+    return token_integers
 
 
 @retry(tries=3, delay=2)
