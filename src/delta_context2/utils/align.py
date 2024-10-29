@@ -340,7 +340,6 @@ def split_to_atomic_part(
             PARAGRAPH_A=chunk,
             PARAGRAPH_B=translation.translate(str.maketrans("。，;", "   ")),
         )
-        print(prompt)
         with alive_bar(
             1,
             title=f"align chunk {i + 1}/{len(source_text_chunks)}",
@@ -352,7 +351,6 @@ def split_to_atomic_part(
             while True:
                 try:
                     result = get_json_completion(prompt)
-                    
                     for r in result["pair"]:
                         len_sena_int = len(tokenize(r["sentence_a"]))
                         len_senb_int = len(tokenize(r["sentence_b"]))
