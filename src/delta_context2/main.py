@@ -51,11 +51,12 @@ class VideoProcessor:
         audio_path = extract_vocal(audio_path)
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
         language, audio_waveform = transcribe["language"], transcribe["audio"]
-        summary = get_summary(item_dir, transcribe["text"])
-        get_tags(item_dir, summary["summary"])
+        
         sentences = transcribe["sentences"]
         words = transcribe["words"]
         source_text_chunks = split_sentences_into_chunks(sentences)
+        summary = get_summary(item_dir, source_text_chunks)
+        get_tags(item_dir, summary["summary"])
         result = translate(
             item_dir,
             self.source_lang,

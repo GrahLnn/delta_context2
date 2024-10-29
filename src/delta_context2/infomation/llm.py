@@ -26,12 +26,17 @@ GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
 @update_metadata(
     ("summary", lambda r: r["summary"]), ("summary_zh", lambda r: r["summary_zh"])
 )
-def get_summary(idir, transcription: str) -> dict:
+def get_summary(idir, chunks: list[str]) -> dict:
     check = read_metadata(idir, ["summary", "summary_zh"])
     if check:
         return check
 
-    summary = get_completion(transcription, SUMMARY_SYS_MESSAGE)
+    tldrs = []
+    for chunk in chunks:
+        tldr = openai_completion(chunk, "Abstract this paragraph.")
+        tldrs.append(tldr)
+
+    summary = get_completion(" ".join(tldrs), SUMMARY_SYS_MESSAGE)
     prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
     summary_zh = openai_completion(prompt)
     return {"summary": summary, "summary_zh": summary_zh}
