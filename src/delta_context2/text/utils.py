@@ -76,7 +76,7 @@ def split_para(para):
     )
 
 
-def split_sentences_into_chunks(sentences, max_tokens=500):
+def split_sentences_into_chunks(sentences, max_tokens=1000):
     chunks = []
     chunk = []
     current_token_count = 0
