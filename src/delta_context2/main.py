@@ -70,7 +70,7 @@ class VideoProcessor:
         )
         atomic_zhs = [part["zh"] for part in atomic_part]
         atomic_ens = [part["en"] for part in atomic_part]
-        words = force_align(audio_waveform, " ".join(atomic_ens), language)
+        # words = force_align(audio_waveform, " ".join(atomic_ens), language)
         sentences_timestamps = get_sentence_timestamps(
             item_dir, atomic_ens, words, atomic_zhs
         )

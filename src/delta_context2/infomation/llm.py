@@ -169,7 +169,9 @@ def get_completion(
                     key=key,
                 )
             except Exception as e:
-                print(f"key failed, Error: {e}")
+                print(
+                    f"Error: {e}\n---------------------\nSystem Prompt: {system_message}\n---------------------\nPrompt: {prompt}"
+                )
                 failed_key.append(key)
                 continue
         else:
