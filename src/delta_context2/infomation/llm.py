@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from retry import retry
 
 from ..infomation.read_metadata import read_metadata
+from ..text.utils import split_sentences_into_chunks
 from ..utils.decorator import show_progress, update_metadata
 from .prompt import SINGLE_TRANSLATION_PROMPT, SUMMARY_SYS_MESSAGE
 
@@ -26,10 +27,12 @@ GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
 @update_metadata(
     ("summary", lambda r: r["summary"]), ("summary_zh", lambda r: r["summary_zh"])
 )
-def get_summary(idir, chunks: list[str]) -> dict:
+def get_summary(idir, sentences: list[str]) -> dict:
     check = read_metadata(idir, ["summary", "summary_zh"])
     if check:
         return check
+
+    chunks = split_sentences_into_chunks(sentences, 2000)
 
     tldrs = []
     for chunk in chunks:

@@ -55,7 +55,7 @@ class VideoProcessor:
         sentences = transcribe["sentences"]
         words = transcribe["words"]
         source_text_chunks = split_sentences_into_chunks(sentences)
-        summary = get_summary(item_dir, source_text_chunks)
+        summary = get_summary(item_dir, sentences)
         get_tags(item_dir, summary["summary"])
         result = translate(
             item_dir,
