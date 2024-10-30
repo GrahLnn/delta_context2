@@ -540,12 +540,12 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
     split_atomic_ens = [s.split() for s in atomic_ens]
 
     if len(flatten(split_atomic_ens)) != len(words):
-        raise ValueError("Warning: The words and sentences do not match.")
-        # words = align_diff_words(
-        #     words,
-        #     "".join([word["word"] for word in words]).strip(),
-        #     " ".join(atomic_ens).replace("  ", " ").strip(),
-        # )
+        # raise ValueError("Warning: The words and sentences do not match.")
+        words = align_diff_words(
+            words,
+            "".join([word["word"] for word in words]).strip(),
+            " ".join(atomic_ens).replace("  ", " ").strip(),
+        )
 
     sentence_timestamps = []
 
