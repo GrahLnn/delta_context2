@@ -11,7 +11,12 @@ from retry import retry
 import tiktoken
 
 from ..audio.transcribe import align_diff_words
-from ..infomation.llm import get_completion, get_json_completion, openai_completion, tokenize
+from ..infomation.llm import (
+    get_completion,
+    get_json_completion,
+    openai_completion,
+    tokenize,
+)
 from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
@@ -89,14 +94,10 @@ def get_aligned_sentences(prompt):
     result = openai_completion(prompt, sys_msg)
     # result = get_json_completion(prompt, model="gemini-1.5-flash")
     # print(result)
-    pattern = re.compile(r"```json\s*(.*?)\s*```", re.DOTALL)
-    match = pattern.search(result)
+    pattern = re.compile(r"^json")
+    json_str = pattern.sub("", result.strip().strip("```"))
 
-    if match:
-        json_content = match.group(1)  # 获取匹配到的内容
-        result = demjson3.decode(json_content)["pair"]
-    else:
-        raise ValueError(f"No JSON content found in the response:\n{result}")
+    result = demjson3.decode(json_str)["pair"]
     return result
 
 
@@ -354,7 +355,9 @@ def split_to_atomic_part(
                     for r in result["pair"]:
                         len_sena_int = len(tokenize(r["sentence_a"]))
                         len_senb_int = len(tokenize(r["sentence_b"]))
-                        r["ratio"] = len_sena_int / len_senb_int if len_senb_int > 0 else 0
+                        r["ratio"] = (
+                            len_sena_int / len_senb_int if len_senb_int > 0 else 0
+                        )
                     print(json.dumps(result, ensure_ascii=False, indent=4))
                     a_sentences = [pair["sentence_a"] for pair in result["pair"]]
                     b_sentences = [pair["sentence_b"] for pair in result["pair"]]
