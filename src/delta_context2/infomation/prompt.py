@@ -128,7 +128,7 @@ When translating, follow these guidelines:
 3. Consider the context provided to ensure the tone and style of the translation are suitable.
 4. If there are cultural references or idioms in the original text, try to find equivalent Chinese expressions that capture the same idea.
 
-Provide your translation of the original text, and nothing else. Do not include any explanations, notes, or the original text in your response. Your entire response should be enclosed in <translation> tags."""
+Provide your translation of the original text, and nothing else. Do not include any explanations, notes, or the original text in your response."""
 
 SUMMARY_SYS_MESSAGE = 'You are a summarizing assistant responsible for analyzing the content of YouTube videos. The user will feed you transcriptions but you should always refer to the content in your response as "the video". Focus on accurately summarizing the main points and key details of the videos. Do not comment on the style of the video (e.g., whether it is a voiceover or conversational). Do never mention or imply the existence of text, transcription, or any written format. Use phrases like "The video discusses..." or "According to the video...". Strive to be the best summarizer possible, providing clear, and informative summaries that exclusively reference the video content.'
 

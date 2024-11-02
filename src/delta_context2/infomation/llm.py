@@ -12,7 +12,11 @@ from retry import retry
 from ..infomation.read_metadata import read_metadata
 from ..text.utils import split_sentences_into_chunks
 from ..utils.decorator import show_progress, update_metadata
-from .prompt import SINGLE_TRANSLATION_PROMPT, SUMMARY_SYS_MESSAGE
+from .prompt import (
+    SINGLE_TRANSLATION_PROMPT,
+    SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT,
+    SUMMARY_SYS_MESSAGE,
+)
 
 load_dotenv()
 OPENAI_URL = os.getenv("OPENAI_API_URL")
@@ -25,10 +29,16 @@ GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
 
 @show_progress("getting summary")
 @update_metadata(
-    ("summary", lambda r: r["summary"]), ("summary_zh", lambda r: r["summary_zh"])
+    ("summary", lambda r: r["summary"]),
+    ("summary_zh", lambda r: r["summary_zh"]),
+    ("title_zh", lambda r: r["title_zh"]),
 )
 def get_summary(idir, sentences: list[str]) -> dict:
-    check = read_metadata(idir, ["summary", "summary_zh"])
+    check = read_metadata(
+        idir,
+        ["summary", "summary_zh", "title_zh"],
+    )
+    title = read_metadata(idir, ["title"])
     if check:
         return check
 
@@ -42,7 +52,11 @@ def get_summary(idir, sentences: list[str]) -> dict:
     summary = get_completion(" ".join(tldrs), SUMMARY_SYS_MESSAGE)
     prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
     summary_zh = openai_completion(prompt)
-    return {"summary": summary, "summary_zh": summary_zh}
+    prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
+        ORIGINAL_TEXT=title, CONTEXT=summary
+    )
+    title_zh = openai_completion(prompt)
+    return {"summary": summary, "summary_zh": summary_zh, "title_zh": title_zh}
 
 
 @update_metadata(("tags", lambda r: r))

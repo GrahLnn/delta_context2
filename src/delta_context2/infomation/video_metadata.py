@@ -53,8 +53,8 @@ def get_ytb_video_info(
                         with open(data_path, "r", encoding="utf-8") as file:
                             return json.load(file)
 
-                    prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=title)
-                    res = openai_completion(prompt)
+                    # prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=title)
+                    # res = openai_completion(prompt)
 
                     download_and_resize_thumbnail(
                         thumbnail, data_dir / "videos" / name_formal / "source"
@@ -62,7 +62,6 @@ def get_ytb_video_info(
 
                     metadata = {
                         "title": title,
-                        "title_zh": res,
                         "description": description,
                         "uploader": uploader,
                         "thumbnail": thumbnail,
