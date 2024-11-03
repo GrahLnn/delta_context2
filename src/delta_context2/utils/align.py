@@ -450,7 +450,11 @@ def split_to_atomic_part(
                 )
                 # [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
                 # print("--------------")
-                zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
+                try:
+                    zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
+                except Exception as e:
+                    [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
+                    raise e
                 if abs_uni_len("".join(en_list)) == 0:
                     raise ValueError(
                         f"empty translation: {[s+'|'+t for s, t in zip(llm_align_zh_list, llm_align_en_list)]}"
