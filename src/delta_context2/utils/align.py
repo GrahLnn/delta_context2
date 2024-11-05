@@ -159,7 +159,7 @@ def llm_align_sentences(source_text, translated_snetence_array):
     en_len_split = abs_uni_len("".join(en_list))
     en_len_source = abs_uni_len(source_text)
     if en_len_split != en_len_source:
-        print("radio split", en_len_split, en_len_source)
+        # print("radio split", en_len_split, en_len_source)
         en_list = radio_split(source_text, zh_list)
 
     return zh_list, en_list
@@ -358,7 +358,7 @@ def split_to_atomic_part(
                         r["ratio"] = (
                             len_sena_int / len_senb_int if len_senb_int > 0 else 0
                         )
-                    print(json.dumps(result, ensure_ascii=False, indent=4))
+                    # print(json.dumps(result, ensure_ascii=False, indent=4))
                     a_sentences = [pair["sentence_a"] for pair in result["pair"]]
                     b_sentences = [pair["sentence_b"] for pair in result["pair"]]
                     break
