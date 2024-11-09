@@ -428,6 +428,8 @@ def split_to_atomic_part(
             " ".join(removed_items) + " " if removed_items else ""
         )
 
+        chunk_atomic_zhs = []
+        chunk_atomic_ens = []
         for en_src, zh_tsl in alive_it(
             zip(en_texts, zh_texts),
             total=len(zh_texts),
@@ -493,15 +495,19 @@ def split_to_atomic_part(
                         nzh_list.append(fix_item.strip())
                     else:
                         nzh_list.append(item)
-                atomic_zhs.extend(nzh_list)
-                atomic_ens.extend(en_list)
+                chunk_atomic_zhs.extend(nzh_list)
+                chunk_atomic_ens.extend(en_list)
 
             else:
                 if en_src:
-                    atomic_zhs.append(zh_tsl)
-                    atomic_ens.append(en_src)
+                    chunk_atomic_zhs.append(zh_tsl)
+                    chunk_atomic_ens.append(en_src)
                 else:
-                    atomic_zhs[-1] += "，" + zh_tsl
+                    chunk_atomic_zhs[-1] += "，" + zh_tsl
+        if "" in chunk_atomic_ens or "" in chunk_atomic_zhs:
+            raise ValueError("empty translation")
+        atomic_zhs.extend(chunk_atomic_zhs)
+        atomic_ens.extend(chunk_atomic_ens)
         done_idx += 1
         cache_data = {
             "done_idx": done_idx,
