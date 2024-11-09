@@ -43,7 +43,7 @@ class VideoProcessor:
         formal_name = formal_folder_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
 
-        if not os.path.exists(item_dir + "translated_video.mp4"):
+        if not os.path.exists(item_dir / "translated_video.mp4"):
             video_path = download_ytb_mp4(
                 ytb_url, item_dir, formal_name, self.ytb_cookies
             )
