@@ -131,8 +131,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
     else:
         # segments = segment_audio(audio_path)
         # result = transcribe_audio(audio_path, segments, model)
-        if not model or not audio:
-            raise ValueError("No audio or model")
+        if audio_path is None:
+            raise ValueError("No audio path provided")
 
         result = model.transcribe(
             audio=audio,
