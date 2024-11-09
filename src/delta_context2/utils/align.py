@@ -338,7 +338,7 @@ def split_to_atomic_part(
         translation = not_belong_this_chunk_zh + translated_chunks[i]
         not_belong_this_chunk_zh = ""
         prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
-            PARAGRAPH_A=chunk,
+            PARAGRAPH_A=chunk.translate(str.maketrans(".,", "  ")),
             PARAGRAPH_B=translation.translate(str.maketrans("。，;", "   ")),
         )
         with alive_bar(

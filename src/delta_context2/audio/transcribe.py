@@ -115,8 +115,12 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
         item_dir,
         ["transcription", "sentences", "words", "ord_text", "ord_words", "language"],
     )
-    model = whisper.load_model("turbo")
-    audio = whisper.load_audio(audio_path)
+    model, audio = (
+        (whisper.load_model("turbo"), whisper.load_audio(audio_path))
+        if audio_path
+        else (None, None)
+    )
+
     if check:
         checked_transcribtion = check["transcription"]
         ord_transcription = check["ord_text"]
@@ -127,6 +131,8 @@ def get_transcribe(item_dir, audio_path, description: str) -> dict:
     else:
         # segments = segment_audio(audio_path)
         # result = transcribe_audio(audio_path, segments, model)
+        if not model or not audio:
+            raise ValueError("No audio or model")
 
         result = model.transcribe(
             audio=audio,

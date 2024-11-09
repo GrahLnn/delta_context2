@@ -11,7 +11,7 @@ from ..text.utils import sanitize_filename
 
 
 def download_ytb_mp4(
-    video_url: str, out_name: str | Path, ytb_cookies: Path = None
+    video_url: str, item_dir: Path, file_name: str, ytb_cookies: Path = None
 ) -> str:
     """
     下载 YouTube 视频并转换为 MP4 格式，显示下载进度条。
@@ -21,6 +21,9 @@ def download_ytb_mp4(
     :return: 下载的 MP4 文件路径
     :raises: 在下载过程中发生错误时引发异常
     """
+    source_dir = item_dir / "source"
+    path = source_dir / file_name
+    os.makedirs(source_dir, exist_ok=True)
 
     def progress_hook(d):
         if d["status"] == "downloading":
@@ -42,7 +45,6 @@ def download_ytb_mp4(
     cost = 0
     max_retries = 50
     retry_count = 0
-    path = Path(out_name)
     basename = path.name
     file_name = sanitize_filename(basename)
     out_name = str(path.parent / file_name)

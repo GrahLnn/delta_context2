@@ -42,16 +42,18 @@ class VideoProcessor:
         print("processing: ", video_info["title"])
         formal_name = formal_folder_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
-        source_dir = item_dir / "source"
-        save_name = source_dir / formal_name
-        os.makedirs(source_dir, exist_ok=True)
 
-        video_path = download_ytb_mp4(ytb_url, save_name, self.ytb_cookies)
-        audio_path = separate_audio_from_video(video_path)
-        audio_path = extract_vocal(audio_path)
+        if not os.path.exists(item_dir + "translated_video.mp4"):
+            video_path = download_ytb_mp4(
+                ytb_url, item_dir, formal_name, self.ytb_cookies
+            )
+            audio_path = separate_audio_from_video(video_path)
+            audio_path = extract_vocal(audio_path)
+        else:
+            audio_path = None
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
         language, audio_waveform = transcribe["language"], transcribe["audio"]
-        
+
         sentences = transcribe["sentences"]
         words = transcribe["words"]
         source_text_chunks = split_sentences_into_chunks(sentences)

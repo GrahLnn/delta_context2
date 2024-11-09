@@ -189,27 +189,8 @@ def rm_repeated_sequences(text):
 
 
 def formal_file_name(name):
-    return (
-        name.replace(" ", "_")
-        .replace(",", "")
-        .replace("#", "")
-        .replace("'", "")
-        .replace("!", "")
-        .replace("?", "")
-        .replace("[", "")
-        .replace("]", "")
-    )
+    return re.sub(r'[ ,#\'!\?\[\]]', '', name)
 
 
 def formal_folder_name(name):
-    return (
-        name.replace(" ", "_")
-        .replace(",", "")
-        .replace("#", "")
-        .replace("'", "")
-        .replace("!", "")
-        .replace("?", "")
-        .replace("[", "")
-        .replace("]", "")
-        .replace(".", "")
-    )
+    return re.sub(r'[ ,#\'!\?\[\]\.]', '', name)
