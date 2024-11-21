@@ -334,178 +334,192 @@ def split_to_atomic_part(
         done_idx = cache_data.get("done_idx")
     not_belong_this_chunk_zh = ""
     for i in range(done_idx + 1, len(source_text_chunks)):
-        chunk = source_text_chunks[i]
-        translation = not_belong_this_chunk_zh + translated_chunks[i]
-        not_belong_this_chunk_zh = ""
-        prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
-            PARAGRAPH_A=chunk.translate(str.maketrans(".,", "  ")),
-            PARAGRAPH_B=translation.translate(str.maketrans("。，;", "   ")),
-        )
-        with alive_bar(
-            1,
-            title=f"align chunk {i + 1}/{len(source_text_chunks)}",
-            bar=None,
-            stats=False,
-            monitor=False,
-        ) as bar:
-            try_count = 0
-            while True:
-                try:
-                    result = get_json_completion(prompt)
-                    for r in result["pair"]:
-                        len_sena_int = len(tokenize(r["sentence_a"]))
-                        len_senb_int = len(tokenize(r["sentence_b"]))
-                        r["ratio"] = (
-                            len_sena_int / len_senb_int if len_senb_int > 0 else 0
-                        )
-                    # print(json.dumps(result, ensure_ascii=False, indent=4))
-                    a_sentences = [pair["sentence_a"] for pair in result["pair"]]
-                    b_sentences = [pair["sentence_b"] for pair in result["pair"]]
-                    break
-                except Exception as e:
-                    print(e)
-                    # print(prompt)
-                    try_count += 1
-                    if try_count == 3:
-                        raise ValueError("can not get alignment")
+        try_count = 0
+        while True:
+            chunk = source_text_chunks[i]
+            translation = not_belong_this_chunk_zh + translated_chunks[i]
+            not_belong_this_chunk_zh = ""
+            prompt = PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT.format(
+                PARAGRAPH_A=chunk.translate(str.maketrans(".,", "  ")),
+                PARAGRAPH_B=translation.translate(str.maketrans("。，;", "   ")),
+            )
+            with alive_bar(
+                1,
+                title=f"align chunk {i + 1}/{len(source_text_chunks)}",
+                bar=None,
+                stats=False,
+                monitor=False,
+            ) as bar:
+                ttry_count = 0
+                while True:
+                    try:
+                        result = get_json_completion(prompt)
+                        for r in result["pair"]:
+                            len_sena_int = len(tokenize(r["sentence_a"]))
+                            len_senb_int = len(tokenize(r["sentence_b"]))
+                            r["ratio"] = (
+                                len_sena_int / len_senb_int if len_senb_int > 0 else 0
+                            )
+                        # print(json.dumps(result, ensure_ascii=False, indent=4))
+                        a_sentences = [pair["sentence_a"] for pair in result["pair"]]
+                        b_sentences = [pair["sentence_b"] for pair in result["pair"]]
+                        break
+                    except Exception as e:
+                        print(e)
+                        # print(prompt)
+                        ttry_count += 1
+                        if ttry_count == 3:
+                            raise ValueError("can not get alignment")
 
-            nas = []
-            nbs = []
-            for a, b in zip(a_sentences, b_sentences):
-                if a.strip() == "":
-                    nbs[-1] += " " + b.strip()
-                    continue
-                nas.append(a)
-                nbs.append(b)
+                nas = []
+                nbs = []
+                for a, b in zip(a_sentences, b_sentences):
+                    if a.strip() == "":
+                        nbs[-1] += " " + b.strip()
+                        continue
+                    nas.append(a)
+                    nbs.append(b)
 
-            # [print(s, t) for s, t in zip(nas, nbs)]
+                # [print(s, t) for s, t in zip(nas, nbs)]
 
-            en_texts = []
-            zh_texts = []
-            for idx, (source_text, translated_text) in enumerate(zip(nas, nbs)):
-                if translated_text.strip() == "":
-                    en_texts[-1] += " " + source_text
+                en_texts = []
+                zh_texts = []
+                for idx, (source_text, translated_text) in enumerate(zip(nas, nbs)):
+                    if translated_text.strip() == "":
+                        en_texts[-1] += " " + source_text
 
-                    # max_retry = 5
-                    # for count in range(max_retry):
-                    #     prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
-                    #         ORIGINAL_TEXT=source_text,
-                    #         CONTEXT=str(
-                    #             [(a, b) for a, b in zip(a_sentences, b_sentences)]
-                    #         ),
-                    #     )
-                    #     res = openai_completion(prompt)
-                    #     # res = get_completion(prompt)
-                    #     res = re.sub(r"<[^>]*>", "", res).strip()
-                    #     # print("补偿：", source_text, "->", res)
-                    #     if len(extract_zh_char(res)) != 0:
-                    #         zh_texts.append(res)
-                    #         en_texts.append(source_text)
-                    #         break
-                    #     if count + 1 == max_retry:
-                    #         raise ValueError("sentence can not translate")
+                        # max_retry = 5
+                        # for count in range(max_retry):
+                        #     prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
+                        #         ORIGINAL_TEXT=source_text,
+                        #         CONTEXT=str(
+                        #             [(a, b) for a, b in zip(a_sentences, b_sentences)]
+                        #         ),
+                        #     )
+                        #     res = openai_completion(prompt)
+                        #     # res = get_completion(prompt)
+                        #     res = re.sub(r"<[^>]*>", "", res).strip()
+                        #     # print("补偿：", source_text, "->", res)
+                        #     if len(extract_zh_char(res)) != 0:
+                        #         zh_texts.append(res)
+                        #         en_texts.append(source_text)
+                        #         break
+                        #     if count + 1 == max_retry:
+                        #         raise ValueError("sentence can not translate")
+                    else:
+                        en_texts.append(source_text)
+                        zh_texts.append(translated_text)
+                bar()
+            empty_indices = []
+            for emptyi in range(len(en_texts) - 1, -1, -1):
+                if en_texts[emptyi] == "":
+                    empty_indices.append(emptyi)
                 else:
-                    en_texts.append(source_text)
-                    zh_texts.append(translated_text)
-            bar()
-        empty_indices = []
-        for emptyi in range(len(en_texts) - 1, -1, -1):
-            if en_texts[emptyi] == "":
-                empty_indices.append(emptyi)
+                    break
+
+            # 根据空项的索引从 z 中移除并保存到另一个列表
+            removed_items = []
+            for index in sorted(empty_indices, reverse=True):
+                removed_items.append(en_texts.pop(index))
+                # en_texts.pop(index)
+
+            # 逆序保存的 removed_items 列表，因为我们是从末尾开始移除的
+            removed_items.reverse()
+
+            not_belong_this_chunk_zh = (
+                " ".join(removed_items) + " " if removed_items else ""
+            )
+
+            chunk_atomic_zhs = []
+            chunk_atomic_ens = []
+            for en_src, zh_tsl in alive_it(
+                zip(en_texts, zh_texts),
+                total=len(zh_texts),
+                title=f"split chunk {i + 1}/{len(source_text_chunks)}",
+            ):
+                if abs_uni_len(zh_tsl) > subtitle_len:
+                    # print(zh_tsl)
+                    if "，" in zh_tsl:
+                        split_text = re.split("，|；", zh_tsl)
+                        split_text = [s for s in split_text if s]
+                        new_t = modify_zh_list(split_text)
+                    else:
+                        new_t = [zh_tsl]
+                    new_t = second_split(new_t, subtitle_len)
+                    new_t = second_split(new_t, subtitle_len)
+                    # print(en_src)
+                    # print(new_t)
+                    llm_align_zh_list, llm_align_en_list = llm_align_sentences(
+                        en_src, new_t
+                    )
+                    # [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
+                    # print("--------------")
+                    try:
+                        zh_list, en_list = hand_repair(
+                            llm_align_zh_list, llm_align_en_list
+                        )
+                    except Exception as e:
+                        [
+                            print(s, t)
+                            for s, t in zip(llm_align_zh_list, llm_align_en_list)
+                        ]
+                        raise e
+                    if abs_uni_len("".join(en_list)) == 0:
+                        raise ValueError(
+                            f"empty translation: {[s+'|'+t for s, t in zip(llm_align_zh_list, llm_align_en_list)]}"
+                        )
+                    en_list = en_large_diff_radio_repair(zh_list, en_list)
+                    en_list = move_commas(en_list)
+
+                    # [print(s, t) for s, t in zip(zh_list, en_list)]
+                    # print("--------------")
+                    nzh_list = []
+                    for item in zh_list:
+                        if len(item) > subtitle_len:
+                            # print(">27", item)
+                            split_t = item.split(" ")
+                            fix_item = ""
+                            for s in split_t:
+                                if len(s) > subtitle_len:
+                                    # print(">27s", s)
+                                    token_integers = encoding.encode(s)
+                                    parts = len(s) // subtitle_len + 1
+                                    tokens_per_part = len(token_integers) // parts
+                                    ffix_item = ""
+                                    for i in range(parts):
+                                        start = i * tokens_per_part
+                                        end = (
+                                            (i + 1) * tokens_per_part
+                                            if i < parts - 1
+                                            else None
+                                        )
+                                        part = encoding.decode(
+                                            token_integers[start:end]
+                                        )
+                                        ffix_item += part + " "
+                                    fix_item += ffix_item
+                                else:
+                                    fix_item += s + " "
+                            # print(">27f", fix_item.strip())
+                            nzh_list.append(fix_item.strip())
+                        else:
+                            nzh_list.append(item)
+                    chunk_atomic_zhs.extend(nzh_list)
+                    chunk_atomic_ens.extend(en_list)
+
+                else:
+                    if en_src:
+                        chunk_atomic_zhs.append(zh_tsl)
+                        chunk_atomic_ens.append(en_src)
+                    else:
+                        chunk_atomic_zhs[-1] += "，" + zh_tsl
+            if "" in chunk_atomic_ens or "" in chunk_atomic_zhs:
+                try_count += 1
+                if try_count == 3:
+                    raise ValueError("can not get alignment")
+                continue
             else:
                 break
-
-        # 根据空项的索引从 z 中移除并保存到另一个列表
-        removed_items = []
-        for index in sorted(empty_indices, reverse=True):
-            removed_items.append(en_texts.pop(index))
-            # en_texts.pop(index)
-
-        # 逆序保存的 removed_items 列表，因为我们是从末尾开始移除的
-        removed_items.reverse()
-
-        not_belong_this_chunk_zh = (
-            " ".join(removed_items) + " " if removed_items else ""
-        )
-
-        chunk_atomic_zhs = []
-        chunk_atomic_ens = []
-        for en_src, zh_tsl in alive_it(
-            zip(en_texts, zh_texts),
-            total=len(zh_texts),
-            title=f"split chunk {i + 1}/{len(source_text_chunks)}",
-        ):
-            if abs_uni_len(zh_tsl) > subtitle_len:
-                # print(zh_tsl)
-                if "，" in zh_tsl:
-                    split_text = re.split("，|；", zh_tsl)
-                    split_text = [s for s in split_text if s]
-                    new_t = modify_zh_list(split_text)
-                else:
-                    new_t = [zh_tsl]
-                new_t = second_split(new_t, subtitle_len)
-                new_t = second_split(new_t, subtitle_len)
-                # print(en_src)
-                # print(new_t)
-                llm_align_zh_list, llm_align_en_list = llm_align_sentences(
-                    en_src, new_t
-                )
-                # [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
-                # print("--------------")
-                try:
-                    zh_list, en_list = hand_repair(llm_align_zh_list, llm_align_en_list)
-                except Exception as e:
-                    [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
-                    raise e
-                if abs_uni_len("".join(en_list)) == 0:
-                    raise ValueError(
-                        f"empty translation: {[s+'|'+t for s, t in zip(llm_align_zh_list, llm_align_en_list)]}"
-                    )
-                en_list = en_large_diff_radio_repair(zh_list, en_list)
-                en_list = move_commas(en_list)
-
-                # [print(s, t) for s, t in zip(zh_list, en_list)]
-                # print("--------------")
-                nzh_list = []
-                for item in zh_list:
-                    if len(item) > subtitle_len:
-                        # print(">27", item)
-                        split_t = item.split(" ")
-                        fix_item = ""
-                        for s in split_t:
-                            if len(s) > subtitle_len:
-                                # print(">27s", s)
-                                token_integers = encoding.encode(s)
-                                parts = len(s) // subtitle_len + 1
-                                tokens_per_part = len(token_integers) // parts
-                                ffix_item = ""
-                                for i in range(parts):
-                                    start = i * tokens_per_part
-                                    end = (
-                                        (i + 1) * tokens_per_part
-                                        if i < parts - 1
-                                        else None
-                                    )
-                                    part = encoding.decode(token_integers[start:end])
-                                    ffix_item += part + " "
-                                fix_item += ffix_item
-                            else:
-                                fix_item += s + " "
-                        # print(">27f", fix_item.strip())
-                        nzh_list.append(fix_item.strip())
-                    else:
-                        nzh_list.append(item)
-                chunk_atomic_zhs.extend(nzh_list)
-                chunk_atomic_ens.extend(en_list)
-
-            else:
-                if en_src:
-                    chunk_atomic_zhs.append(zh_tsl)
-                    chunk_atomic_ens.append(en_src)
-                else:
-                    chunk_atomic_zhs[-1] += "，" + zh_tsl
-        if "" in chunk_atomic_ens or "" in chunk_atomic_zhs:
-            raise ValueError("empty translation")
         atomic_zhs.extend(chunk_atomic_zhs)
         atomic_ens.extend(chunk_atomic_ens)
         done_idx += 1
