@@ -59,10 +59,10 @@ def download_ytb_mp4(
                 "preferedformat": "mp4",
             }
         ],
-        "progress_hooks": [progress_hook],
-        "logger": MyLogger(),
+        # "progress_hooks": [progress_hook],
+        # "logger": MyLogger(),
         "quiet": True,
-        "nopart": True,
+        # "nopart": True,
     }
     if ytb_cookies:
         ydl_opts["cookiefile"] = ytb_cookies
