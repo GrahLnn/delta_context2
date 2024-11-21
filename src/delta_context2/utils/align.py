@@ -1,5 +1,6 @@
 import difflib
 import json
+from logging import log
 import os
 import re
 import shutil
@@ -270,7 +271,7 @@ def radio_check(lst):
     return radios
 
 
-def en_large_diff_radio_repair(zh_list, en_list):
+def en_large_diff_ratio_repair(zh_list, en_list):
     zh_rid = radio_check(zh_list)
     en_rid = radio_check(en_list)
     new_en_list = en_list[:]
@@ -333,6 +334,10 @@ def split_to_atomic_part(
     not_belong_this_chunk_zh = ""
     for i in range(done_idx + 1, len(source_text_chunks)):
         try_count = 0
+        logsave = {
+            "source_chunks": source_text_chunks,
+            "translated_chunks": translated_chunks,
+        }
         while True:
             chunk = source_text_chunks[i]
             translation = not_belong_this_chunk_zh + translated_chunks[i]
@@ -352,6 +357,7 @@ def split_to_atomic_part(
                 while True:
                     try:
                         result = get_json_completion(prompt)
+                        logsave.update({"first_alignment": result})
                         for r in result["pair"]:
                             len_sena_int = len(tokenize(r["sentence_a"]))
                             len_senb_int = len(tokenize(r["sentence_b"]))
@@ -367,7 +373,7 @@ def split_to_atomic_part(
                         # print(prompt)
                         ttry_count += 1
                         if ttry_count == 3:
-                            raise ValueError("can not get alignment")
+                            raise ValueError("can not get alignment in first alignment")
 
                 nas = []
                 nbs = []
@@ -408,6 +414,9 @@ def split_to_atomic_part(
                         en_texts.append(source_text)
                         zh_texts.append(translated_text)
                 bar()
+            logsave.update(
+                {"first_fix": [{"en": e, "zh": z} for e, z in zip(en_texts, zh_texts)]}
+            )
             empty_indices = []
             for emptyi in range(len(en_texts) - 1, -1, -1):
                 if en_texts[emptyi] == "":
@@ -430,8 +439,8 @@ def split_to_atomic_part(
 
             chunk_atomic_zhs = []
             chunk_atomic_ens = []
-            for en_src, zh_tsl in alive_it(
-                zip(en_texts, zh_texts),
+            for sentence_idx, (en_src, zh_tsl) in alive_it(
+                enumerate(zip(en_texts, zh_texts)),
                 total=len(zh_texts),
                 title=f"split chunk {i + 1}/{len(source_text_chunks)}",
             ):
@@ -445,10 +454,17 @@ def split_to_atomic_part(
                         new_t = [zh_tsl]
                     new_t = second_split(new_t, subtitle_len)
                     new_t = second_split(new_t, subtitle_len)
-                    # print(en_src)
-                    # print(new_t)
+
                     llm_align_zh_list, llm_align_en_list = llm_align_sentences(
                         en_src, new_t
+                    )
+                    logsave.update(
+                        {
+                            f"llm_align_{sentence_idx}": [
+                                {"en": e, "zh": z}
+                                for e, z in zip(llm_align_en_list, llm_align_zh_list)
+                            ]
+                        }
                     )
                     # [print(s, t) for s, t in zip(llm_align_zh_list, llm_align_en_list)]
                     # print("--------------")
@@ -462,11 +478,18 @@ def split_to_atomic_part(
                             for s, t in zip(llm_align_zh_list, llm_align_en_list)
                         ]
                         raise e
+                    logsave.update(
+                        {
+                            f"hand_repair_{sentence_idx}": [
+                                {"en": e, "zh": z} for e, z in zip(en_list, zh_list)
+                            ]
+                        }
+                    )
                     if abs_uni_len("".join(en_list)) == 0:
                         raise ValueError(
                             f"empty translation: {[s+'|'+t for s, t in zip(llm_align_zh_list, llm_align_en_list)]}"
                         )
-                    en_list = en_large_diff_radio_repair(zh_list, en_list)
+                    en_list = en_large_diff_ratio_repair(zh_list, en_list)
                     en_list = move_commas(en_list)
 
                     # [print(s, t) for s, t in zip(zh_list, en_list)]
@@ -502,6 +525,13 @@ def split_to_atomic_part(
                             nzh_list.append(fix_item.strip())
                         else:
                             nzh_list.append(item)
+                    logsave.update(
+                        {
+                            f"split_{sentence_idx}": [
+                                {"en": e, "zh": z} for e, z in zip(en_list, nzh_list)
+                            ]
+                        }
+                    )
                     chunk_atomic_zhs.extend(nzh_list)
                     chunk_atomic_ens.extend(en_list)
 
@@ -514,7 +544,7 @@ def split_to_atomic_part(
             if "" in chunk_atomic_ens or "" in chunk_atomic_zhs:
                 try_count += 1
                 if try_count == 3:
-                    raise ValueError("can not get alignment")
+                    raise ValueError("can not get alignment after 3 times")
                 continue
             else:
                 break
