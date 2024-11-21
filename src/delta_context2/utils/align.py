@@ -12,7 +12,6 @@ import tiktoken
 
 from ..audio.transcribe import align_diff_words
 from ..infomation.llm import (
-    get_completion,
     get_json_completion,
     openai_completion,
     tokenize,
@@ -20,11 +19,10 @@ from ..infomation.llm import (
 from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
-    SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT,
     SPLIT_SMALL_SENTENCE_PROMPT,
 )
 from ..infomation.read_metadata import read_metadata
-from ..text.utils import abs_uni_len, extract_zh_char, normalize_to_10, split_para
+from ..text.utils import abs_uni_len, normalize_to_10
 from ..utils.decorator import update_metadata
 from ..utils.list import flatten
 
