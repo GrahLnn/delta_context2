@@ -25,12 +25,12 @@ def download_ytb_mp4(
     path = source_dir / file_name
     os.makedirs(source_dir, exist_ok=True)
 
-    def progress_hook(d):
-        if d["status"] == "downloading":
-            total_bytes = d.get("total_bytes", 0)
-            downloaded_bytes = d.get("downloaded_bytes", 0)
-            progress = downloaded_bytes / total_bytes if total_bytes else 0
-            bar(progress)
+    # def progress_hook(d):
+    #     if d["status"] == "downloading":
+    #         total_bytes = d.get("total_bytes", 0)
+    #         downloaded_bytes = d.get("downloaded_bytes", 0)
+    #         progress = downloaded_bytes / total_bytes if total_bytes else 0
+    #         bar(progress)
 
     class MyLogger:
         def debug(self, msg):
@@ -72,9 +72,7 @@ def download_ytb_mp4(
 
     while True:
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl, alive_bar(
-                100, title="Downloading", manual=True
-            ) as bar:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([video_url])
             return out_name + ".mp4"
 
@@ -96,7 +94,7 @@ def download_ytb_mp4(
                     except OSError as remove_error:
                         print(f"Error removing file {file}: {remove_error}")
             else:
-                print(f"Non-critical error, retrying without removing files...")
+                print("Non-critical error, retrying without removing files...")
 
             if retry_count < max_retries:
                 print(f"Retrying {video_url}... attempt {retry_count}")
