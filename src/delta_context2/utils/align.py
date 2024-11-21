@@ -1,6 +1,6 @@
 import difflib
 import json
-from logging import log
+import toml
 import os
 import re
 import shutil
@@ -544,6 +544,8 @@ def split_to_atomic_part(
             if "" in chunk_atomic_ens or "" in chunk_atomic_zhs:
                 try_count += 1
                 if try_count == 3:
+                    with open("log.toml", "w", encoding="utf-8") as f:
+                        toml.dump(logsave, f)
                     raise ValueError("can not get alignment after 3 times")
                 continue
             else:
