@@ -507,11 +507,11 @@ def split_to_atomic_part(
                                     parts = len(s) // subtitle_len + 1
                                     tokens_per_part = len(token_integers) // parts
                                     ffix_item = ""
-                                    for i in range(parts):
-                                        start = i * tokens_per_part
+                                    for ii in range(parts):
+                                        start = ii * tokens_per_part
                                         end = (
-                                            (i + 1) * tokens_per_part
-                                            if i < parts - 1
+                                            (ii + 1) * tokens_per_part
+                                            if ii < parts - 1
                                             else None
                                         )
                                         part = encoding.decode(
