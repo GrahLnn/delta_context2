@@ -4,9 +4,7 @@ import time
 from pathlib import Path
 
 import yt_dlp
-from alive_progress import alive_bar
 from tenacity import retry, stop_after_attempt, wait_exponential
-from yt_dlp.utils import DownloadError
 
 from ..text.utils import sanitize_filename
 
