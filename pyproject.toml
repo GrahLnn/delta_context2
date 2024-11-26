@@ -20,6 +20,7 @@ dependencies = [
     "onnx==1.16.1",
     "onnxruntime==1.19.2",
     "toml>=0.10.2",
+    "tenacity>=9.0",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"

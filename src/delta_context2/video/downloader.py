@@ -5,11 +5,13 @@ from pathlib import Path
 
 import yt_dlp
 from alive_progress import alive_bar
+from tenacity import retry, stop_after_attempt, wait_exponential
 from yt_dlp.utils import DownloadError
 
 from ..text.utils import sanitize_filename
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=15))
 def download_ytb_mp4(
     video_url: str, item_dir: Path, file_name: str, ytb_cookies: Path = None
 ) -> str:
@@ -25,26 +27,6 @@ def download_ytb_mp4(
     path = source_dir / file_name
     os.makedirs(source_dir, exist_ok=True)
 
-    # def progress_hook(d):
-    #     if d["status"] == "downloading":
-    #         total_bytes = d.get("total_bytes", 0)
-    #         downloaded_bytes = d.get("downloaded_bytes", 0)
-    #         progress = downloaded_bytes / total_bytes if total_bytes else 0
-    #         bar(progress)
-
-    class MyLogger:
-        def debug(self, msg):
-            pass
-
-        def warning(self, msg):
-            pass
-
-        def error(self, msg):
-            print(msg)
-
-    cost = 0
-    max_retries = 50
-    retry_count = 0
     basename = path.name
     file_name = sanitize_filename(basename)
     out_name = str(path.parent / file_name)
@@ -59,10 +41,7 @@ def download_ytb_mp4(
                 "preferedformat": "mp4",
             }
         ],
-        # "progress_hooks": [progress_hook],
-        # "logger": MyLogger(),
         "quiet": True,
-        # "nopart": True,
     }
     if ytb_cookies:
         ydl_opts["cookiefile"] = ytb_cookies
@@ -70,47 +49,6 @@ def download_ytb_mp4(
     if os.path.exists(out_name + ".mp4"):
         return out_name + ".mp4"
 
-    while True:
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([video_url])
-            return out_name + ".mp4"
-
-        except DownloadError as e:
-            error_message = str(e)
-            print(f"Download error: {error_message}")
-            retry_count += 1
-
-            # 如果错误消息包含特定的内容，表明需要删除文件重新下载
-            if (
-                "HTTP Error 416" in error_message
-                or "unable to download video data" in error_message
-            ):
-                print("Critical error, removing partial files and retrying...")
-                file_list = glob.glob(out_name + ".*")
-                for file in file_list:
-                    try:
-                        os.remove(file)
-                    except OSError as remove_error:
-                        print(f"Error removing file {file}: {remove_error}")
-            else:
-                print("Non-critical error, retrying without removing files...")
-
-            if retry_count < max_retries:
-                print(f"Retrying {video_url}... attempt {retry_count}")
-                time.sleep(5)
-            elif retry_count == max_retries:
-                print("Maximum retry attempts reached. Cleaning up.")
-                file_list = glob.glob(out_name + ".*")
-                for file in file_list:
-                    try:
-                        os.remove(file)
-                    except OSError as remove_error:
-                        print(f"Error removing file {file}: {remove_error}")
-                time.sleep(10)
-                cost += 1
-                retry_count = 0  # 重置重试计数器，以便在清理后再次尝试
-
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            exit(1)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([video_url])
+    return out_name + ".mp4"

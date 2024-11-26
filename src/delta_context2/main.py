@@ -14,7 +14,7 @@ from .text.utils import (
 )
 from .utils.align import get_sentence_timestamps, split_to_atomic_part
 from .utils.subtitle import render_video_with_subtitles, save_to_ass
-from .video.downloader import download_ytb_mp4
+from .video.downloader import downl
 from .video.utils import compress_video
 
 
@@ -44,7 +44,7 @@ class VideoProcessor:
         item_dir = self.DATA_DIR / "videos" / formal_name
 
         if not os.path.exists(item_dir / "translated_video.mp4"):
-            video_path = download_ytb_mp4(
+            video_path = downl(
                 ytb_url, item_dir, formal_name, self.ytb_cookies
             )
             audio_path = separate_audio_from_video(video_path)
