@@ -3,6 +3,7 @@ import io
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from museper.inference import separate_audio
@@ -51,6 +52,20 @@ def separate_audio_from_video(video_path: str, output_audio_path: str = None) ->
     return str(output_audio_path)
 
 
+def remove_file_with_retry(file_path, max_retries=3, delay=1):
+    for i in range(max_retries):
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return True
+        except PermissionError:
+            if i < max_retries - 1:
+                time.sleep(delay)
+            else:
+                print(f"警告：无法删除文件 {file_path}，该文件可能正被其他程序使用")
+                return False
+
+
 @show_progress("Extracting")
 def extract_vocal(audio_path: str) -> str:
     model_type = "mel_band_roformer"
@@ -87,7 +102,8 @@ def extract_vocal(audio_path: str) -> str:
     )
 
     shutil.move(temp_audio_path, target_audio_path)
-    os.remove(model_give_name)
-    os.remove(audio_path)
+    # 添加重试机制删除文件
+    remove_file_with_retry(model_give_name)
+    remove_file_with_retry(audio_path)
 
     return str(target_audio_path)
