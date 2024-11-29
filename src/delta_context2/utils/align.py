@@ -8,7 +8,8 @@ from pathlib import Path
 
 import demjson3
 from alive_progress import alive_bar, alive_it
-from retry import retry
+from tenacity import retry, stop_after_attempt
+
 import tiktoken
 
 from ..audio.transcribe import align_diff_words
@@ -87,17 +88,21 @@ def second_split(zh_list, len_limit):
     return [elem for elem in new_list if elem]
 
 
-@retry(tries=3, delay=2)
+def retry_handler(retry_state):
+    print(f"All retries failed. Last error: {retry_state.outcome.exception()}")
+    print(f"Last attempt result: {retry_state.outcome.result()}")
+    raise
+
+
+@retry(stop=stop_after_attempt(3), retry_error_callback=retry_handler)
 def get_aligned_sentences(prompt):
     sys_msg = "You have a special preference for JSON, and all your responses will be in the form of ```json{...}``` for users."
     result = openai_completion(prompt, sys_msg)
-    # result = get_json_completion(prompt, model="gemini-1.5-flash")
-    # print(result)
     pattern = re.compile(r"^json")
     json_str = pattern.sub("", result.strip().strip("```"))
 
-    result = demjson3.decode(json_str)["pair"]
-    return result
+    answer = demjson3.decode(json_str)["pair"]
+    return answer
 
 
 def radio_split(target_str, reference_list):
@@ -129,7 +134,7 @@ def radio_split(target_str, reference_list):
     return segments
 
 
-@retry(tries=3, delay=2, exceptions=ValueError)
+@retry(stop=stop_after_attempt(3))
 def llm_align_sentences(source_text, translated_snetence_array):
     translated_snetence_array = [
         t.replace('"', "\\'") for t in translated_snetence_array
