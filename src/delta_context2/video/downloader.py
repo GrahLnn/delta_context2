@@ -30,15 +30,10 @@ def download_ytb_mp4(
     out_name = str(path.parent / file_name)
 
     ydl_opts = {
-        "format": "bestvideo+bestaudio/best",
+        "format": "bestvideo+bestaudio",
         "outtmpl": out_name + ".%(ext)s",
         "restrictfilenames": True,
-        "postprocessors": [
-            {
-                "key": "FFmpegVideoConvertor",
-                "preferedformat": "mp4",
-            }
-        ],
+        "merge_output_format": "mp4",
         "quiet": True,
     }
     if ytb_cookies:
