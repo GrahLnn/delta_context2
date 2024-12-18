@@ -183,6 +183,7 @@ def get_completion(
                     key=key,
                 )
             except Exception as e:
+                print(e)
                 failed_key.append(key)
                 continue
         else:
