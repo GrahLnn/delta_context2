@@ -1,7 +1,7 @@
 import os
 import random
 import re
-import sys
+import time
 
 import demjson3
 import requests
@@ -162,18 +162,19 @@ def get_completion(
     prompt: str,
     system_message: str = "",
     model: str = TRANSLATION_MODEL,
-    temperature: float = 1.0,
+    temperature: int = 1,
 ) -> str:
     answer = ""
     failed_key = []
     for _ in range(len(GEMINI_KEYS) + 1):
         if "gemini" in model:
             while True:
-                key = choose_key()
-                if len(failed_key) == len(GEMINI_KEYS):
-                    raise Exception("Failed to get completion. No available key.")
+                key = choose_key()                
                 if key not in failed_key:
                     break
+                if len(failed_key) == len(GEMINI_KEYS):
+                    time.sleep(60)
+                    failed_key=[]
             try:
                 answer = gemini_completion(
                     prompt=prompt,
