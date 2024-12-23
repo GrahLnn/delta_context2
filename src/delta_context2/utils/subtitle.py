@@ -99,8 +99,6 @@ def render_video_with_subtitles(
         return final_video_path
     cmd = [
         "ffmpeg",
-        "-hwaccel",
-        "cuda",  # 启用 CUDA 硬件加速
         "-i",
         video_path,  # 输入视频文件
         "-vf",
@@ -113,31 +111,33 @@ def render_video_with_subtitles(
         output_path,  # 输出视频文件
     ]
 
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        encoding="utf-8",
-        text=True,
-    )
+    subprocess.run(cmd, check=True)
 
-    duration = None
-    progress = [0]
+    # process = subprocess.Popen(
+    #     cmd,
+    #     stdout=subprocess.PIPE,
+    #     stderr=subprocess.STDOUT,
+    #     encoding="utf-8",
+    #     text=True,
+    # )
 
-    # 使用 alive_progress 显示进度条
-    with alive_bar(100, title="render subtitle", manual=True) as bar:
-        for line in process.stdout:
-            if duration is None:
-                match = re.search(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2}),", line)
-                if match:
-                    duration = get_seconds(match.group(1))
+    # duration = None
+    # progress = [0]
 
-            match = re.search(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", line)
-            if match:
-                elapsed_time = get_seconds(match.group(1))
-                if duration:
-                    progress = round(elapsed_time / duration, 2)
-                    bar(progress)
+    # # 使用 alive_progress 显示进度条
+    # with alive_bar(100, title="render subtitle", manual=True) as bar:
+    #     for line in process.stdout:
+    #         if duration is None:
+    #             match = re.search(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2}),", line)
+    #             if match:
+    #                 duration = get_seconds(match.group(1))
 
-    process.wait()
+    #         match = re.search(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", line)
+    #         if match:
+    #             elapsed_time = get_seconds(match.group(1))
+    #             if duration:
+    #                 progress = round(elapsed_time / duration, 2)
+    #                 bar(progress)
+
+    # process.wait()
     return output_path
