@@ -113,10 +113,9 @@ def gemini_completion(prompt, system_message, temperature, model, key):
     os.makedirs("asset", exist_ok=True)
 
     payload = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "contents": {"parts": {"text": prompt}},
         "systemInstruction": {
-            "role": "system",
-            "parts": [{"text": system_message}],
+            "parts": {"text": system_message}
         },
         "generationConfig": {"temperature": temperature, "topP": 0.95},
         "safetySettings": [
