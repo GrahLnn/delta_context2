@@ -49,16 +49,16 @@ def get_summary(idir, sentences: list[str]) -> dict:
 
     tldrs = []
     for chunk in chunks:
-        tldr = openai_completion(chunk, "Abstract this paragraph.")
+        tldr = get_completion(chunk, "Abstract this paragraph.")
         tldrs.append(tldr)
 
     summary = get_completion(" ".join(tldrs), SUMMARY_SYS_MESSAGE)
     prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
-    summary_zh = openai_completion(prompt)
+    summary_zh = get_completion(prompt)
     prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
         ORIGINAL_TEXT=title, CONTEXT=summary
     )
-    title_zh = openai_completion(prompt)
+    title_zh = get_completion(prompt)
     return {"summary": summary, "summary_zh": summary_zh, "title_zh": title_zh}
 
 
@@ -72,7 +72,7 @@ def get_tags(idir, summary: str) -> dict:
         summary=summary
     )
 
-    res = openai_completion(prompt)
+    res = get_completion(prompt)
     tags = res.split(",")
     tags = [tag.strip() for tag in tags]
     return tags
@@ -85,7 +85,7 @@ def choose_key():
 
 @retry(tries=3, delay=2)
 def get_json_completion(prompt, model=TRANSLATION_MODEL):
-    result = get_completion(prompt, model=model)
+    result = get_completion(prompt)
     pattern = re.compile(r"^json")
     json_str = pattern.sub("", result.strip().strip("```"))
     result = demjson3.decode(json_str)
