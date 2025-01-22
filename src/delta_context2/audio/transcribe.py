@@ -155,7 +155,6 @@ def transcribe_audio(item_dir: str, audio_path: str) -> dict:
     }
 
 
-@show_progress("Correcting")
 @update_metadata(
     ("text", lambda result: result["text"]),
     ("sentences", lambda result: result["sentences"]),
@@ -203,7 +202,6 @@ def correct_transcript(item_dir: str, transcribed_data: dict) -> dict:
     # 6. 句子分割、去重、去除重复序列
     sentences = drop_duplicate(collect_sentences(trg_words))
     checked_transcription = rm_repeated_sequences(" ".join(sentences))
-    print("diff len", len(checked_transcription) - len(ord_text))
 
     # 7. 再次对齐，得到最终的对齐信息
     trg_words = align_diff_words(words, ord_text, checked_transcription)
@@ -338,7 +336,7 @@ def format_words(words):
 def corect_transcription(transcription):
     chunks = split_text_into_chunks(transcription)
     texts = []
-    for chunk in tqdm(chunks):
+    for chunk in tqdm(chunks, desc="Correcting"):
         prompt = TRANSCRIBTION_CORECTION_PROMPT.format(TRANSCRIBED_TEXT=chunk)
         max_attempts = 3
         for attempt in range(max_attempts):
