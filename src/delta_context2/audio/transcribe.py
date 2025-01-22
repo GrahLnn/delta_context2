@@ -1,7 +1,8 @@
 import difflib
-import regex as re
 
+import regex as re
 import whisper
+from alive_progress import alive_it
 
 from ..infomation.llm import get_completion
 from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
@@ -337,7 +338,7 @@ def format_words(words):
 def corect_transcription(transcription):
     chunks = split_text_into_chunks(transcription)
     texts = []
-    for chunk in chunks:
+    for chunk in alive_it(chunks):
         prompt = TRANSCRIBTION_CORECTION_PROMPT.format(TRANSCRIBED_TEXT=chunk)
         max_attempts = 3
         for attempt in range(max_attempts):
