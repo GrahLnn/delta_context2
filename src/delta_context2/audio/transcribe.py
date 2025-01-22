@@ -156,9 +156,9 @@ def transcribe_audio(item_dir: str, audio_path: str) -> dict:
 
 @show_progress("Correcting")
 @update_metadata(
-    ("text", lambda result: result["ord_words"]),
-    ("sentences", lambda result: result["ord_text"]),
-    ("words", lambda result: result["language"]),
+    ("text", lambda result: result["text"]),
+    ("sentences", lambda result: result["sentences"]),
+    ("words", lambda result: result["words"]),
 )
 def correct_transcript(item_dir: str, transcribed_data: dict) -> dict:
     """
@@ -178,7 +178,7 @@ def correct_transcript(item_dir: str, transcribed_data: dict) -> dict:
         }
     # 1. 取出原始转录数据
     ord_text = transcribed_data["ord_text"]
-    words = transcribed_data["words"]
+    words = transcribed_data["ord_words"]
 
     # 2. 初步对齐：把原始 words 与原始转录文本对齐
     words = align_diff_words(words, "".join([w["word"] for w in words]), ord_text)
