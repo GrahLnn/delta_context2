@@ -17,6 +17,7 @@ from .prompt import (
     SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT,
     SUMMARY_SYS_MESSAGE,
 )
+from poolctrl import Pool
 
 load_dotenv()
 OPENAI_URL = os.getenv("OPENAI_API_URL")
@@ -26,6 +27,7 @@ TRANSLATION_MODEL = os.getenv("TRANSLATION_MODEL")
 GEMINI_API = os.getenv("GEMINI_API")
 GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
 
+pool = Pool(rpm=2, rpd=50, task_id="gemini")
 
 @show_progress("getting summary")
 @update_metadata(
@@ -167,21 +169,16 @@ def get_completion(
     failed_key = []
     for _ in range(len(GEMINI_KEYS) + 1):
         if "gemini" in model:
-            while True:
-                key = choose_key()                
-                if key not in failed_key:
-                    break
-                if len(failed_key) == len(GEMINI_KEYS):
-                    time.sleep(60)
-                    failed_key=[]
+            
             try:
-                answer = gemini_completion(
-                    prompt=prompt,
-                    system_message=system_message,
-                    temperature=temperature,
-                    model=model,
-                    key=key,
-                )
+                with pool.context(GEMINI_KEYS) as key:
+                    answer = gemini_completion(
+                        prompt=prompt,
+                        system_message=system_message,
+                        temperature=temperature,
+                        model=model,
+                        key=key,
+                    )
             except Exception as e:
                 print(e)
                 failed_key.append(key)
