@@ -118,7 +118,13 @@ def gemini_completion(prompt, system_message, temperature, model, key):
     payload = {
         "contents": {"parts": {"text": prompt}},
         "systemInstruction": {"parts": {"text": system_message}},
-        "generationConfig": {"temperature": temperature, "topP": 0.95},
+        "generationConfig": {
+            "temperature": 0.7,
+            "topK": 64,
+            "topP": 0.95,
+            "maxOutputTokens": 65536,
+            "responseMimeType": "text/plain",
+        },
         "safetySettings": [
             {
                 "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
