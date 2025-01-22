@@ -300,5 +300,10 @@ Double-check that you have translated every sentence from the <translate_this> s
 Do not translate or modify any part of the source text outside the <translate_this> tags.
 f) Remove any pinyin annotations.
 
-Provide your improved translation inside <improved_translation> tags.
+
+<improved_translation>
+[Your improved translation goes here]
+</improved_translation>
+
+Ensure that your improved translation addresses all the expert suggestions and adheres to the guidelines provided above.
 """
