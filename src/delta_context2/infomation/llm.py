@@ -27,7 +27,8 @@ TRANSLATION_MODEL = os.getenv("TRANSLATION_MODEL")
 GEMINI_API = os.getenv("GEMINI_API")
 GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
 
-pool = Pool(rpm=2, rpd=50, task_id="gemini")
+pool = Pool(rpm=8, rpd=1300, task_id="gemini")
+
 
 @show_progress("getting summary")
 @update_metadata(
@@ -116,9 +117,7 @@ def gemini_completion(prompt, system_message, temperature, model, key):
 
     payload = {
         "contents": {"parts": {"text": prompt}},
-        "systemInstruction": {
-            "parts": {"text": system_message}
-        },
+        "systemInstruction": {"parts": {"text": system_message}},
         "generationConfig": {"temperature": temperature, "topP": 0.95},
         "safetySettings": [
             {
@@ -169,7 +168,6 @@ def get_completion(
     failed_key = []
     for _ in range(len(GEMINI_KEYS) + 1):
         if "gemini" in model:
-            
             try:
                 with pool.context(GEMINI_KEYS) as key:
                     answer = gemini_completion(
@@ -181,7 +179,7 @@ def get_completion(
                     )
             except Exception as e:
                 print(e)
-                failed_key.append(key)
+                # failed_key.append(key)
                 continue
         else:
             answer = openai_completion(

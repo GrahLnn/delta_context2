@@ -103,75 +103,207 @@ from ..utils.list import drop_duplicate, flatten
 
 @show_progress("Transcribing")
 @update_metadata(
-    ("transcription", lambda result: result["text"]),
-    ("words", lambda result: result["words"]),
     ("ord_words", lambda result: result["ord_words"]),
-    ("sentences", lambda result: result["sentences"]),
     ("ord_text", lambda result: result["ord_text"]),
     ("language", lambda result: result["language"]),
 )
-def get_transcribe(item_dir, audio_path, description: str = None) -> dict:
+def transcribe_audio(item_dir: str, audio_path: str) -> dict:
+    """
+    只负责调用 Whisper 模型进行音频转录，返回原始文本、分段、words、语言等原始信息。
+    不做任何纠正或后处理。
+    """
+    if audio_path is None:
+        raise ValueError("No audio path provided")
+
+    # 1. 加载模型 & 音频
+    model = whisper.load_model("turbo")
+    audio = whisper.load_audio(audio_path)
+
     check = read_metadata(
         item_dir,
-        ["transcription", "sentences", "words", "ord_text", "ord_words", "language"],
+        ["ord_text", "ord_words", "language"],
     )
-    model, audio = (
-        (whisper.load_model("turbo"), whisper.load_audio(audio_path))
-        if audio_path
-        else (None, None)
-    )
-
     if check:
-        checked_transcribtion = check["transcription"]
-        ord_transcription = check["ord_text"]
-        trg_words = check["words"]
-        sentences = check["sentences"]
-        words = check["ord_words"]
-        language = check["language"]
-    else:
-        # segments = segment_audio(audio_path)
-        # result = transcribe_audio(audio_path, segments, model)
-        if audio_path is None:
-            raise ValueError("No audio path provided")
+        return {
+            "ord_text": check.get("ord_text"),  # 原始转录文本
+            "ord_words": check.get("ord_words"),  # 原始 word 列表
+            "audio": audio,  # 已加载的音频，是否返回视需要而定
+            "language": check.get("language"),  # 语言
+        }
 
-        result = model.transcribe(
-            audio=audio,
-            word_timestamps=True,
-        )
-        ord_transcription = result["text"]
-        segments = result["segments"]
-        language = result["language"]
-        # texts = [seg["text"] for seg in segments]
-        words = flatten([seg["words"] for seg in segments])
-        # Somtimes the transcription is not correct with segments words
-        words = align_diff_words(
-            words, "".join([word["word"] for word in words]), ord_transcription
-        )
-        formal_words = format_words(words)
-        if (n := len(ord_transcription.split())) != (m := len(formal_words)):
-            [
-                print(sw, fw["word"])
-                for sw, fw in zip(ord_transcription.split(), formal_words)
-            ]
-            raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
-        checked_transcribtion = corect_transcription(ord_transcription)
-        trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
-        sentences = drop_duplicate(collect_sentences(trg_words))
-        checked_transcribtion = rm_repeated_sequences(" ".join(sentences))
+    # 2. 开始转录
+    result = model.transcribe(
+        audio=audio,
+        word_timestamps=True,
+    )
 
-        print("diff len", len(checked_transcribtion) - len(ord_transcription))
-        trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
-        sentences = split_para(checked_transcribtion)
+    # 3. 释放模型
+    del model
+
+    # 4. 整理并返回原始信息
+    ord_transcription = result["text"]
+    segments = result["segments"]
+    language = result["language"]
+    words = flatten([seg["words"] for seg in segments])  # 原始的 words 列表
 
     return {
-        "text": checked_transcribtion,
-        "ord_text": ord_transcription,
-        "sentences": sentences,
-        "ord_words": words,
-        "words": trg_words,
-        "audio": audio,
-        "language": language,
+        "ord_text": ord_transcription,  # 原始转录文本
+        "ord_words": words,  # 原始 word 列表
+        "audio": audio,  # 已加载的音频，是否返回视需要而定
+        "language": language,  # 语言
     }
+
+
+@show_progress("Correcting")
+@update_metadata(
+    ("text", lambda result: result["ord_words"]),
+    ("sentences", lambda result: result["ord_text"]),
+    ("words", lambda result: result["language"]),
+)
+def correct_transcript(item_dir: str, transcribed_data: dict) -> dict:
+    """
+    只负责对 `transcribe_audio` 返回的原始转录结果进行纠正、分词对齐、去重处理等。
+    """
+    check = read_metadata(
+        item_dir,
+        ["text", "sentences", "language", "words"],
+    )
+    if check:
+        return {
+            "text": check.get("text"),  # 最终纠正文本
+            "sentences": check.get("sentences"),  # 分好句的文本
+            "words": check.get("words"),  # 对齐后的最终 words
+            "audio": transcribed_data["audio"],
+            "language": check.get("language"),
+        }
+    # 1. 取出原始转录数据
+    ord_text = transcribed_data["ord_text"]
+    words = transcribed_data["words"]
+
+    # 2. 初步对齐：把原始 words 与原始转录文本对齐
+    words = align_diff_words(words, "".join([w["word"] for w in words]), ord_text)
+    formal_words = format_words(words)
+
+    # 3. 检查分词数是否匹配
+    n = len(ord_text.split())
+    m = len(formal_words)
+    if n != m:
+        # 只是简单打印一下对不上时的映射
+        for sw, fw in zip(ord_text.split(), formal_words):
+            print(sw, fw["word"])
+        raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
+
+    # 4. 纠正文本（拼写或其他自定义修正）
+    checked_transcription = corect_transcription(ord_text)
+
+    # 5. 二次对齐纠正后结果
+    trg_words = align_diff_words(words, ord_text, checked_transcription)
+
+    # 6. 句子分割、去重、去除重复序列
+    sentences = drop_duplicate(collect_sentences(trg_words))
+    checked_transcription = rm_repeated_sequences(" ".join(sentences))
+    print("diff len", len(checked_transcription) - len(ord_text))
+
+    # 7. 再次对齐，得到最终的对齐信息
+    trg_words = align_diff_words(words, ord_text, checked_transcription)
+    sentences = split_para(checked_transcription)
+
+    # 8. 返回纠正后的文本及其他信息
+    return {
+        "text": checked_transcription,  # 最终纠正文本
+        "sentences": sentences,  # 分好句的文本
+        "words": trg_words,  # 对齐后的最终 words
+        "audio": transcribed_data["audio"],  # 是否保留音频根据需求
+        "language": transcribed_data["language"],
+    }
+
+
+def get_transcribe(item_dir: str, audio_path: str, description: str = None) -> dict:
+    """
+    通过先调用 transcribe_audio 做初步转录，再调用 correct_transcript 做纠正。
+    最终返回纠正后的结果。
+    """
+    # 1. 调用转录
+    raw_data = transcribe_audio(item_dir, audio_path)
+
+    # 2. 调用纠正
+    result_data = correct_transcript(item_dir, raw_data)
+
+    # 3. 返回最终结果
+    return result_data
+
+
+# @show_progress("Transcribing")
+# @update_metadata(
+#     ("transcription", lambda result: result["text"]),
+#     ("words", lambda result: result["words"]),
+#     ("ord_words", lambda result: result["ord_words"]),
+#     ("sentences", lambda result: result["sentences"]),
+#     ("ord_text", lambda result: result["ord_text"]),
+#     ("language", lambda result: result["language"]),
+# )
+# def get_transcribe(item_dir, audio_path, description: str = None) -> dict:
+#     check = read_metadata(
+#         item_dir,
+#         ["transcription", "sentences", "words", "ord_text", "ord_words", "language"],
+#     )
+#     model, audio = (
+#         (whisper.load_model("turbo"), whisper.load_audio(audio_path))
+#         if audio_path
+#         else (None, None)
+#     )
+
+#     if check:
+#         checked_transcribtion = check["transcription"]
+#         ord_transcription = check["ord_text"]
+#         trg_words = check["words"]
+#         sentences = check["sentences"]
+#         words = check["ord_words"]
+#         language = check["language"]
+#     else:
+#         # segments = segment_audio(audio_path)
+#         # result = transcribe_audio(audio_path, segments, model)
+#         if audio_path is None:
+#             raise ValueError("No audio path provided")
+
+#         result = model.transcribe(
+#             audio=audio,
+#             word_timestamps=True,
+#         )
+#         ord_transcription = result["text"]
+#         segments = result["segments"]
+#         language = result["language"]
+#         # texts = [seg["text"] for seg in segments]
+#         words = flatten([seg["words"] for seg in segments])
+#         # Somtimes the transcription is not correct with segments words
+#         words = align_diff_words(
+#             words, "".join([word["word"] for word in words]), ord_transcription
+#         )
+#         formal_words = format_words(words)
+#         if (n := len(ord_transcription.split())) != (m := len(formal_words)):
+#             [
+#                 print(sw, fw["word"])
+#                 for sw, fw in zip(ord_transcription.split(), formal_words)
+#             ]
+#             raise ValueError(f"Error: The words({m}) and sentences({n}) do not match.")
+#         checked_transcribtion = corect_transcription(ord_transcription)
+#         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
+#         sentences = drop_duplicate(collect_sentences(trg_words))
+#         checked_transcribtion = rm_repeated_sequences(" ".join(sentences))
+
+#         print("diff len", len(checked_transcribtion) - len(ord_transcription))
+#         trg_words = align_diff_words(words, ord_transcription, checked_transcribtion)
+#         sentences = split_para(checked_transcribtion)
+
+#     return {
+#         "text": checked_transcribtion,
+#         "ord_text": ord_transcription,
+#         "sentences": sentences,
+#         "ord_words": words,
+#         "words": trg_words,
+#         "audio": audio,
+#         "language": language,
+#     }
 
 
 def merge_sentence(lst) -> list[str]:
