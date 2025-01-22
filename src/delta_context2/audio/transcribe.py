@@ -110,7 +110,7 @@ from ..utils.list import drop_duplicate, flatten
     ("ord_text", lambda result: result["ord_text"]),
     ("language", lambda result: result["language"]),
 )
-def get_transcribe(item_dir, audio_path, description: str) -> dict:
+def get_transcribe(item_dir, audio_path, description: str = None) -> dict:
     check = read_metadata(
         item_dir,
         ["transcription", "sentences", "words", "ord_text", "ord_words", "language"],

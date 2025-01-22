@@ -6,6 +6,7 @@ import subprocess
 import time
 from pathlib import Path
 
+import librosa
 from museper.inference import separate_audio
 
 from ..utils.decorator import show_progress
@@ -72,6 +73,7 @@ def extract_vocal(audio_path: str) -> str:
     audio_path: Path = Path(audio_path)
     model_give_name = audio_path.with_name(f"{audio_path.stem}_vocals.wav")
     target_audio_path = audio_path.with_name("vocal.wav")
+
     if os.path.exists(target_audio_path):
         return str(target_audio_path)
 
@@ -84,6 +86,9 @@ def extract_vocal(audio_path: str) -> str:
             extract_instrumental=False,
             model_type=model_type,
         )
+
+    # 获取原始音频长度
+    original_duration = get_audio_duration(audio_path)
 
     # 使用ffmpeg只保留音频数据
     temp_audio_path = audio_path.with_name(f"{audio_path.stem}_temp.wav")
@@ -101,9 +106,24 @@ def extract_vocal(audio_path: str) -> str:
         check=True,
     )
 
-    shutil.move(temp_audio_path, target_audio_path)
-    # 添加重试机制删除文件
+    # 获取提取后音频长度
+    extracted_duration = get_audio_duration(temp_audio_path)
+
+    if abs(original_duration - extracted_duration) > 0.1:  # 容许误差0.1秒
+        shutil.move(audio_path, target_audio_path)
+        remove_file_with_retry(temp_audio_path)
+    else:
+        shutil.move(temp_audio_path, target_audio_path)
+
+    # 删除原始文件
+    
     remove_file_with_retry(model_give_name)
     remove_file_with_retry(audio_path)
 
     return str(target_audio_path)
+
+
+def get_audio_duration(file_path: Path) -> float:
+    """使用librosa获取音频长度"""
+    
+    return librosa.get_duration(path=str(file_path))
