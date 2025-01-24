@@ -1765,7 +1765,7 @@ wheels = [
 [[package]]
 name = "poolctrl"
 version = "0.1.0"
-source = { git = "https://github.com/GrahLnn/poolctrl.git#6634f15dffff339ec00b109337099eb5ec403ace" }
+source = { git = "https://github.com/GrahLnn/poolctrl.git#a0ddb5fb526f8564b4ddf862103264aa1ffaf677" }
 
 [[package]]
 name = "prompt-toolkit"
