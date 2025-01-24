@@ -47,7 +47,7 @@ class VideoProcessor:
             video_path = download_ytb_mp4(
                 ytb_url, item_dir, formal_name, self.ytb_cookies
             )
-            if os.path.exists(item_dir / "source" / "vocal.wav"):
+            if not os.path.exists(item_dir / "source" / "vocal.wav"):
                 audio_path = separate_audio_from_video(video_path)
                 audio_path = extract_vocal(audio_path)
         else:

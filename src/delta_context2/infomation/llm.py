@@ -53,8 +53,11 @@ def get_summary(idir, sentences: list[str]) -> dict:
         tldrs.append(tldr)
 
     summary = get_completion(" ".join(tldrs), SUMMARY_SYS_MESSAGE)
+    
     prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
     summary_zh = get_completion(prompt)
+    while len(summary_zh) > 2000:
+        summary_zh = get_completion(summary_zh, "Please condense this summary to be more concise, omitting any irrelevant parts with same language.")
     prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
         ORIGINAL_TEXT=title, CONTEXT=summary
     )
