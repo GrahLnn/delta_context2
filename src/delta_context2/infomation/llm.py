@@ -17,7 +17,7 @@ from .prompt import (
     SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT,
     SUMMARY_SYS_MESSAGE,
 )
-from poolctrl import Pool
+from poolctrl import Pool, RateLimitRule
 
 load_dotenv()
 OPENAI_URL = os.getenv("OPENAI_API_URL")
@@ -27,7 +27,14 @@ TRANSLATION_MODEL = os.getenv("TRANSLATION_MODEL")
 GEMINI_API = os.getenv("GEMINI_API")
 GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
 
-pool = Pool(rpm=8, rpd=1300, task_id="gemini")
+pool = Pool(
+    task_id="gemini",
+    persist=True,
+    limits=[
+        RateLimitRule(max_requests=5, interval=1, time_unit="minute"),
+        RateLimitRule(max_requests=1400, interval=1.5, time_unit="day"),
+    ],
+)
 
 
 @show_progress("getting summary")
@@ -53,11 +60,14 @@ def get_summary(idir, sentences: list[str]) -> dict:
         tldrs.append(tldr)
 
     summary = get_completion(" ".join(tldrs), SUMMARY_SYS_MESSAGE)
-    
+
     prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
     summary_zh = get_completion(prompt)
     while len(summary_zh) > 2000:
-        summary_zh = get_completion(summary_zh, "Please condense this summary to be more concise, omitting any irrelevant parts with same language.")
+        summary_zh = get_completion(
+            summary_zh,
+            "Please condense this summary to be more concise, omitting any irrelevant parts with same language.",
+        )
     prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
         ORIGINAL_TEXT=title, CONTEXT=summary
     )
