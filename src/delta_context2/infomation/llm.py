@@ -31,8 +31,8 @@ pool = Pool(
     task_id="gemini",
     persist=True,
     limits=[
-        RateLimitRule(max_requests=5, interval=1, time_unit="minute"),
-        RateLimitRule(max_requests=1400, interval=1.5, time_unit="day"),
+        RateLimitRule(max_requests=2, interval=1, time_unit="minute"),
+        RateLimitRule(max_requests=1300, interval=1.5, time_unit="day"),
     ],
 )
 
