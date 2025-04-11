@@ -53,7 +53,7 @@ class VideoProcessor:
             else:
                 audio_path = item_dir / "source" / "vocal.wav"
         else:
-            audio_path = None
+            return item_dir
         transcribe = get_transcribe(item_dir, audio_path, video_info["description"])
         language, audio_waveform = transcribe["language"], transcribe["audio"]
 
