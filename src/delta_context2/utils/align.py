@@ -492,7 +492,7 @@ def split_to_atomic_part(
                     )
                     if abs_uni_len("".join(en_list)) == 0:
                         raise ValueError(
-                            f"empty translation: {[s+'|'+t for s, t in zip(llm_align_zh_list, llm_align_en_list)]}"
+                            f"empty translation: {[s + '|' + t for s, t in zip(llm_align_zh_list, llm_align_en_list)]}"
                         )
                     en_list = en_large_diff_ratio_repair(zh_list, en_list)
                     en_list = move_commas(en_list)
@@ -620,7 +620,7 @@ def get_sentence_timestamps(dir, atomic_ens, words, atomic_zhs):
 
         # 处理中文句子的标点符号
         zh_stc = re.sub(r"[，]", " ", zh_stc).strip()
-        zh_stc = re.sub(r"[。；,]", "", zh_stc)
+        zh_stc = re.sub(r"[。；,*]", "", zh_stc)
 
         if zh_stc:
             min_duration = (abs_uni_len(zh_stc) // 6) * 1.0
