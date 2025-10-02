@@ -136,6 +136,7 @@ def transcribe_audio(item_dir: str, audio_path: str) -> dict:
     result = model.transcribe(
         audio=audio,
         word_timestamps=True,
+        initial_prompt="Please retain punctuation and capitalization in the transcript.",
     )
 
     # 3. 释放模型
