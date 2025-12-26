@@ -169,6 +169,7 @@ Please follow these instructions carefully:
    - Do not make corrections at a level larger than individual words.
    - Do not optimize or correct grammar.
    - Ensure consistency between the transcription and what was likely said in the original audio.
+   - Do not use Latex code to describe some formula, only use unicode.
 
 2. Adding Punctuation:
    - Add necessary punctuation marks where they are missing. This includes:
