@@ -1,5 +1,7 @@
 import os
+import shutil
 from pathlib import Path
+from urllib.parse import urlparse
 
 # from .audio.force_align import force_align
 from .audio.separator import extract_vocal, separate_audio_from_video
@@ -10,6 +12,7 @@ from .infomation.video_metadata import get_ytb_video_info
 from .text.utils import (
     formal_file_name,
     formal_folder_name,
+    sanitize_filename,
     split_sentences_into_chunks,
 )
 from .utils.align import get_sentence_timestamps, split_to_atomic_part
@@ -38,15 +41,48 @@ class VideoProcessor:
         """
         return: the video dir
         """
-        video_info = get_ytb_video_info(ytb_url, self.DATA_DIR, self.ytb_cookies)
+        parsed_url = urlparse(ytb_url)
+        is_http_url = parsed_url.scheme in ("http", "https")
+        local_path = None
+        if is_http_url:
+            video_info = get_ytb_video_info(
+                ytb_url, self.DATA_DIR, self.ytb_cookies
+            )
+        else:
+            if parsed_url.scheme == "file":
+                local_path = Path(parsed_url.path.lstrip("/"))
+            else:
+                local_path = Path(ytb_url)
+            local_path = local_path.expanduser()
+            if not local_path.is_file():
+                raise FileNotFoundError(
+                    f"Local video file not found: {local_path}"
+                )
+            video_info = {
+                "title": local_path.stem,
+                "description": "",
+                "uploader": None,
+                "thumbnail": None,
+                "video_url": None,
+            }
         print("processing: ", video_info["title"])
         formal_name = formal_folder_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
 
         if not os.path.exists(item_dir / "translated_video.mp4"):
-            video_path = download_ytb_mp4(
-                ytb_url, item_dir, formal_name, self.ytb_cookies
-            )
+            if is_http_url:
+                video_path = download_ytb_mp4(
+                    ytb_url, item_dir, formal_name, self.ytb_cookies
+                )
+            else:
+                source_dir = item_dir / "source"
+                source_dir.mkdir(parents=True, exist_ok=True)
+                sanitized_name = (
+                    sanitize_filename(local_path.stem) + local_path.suffix
+                )
+                video_path = source_dir / sanitized_name
+                if not video_path.exists():
+                    shutil.move(str(local_path), video_path)
             if not os.path.exists(item_dir / "source" / "vocal.wav"):
                 audio_path = separate_audio_from_video(video_path)
                 audio_path = extract_vocal(audio_path)
