@@ -1,5 +1,7 @@
 import os
+import json
 import shutil
+import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -68,6 +70,14 @@ class VideoProcessor:
         print("processing: ", video_info["title"])
         formal_name = formal_folder_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
+        if not is_http_url:
+            data_path = item_dir / "metadata.json"
+            if not data_path.exists():
+                data_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(data_path, "w", encoding="utf-8") as file:
+                    json.dump(
+                        video_info, file, ensure_ascii=False, indent=4
+                    )
 
         if not os.path.exists(item_dir / "translated_video.mp4"):
             if is_http_url:
@@ -83,6 +93,20 @@ class VideoProcessor:
                 video_path = source_dir / sanitized_name
                 if not video_path.exists():
                     shutil.move(str(local_path), video_path)
+                thumbnail_path = source_dir / "thumbnail.jpg"
+                if not thumbnail_path.exists():
+                    cmd = [
+                        "ffmpeg",
+                        "-y",
+                        "-i",
+                        str(video_path),
+                        "-vf",
+                        "scale=1920:1080",
+                        "-frames:v",
+                        "1",
+                        str(thumbnail_path),
+                    ]
+                    subprocess.run(cmd, check=True)
             if not os.path.exists(item_dir / "source" / "vocal.wav"):
                 audio_path = separate_audio_from_video(video_path)
                 audio_path = extract_vocal(audio_path)
