@@ -56,10 +56,6 @@ class VideoProcessor:
             else:
                 local_path = Path(ytb_url)
             local_path = local_path.expanduser()
-            if not local_path.is_file():
-                raise FileNotFoundError(
-                    f"Local video file not found: {local_path}"
-                )
             video_info = {
                 "title": local_path.stem,
                 "description": "",
@@ -67,18 +63,10 @@ class VideoProcessor:
                 "thumbnail": None,
                 "video_url": None,
             }
+            local_missing = not local_path.is_file()
         print("processing: ", video_info["title"])
         formal_name = formal_folder_name(video_info["title"])
         item_dir = self.DATA_DIR / "videos" / formal_name
-        if not is_http_url:
-            data_path = item_dir / "metadata.json"
-            if not data_path.exists():
-                data_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(data_path, "w", encoding="utf-8") as file:
-                    json.dump(
-                        video_info, file, ensure_ascii=False, indent=4
-                    )
-
         if not os.path.exists(item_dir / "translated_video.mp4"):
             if is_http_url:
                 video_path = download_ytb_mp4(
@@ -88,9 +76,16 @@ class VideoProcessor:
                 source_dir = item_dir / "source"
                 source_dir.mkdir(parents=True, exist_ok=True)
                 sanitized_name = (
-                    sanitize_filename(local_path.stem) + local_path.suffix
+                    sanitize_filename(local_path.stem) + local_path.suffix      
                 )
                 video_path = source_dir / sanitized_name
+                if local_missing:
+                    if video_path.exists():
+                        local_path = video_path
+                    else:
+                        raise FileNotFoundError(
+                            f"Local video file not found: {local_path}"
+                        )
                 if not video_path.exists():
                     shutil.move(str(local_path), video_path)
                 thumbnail_path = source_dir / "thumbnail.jpg"
@@ -107,6 +102,14 @@ class VideoProcessor:
                         str(thumbnail_path),
                     ]
                     subprocess.run(cmd, check=True)
+                video_info["thumbnail"] = str(thumbnail_path)
+                data_path = item_dir / "metadata.json"
+                if not data_path.exists():
+                    data_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(data_path, "w", encoding="utf-8") as file:
+                        json.dump(
+                            video_info, file, ensure_ascii=False, indent=4
+                        )
             if not os.path.exists(item_dir / "source" / "vocal.wav"):
                 audio_path = separate_audio_from_video(video_path)
                 audio_path = extract_vocal(audio_path)
