@@ -52,27 +52,27 @@ def get_summary(idir, sentences: list[str]) -> dict:
     if check:
         return check
 
-    chunks = split_sentences_into_chunks(sentences, 2000)
+    chunks = split_sentences_into_chunks(sentences, 8000)
 
     tldrs = []
     for chunk in chunks:
-        tldr = get_completion(chunk, "Abstract this paragraph.")
+        tldr = get_completion(chunk + "\n\nAbstract this paragraph.")
         tldrs.append(tldr)
 
-    summary = get_completion(" ".join(tldrs), SUMMARY_SYS_MESSAGE)
+    summary_zh = get_completion(" ".join(tldrs) + "\n\n直接给这个视频一个中文摘要")
 
-    prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
-    summary_zh = get_completion(prompt)
+    # prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
+    # summary_zh = get_completion(prompt)
     while len(summary_zh) > 2000:
         summary_zh = get_completion(
             summary_zh,
             "Please condense this summary to be more concise, omitting any irrelevant parts with same language.",
         )
     prompt = SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT.format(
-        ORIGINAL_TEXT=title, CONTEXT=summary
+        ORIGINAL_TEXT=title, CONTEXT=summary_zh
     )
     title_zh = get_completion(prompt)
-    return {"summary": summary, "summary_zh": summary_zh, "title_zh": title_zh}
+    return {"summary": "not suport", "summary_zh": summary_zh, "title_zh": title_zh}
 
 
 @update_metadata(("tags", lambda r: r))
