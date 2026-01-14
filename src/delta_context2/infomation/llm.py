@@ -56,12 +56,15 @@ def get_summary(idir, sentences: list[str]) -> dict:
 
     tldrs = []
     for chunk in chunks:
-        tldr = get_completion(chunk + "\n\nAbstract this paragraph.")
+        tldr = get_completion(
+            chunk
+            + "\n\nAbstract this paragraph, and remove any non-content related information, and ONLY keep the main points."
+        )
         tldrs.append(tldr)
 
     summary_zh = get_completion(
         " ".join(tldrs)
-        + "\n\n直接给这个视频一个中文摘要，不要任何非摘要信息，只直接给摘要"
+        + "\n\n直接给这个视频一个中文摘要，不要任何非摘要信息，只直接给摘要，并移除非内容相关的东西"
     )
 
     # prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=summary)
