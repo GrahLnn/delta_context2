@@ -46,7 +46,10 @@ def get_ytb_video_info(
                     video_url = info_dict.get("webpage_url", None)
                     description = info_dict.get("description", None)
                     uploader = info_dict.get("uploader", None)
-                    thumbnail = info_dict.get("thumbnail", None)
+                    thumbnail = info_dict.get("thumbnail") or (
+                        (info_dict.get("thumbnails") or [{}])[-1].get("url")
+                    )
+
                     name_formal = formal_folder_name(title)
                     data_path = data_dir / "videos" / name_formal / "metadata.json"
                     if data_path.exists():
@@ -56,9 +59,14 @@ def get_ytb_video_info(
                     # prompt = SINGLE_TRANSLATION_PROMPT.format(ORIGINAL_TEXT=title)
                     # res = openai_completion(prompt)
 
-                    download_and_resize_thumbnail(
-                        thumbnail, data_dir / "videos" / name_formal / "source"
-                    )
+                    try:
+                        if thumbnail:
+                            download_and_resize_thumbnail(
+                                thumbnail, data_dir / "videos" / name_formal / "source"
+                            )
+                    except Exception as _thumb_err:
+                        # 只降级，不要让 metadata 流程失败
+                        pass
 
                     metadata = {
                         "title": title,
