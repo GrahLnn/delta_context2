@@ -102,6 +102,83 @@ from ..utils.list import drop_duplicate, flatten
 #     return result
 
 
+# @show_progress("Transcribing")
+# @update_metadata(
+#     ("ord_words", lambda result: result["ord_words"]),
+#     ("ord_text", lambda result: result["ord_text"]),
+#     ("language", lambda result: result["language"]),
+# )
+# def transcribe_audio(item_dir: str, audio_path: str) -> dict:
+#     """
+#     只负责调用 Whisper 模型进行音频转录，返回原始文本、分段、words、语言等原始信息。
+#     不做任何纠正或后处理。
+#     """
+#     if audio_path is None:
+#         raise ValueError("No audio path provided")
+
+#     # 1. 加载模型 & 音频
+#     model = whisper.load_model("turbo")
+#     audio = whisper.load_audio(audio_path)
+
+#     check = read_metadata(
+#         item_dir,
+#         ["ord_text", "ord_words", "language"],
+#     )
+#     if check:
+#         return {
+#             "ord_text": check.get("ord_text"),  # 原始转录文本
+#             "ord_words": check.get("ord_words"),  # 原始 word 列表
+#             "audio": audio,  # 已加载的音频，是否返回视需要而定
+#             "language": check.get("language"),  # 语言
+#         }
+
+#     # 2. 开始转录
+#     result = model.transcribe(
+#         audio=audio,
+#         word_timestamps=True,
+#         initial_prompt="Please retain punctuation and capitalization in the transcript.",
+#     )
+
+#     # 3. 释放模型
+#     del model
+
+#     # 4. 整理并返回原始信息
+#     ord_transcription = result["text"]
+#     segments = result["segments"]
+#     language = result["language"]
+#     words = flatten([seg["words"] for seg in segments])  # 原始的 words 列表
+
+#     return {
+#         "ord_text": ord_transcription,  # 原始转录文本
+#         "ord_words": words,  # 原始 word 列表
+#         "audio": audio,  # 已加载的音频，是否返回视需要而定
+#         "language": language,  # 语言
+#     }
+
+
+def _get_attr_or_key(obj, key, default=None):
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def _normalize_qwen_words(time_stamps):
+    words = []
+    for stamp in time_stamps or []:
+        if isinstance(stamp, dict):
+            text = stamp.get("text") or stamp.get("word") or stamp.get("token")
+            start = stamp.get("start") or stamp.get("start_time")
+            end = stamp.get("end") or stamp.get("end_time")
+        else:
+            text = getattr(stamp, "text", None) or getattr(stamp, "word", None)
+            start = getattr(stamp, "start", None) or getattr(stamp, "start_time", None)
+            end = getattr(stamp, "end", None) or getattr(stamp, "end_time", None)
+        if text is None:
+            continue
+        words.append({"word": text, "start": start, "end": end})
+    return words
+
+
 @show_progress("Transcribing")
 @update_metadata(
     ("ord_words", lambda result: result["ord_words"]),
@@ -110,14 +187,11 @@ from ..utils.list import drop_duplicate, flatten
 )
 def transcribe_audio(item_dir: str, audio_path: str) -> dict:
     """
-    只负责调用 Whisper 模型进行音频转录，返回原始文本、分段、words、语言等原始信息。
-    不做任何纠正或后处理。
+    使用 Qwen3-ASR (transformers 后端) + Forced Aligner 进行离线转录，返回原始信息。
     """
     if audio_path is None:
         raise ValueError("No audio path provided")
 
-    # 1. 加载模型 & 音频
-    model = whisper.load_model("turbo")
     audio = whisper.load_audio(audio_path)
 
     check = read_metadata(
@@ -126,33 +200,53 @@ def transcribe_audio(item_dir: str, audio_path: str) -> dict:
     )
     if check:
         return {
-            "ord_text": check.get("ord_text"),  # 原始转录文本
-            "ord_words": check.get("ord_words"),  # 原始 word 列表
-            "audio": audio,  # 已加载的音频，是否返回视需要而定
-            "language": check.get("language"),  # 语言
+            "ord_text": check.get("ord_text"),
+            "ord_words": check.get("ord_words"),
+            "audio": audio,
+            "language": check.get("language"),
         }
 
-    # 2. 开始转录
-    result = model.transcribe(
-        audio=audio,
-        word_timestamps=True,
-        initial_prompt="Please retain punctuation and capitalization in the transcript.",
+    import torch
+    from qwen_asr import Qwen3ASRModel
+
+    model = Qwen3ASRModel.from_pretrained(
+        "Qwen/Qwen3-ASR-1.7B",
+        dtype=torch.bfloat16,
+        device_map="cuda:0",
+        forced_aligner="Qwen/Qwen3-ForcedAligner-0.6B",
+        forced_aligner_kwargs={
+            "dtype": torch.bfloat16,
+            "device_map": "cuda:0",
+        },
     )
 
-    # 3. 释放模型
+    results = model.transcribe(
+        audio=audio_path,
+        language=None,
+        return_time_stamps=True,
+    )
+
     del model
 
-    # 4. 整理并返回原始信息
-    ord_transcription = result["text"]
-    segments = result["segments"]
-    language = result["language"]
-    words = flatten([seg["words"] for seg in segments])  # 原始的 words 列表
+    if not results:
+        raise ValueError("Qwen3-ASR returned no results")
+
+    first = results[0]
+    ord_transcription = _get_attr_or_key(first, "text", "")
+    language = _get_attr_or_key(first, "language", None)
+    time_stamps = (
+        _get_attr_or_key(first, "time_stamps", None)
+        or _get_attr_or_key(first, "timestamps", None)
+        or _get_attr_or_key(first, "words", None)
+        or []
+    )
+    words = _normalize_qwen_words(time_stamps)
 
     return {
-        "ord_text": ord_transcription,  # 原始转录文本
-        "ord_words": words,  # 原始 word 列表
-        "audio": audio,  # 已加载的音频，是否返回视需要而定
-        "language": language,  # 语言
+        "ord_text": ord_transcription,
+        "ord_words": words,
+        "audio": audio,
+        "language": language,
     }
 
 

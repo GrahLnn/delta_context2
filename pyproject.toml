@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Default template for PDM package"
 authors = [{ name = "GrahLnn", email = "grahlnn@skiff.com" }]
 dependencies = [
+    "qwen-asr>=0.0.6",
     "yt-dlp>=2024.12.6",
     "alive-progress>=3.1.5,<4.0.0",
     "retry>=0.9.2",
@@ -11,22 +12,26 @@ dependencies = [
     "tiktoken>=0.7.0",
     "python-dotenv>=1.0.1",
     "openai-whisper>=20231117",
-    "museper @ git+https://github.com/GrahLnn/museper.git",
     "demjson3>=3.0.6",
     "ctc-forced-aligner @ git+https://github.com/MahmoudAshraf97/ctc-forced-aligner.git",
-    "nemo-toolkit[asr]==2.0.0rc0",
-    "huggingface-hub==0.23.2",
+    "huggingface-hub>=0.23.2",
     "numpy<2",
-    "onnx==1.16.1",
-    "onnxruntime==1.19.2",
     "toml>=0.10.2",
     "tenacity>=9.0",
     "librosa>=0.10.2.post1",
     "poolctrl",
+    "pytest>=9.0.2",
+    "torch",
+    "torchaudio",
 ]
-requires-python = "==3.11.*"
+requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "MIT" }
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: integration tests that require external dependencies or hardware",
+]
 
 
 [tool.pdm]
@@ -34,3 +39,14 @@ distribution = false
 
 [tool.uv.sources]
 poolctrl = { git = "https://github.com/GrahLnn/poolctrl.git" }
+torch = [
+  { index = "pytorch-cu130" },
+]
+torchaudio = [
+  { index = "pytorch-cu130" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true

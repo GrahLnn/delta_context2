@@ -7,8 +7,8 @@ import time
 from pathlib import Path
 
 import librosa
-from museper.inference import separate_audio
 
+# from museper.inference import separate_audio
 from ..utils.decorator import show_progress
 from ..utils.network import check_model_exist
 
@@ -69,61 +69,62 @@ def remove_file_with_retry(file_path, max_retries=3, delay=1):
 
 @show_progress("Extracting")
 def extract_vocal(audio_path: str) -> str:
-    model_type = "mel_band_roformer"
-    audio_path: Path = Path(audio_path)
-    model_give_name = audio_path.with_name(f"{audio_path.stem}_vocals.wav")
-    target_audio_path = audio_path.with_name("vocal.wav")
+    raise NotImplementedError("Function not implemented")
+    # model_type = "mel_band_roformer"
+    # audio_path: Path = Path(audio_path)
+    # model_give_name = audio_path.with_name(f"{audio_path.stem}_vocals.wav")
+    # target_audio_path = audio_path.with_name("vocal.wav")
 
-    if os.path.exists(target_audio_path):
-        return str(target_audio_path)
+    # if os.path.exists(target_audio_path):
+    #     return str(target_audio_path)
 
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
-        separate_audio(
-            input_file=audio_path,
-            store_dir=None,
-            device_id=0,
-            extract_instrumental=False,
-            model_type=model_type,
-        )
+    # f = io.StringIO()
+    # with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
+    #     separate_audio(
+    #         input_file=audio_path,
+    #         store_dir=None,
+    #         device_id=0,
+    #         extract_instrumental=False,
+    #         model_type=model_type,
+    #     )
 
-    # 获取原始音频长度
-    original_duration = get_audio_duration(audio_path)
+    # # 获取原始音频长度
+    # original_duration = get_audio_duration(audio_path)
 
-    # 使用ffmpeg只保留音频数据
-    temp_audio_path = audio_path.with_name(f"{audio_path.stem}_temp.wav")
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-i",
-            str(model_give_name),
-            "-map",
-            "0:a",
-            "-c",
-            "copy",
-            str(temp_audio_path),
-        ],
-        check=True,
-    )
+    # # 使用ffmpeg只保留音频数据
+    # temp_audio_path = audio_path.with_name(f"{audio_path.stem}_temp.wav")
+    # subprocess.run(
+    #     [
+    #         "ffmpeg",
+    #         "-i",
+    #         str(model_give_name),
+    #         "-map",
+    #         "0:a",
+    #         "-c",
+    #         "copy",
+    #         str(temp_audio_path),
+    #     ],
+    #     check=True,
+    # )
 
-    # 获取提取后音频长度
-    extracted_duration = get_audio_duration(temp_audio_path)
+    # # 获取提取后音频长度
+    # extracted_duration = get_audio_duration(temp_audio_path)
 
-    if abs(original_duration - extracted_duration) > 0.1:  # 容许误差0.1秒
-        shutil.move(audio_path, target_audio_path)
-        remove_file_with_retry(temp_audio_path)
-    else:
-        shutil.move(temp_audio_path, target_audio_path)
+    # if abs(original_duration - extracted_duration) > 0.1:  # 容许误差0.1秒
+    #     shutil.move(audio_path, target_audio_path)
+    #     remove_file_with_retry(temp_audio_path)
+    # else:
+    #     shutil.move(temp_audio_path, target_audio_path)
 
-    # 删除原始文件
-    
-    remove_file_with_retry(model_give_name)
-    remove_file_with_retry(audio_path)
+    # # 删除原始文件
 
-    return str(target_audio_path)
+    # remove_file_with_retry(model_give_name)
+    # remove_file_with_retry(audio_path)
+
+    # return str(target_audio_path)
 
 
 def get_audio_duration(file_path: Path) -> float:
     """使用librosa获取音频长度"""
-    
+
     return librosa.get_duration(path=str(file_path))
