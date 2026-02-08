@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -76,7 +76,7 @@ class VideoProcessor:
                 source_dir = item_dir / "source"
                 source_dir.mkdir(parents=True, exist_ok=True)
                 sanitized_name = (
-                    sanitize_filename(local_path.stem) + local_path.suffix      
+                    sanitize_filename(local_path.stem) + local_path.suffix
                 )
                 video_path = source_dir / sanitized_name
                 if local_missing:
@@ -98,7 +98,7 @@ class VideoProcessor:
                         "-vf",
                         "scale=1920:1080",
                         "-frames:v",
-                        "1",
+                        "10",
                         str(thumbnail_path),
                     ]
                     subprocess.run(cmd, check=True)
@@ -112,7 +112,7 @@ class VideoProcessor:
                         )
             if not os.path.exists(item_dir / "source" / "vocal.wav"):
                 audio_path = separate_audio_from_video(video_path)
-                audio_path = extract_vocal(audio_path)
+                # audio_path = extract_vocal(audio_path)
             else:
                 audio_path = item_dir / "source" / "vocal.wav"
         else:
