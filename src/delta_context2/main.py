@@ -96,11 +96,12 @@ class VideoProcessor:
                         "-i",
                         str(video_path),
                         "-vf",
-                        "scale=1920:1080",
+                        "select=eq(n\\,9),scale=1920:1080",
                         "-frames:v",
-                        "10",
+                        "1",
                         str(thumbnail_path),
                     ]
+
                     subprocess.run(cmd, check=True)
                 video_info["thumbnail"] = str(thumbnail_path)
                 data_path = item_dir / "metadata.json"
