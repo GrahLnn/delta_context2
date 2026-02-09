@@ -57,6 +57,34 @@ def test_transcribe_audio_returns_expected_shape(monkeypatch, tmp_path):
     assert result["audio"] == "audio-array"
 
 
+def test_format_words_handles_unspaced_tokens(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+
+    from delta_context2.audio.transcribe import format_words
+
+    words = [
+        {"word": "Hello", "start": 0.0, "end": 0.5},
+        {"word": "world", "start": 0.6, "end": 1.0},
+    ]
+
+    result = format_words(words)
+
+    assert [w["word"] for w in result] == ["Hello", "world"]
+
+
+def test_words_to_text_inserts_spaces_for_stripped_tokens(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+
+    from delta_context2.audio import transcribe as transcribe_mod
+
+    words = [
+        {"word": "Hello", "start": 0.0, "end": 0.5},
+        {"word": "world", "start": 0.6, "end": 1.0},
+    ]
+
+    assert transcribe_mod._words_to_text(words) == "Hello world"
+
+
 @pytest.mark.integration
 def test_transcribe_audio_on_fixture(tmp_path, monkeypatch):
     pytest.importorskip("qwen_asr")

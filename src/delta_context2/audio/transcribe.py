@@ -162,6 +162,17 @@ def _get_attr_or_key(obj, key, default=None):
     return getattr(obj, key, default)
 
 
+def _words_to_text(words) -> str:
+    if not words:
+        return ""
+    has_leading_space = any(
+        (_get_attr_or_key(word, "word", "") or "").startswith(" ") for word in words
+    )
+    if has_leading_space:
+        return "".join([_get_attr_or_key(word, "word", "") or "" for word in words])
+    return " ".join([_get_attr_or_key(word, "word", "") or "" for word in words])
+
+
 def _normalize_qwen_words(time_stamps):
     words = []
     for stamp in time_stamps or []:
@@ -276,7 +287,7 @@ def correct_transcript(item_dir: str, transcribed_data: dict) -> dict:
     words = transcribed_data["ord_words"]
 
     # 2. 初步对齐：把原始 words 与原始转录文本对齐
-    words = align_diff_words(words, "".join([w["word"] for w in words]), ord_text)
+    words = align_diff_words(words, _words_to_text(words), ord_text)
     formal_words = format_words(words)
 
     # 3. 检查分词数是否匹配
@@ -419,8 +430,15 @@ def merge_sentence(lst) -> list[str]:
 
 def format_words(words):
     formal_words = []
+    if not words:
+        return formal_words
+    has_leading_space = any(
+        (word.get("word") or "").startswith(" ") for word in words if isinstance(word, dict)
+    )
+    if not has_leading_space:
+        return list(words)
     for word in words:
-        if word["word"].startswith(" "):
+        if word["word"].startswith(" ") or not formal_words:
             formal_words.append(word)
         else:
             formal_words[-1]["word"] += word["word"]
