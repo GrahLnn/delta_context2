@@ -96,7 +96,7 @@ class VideoProcessor:
                         "-i",
                         str(video_path),
                         "-vf",
-                        "select=eq(n\\,9),scale=1920:1080",
+                        "select=eq(n\\,100),scale=1920:1080",
                         "-frames:v",
                         "1",
                         str(thumbnail_path),
