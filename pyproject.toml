@@ -19,10 +19,10 @@ dependencies = [
     "toml>=0.10.2",
     "tenacity>=9.0",
     "librosa>=0.10.2.post1",
-    "poolctrl",
     "pytest>=9.0.2",
     "torch",
     "torchaudio",
+    "openai>=2.38.0",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
@@ -38,7 +38,6 @@ markers = [
 distribution = false
 
 [tool.uv.sources]
-poolctrl = { git = "https://github.com/GrahLnn/poolctrl.git" }
 torch = [
   { index = "pytorch-cu130" },
 ]

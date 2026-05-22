@@ -1,10 +1,8 @@
 import os
-import random
 import re
-import time
 
 import demjson3
-import requests
+from openai import OpenAI
 import tiktoken
 from dotenv import load_dotenv
 from retry import retry
@@ -17,24 +15,13 @@ from .prompt import (
     SINGLE_TRANSLATION_PROMPT_WITH_CONTEXT,
     SUMMARY_SYS_MESSAGE,
 )
-from poolctrl import Pool, RateLimitRule
 
 load_dotenv()
 OPENAI_URL = os.getenv("OPENAI_API_URL")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 TASK_MODEL = os.getenv("TASK_MODEL")
 TRANSLATION_MODEL = os.getenv("TRANSLATION_MODEL")
-GEMINI_API = os.getenv("GEMINI_API")
-GEMINI_KEYS = list(map(str.strip, os.getenv("GEMINI_API_KEY").split(",")))
-
-pool = Pool(
-    task_id="gemini",
-    persist=True,
-    limits=[
-        RateLimitRule(max_requests=2, interval=1, time_unit="minute"),
-        RateLimitRule(max_requests=1300, interval=1.5, time_unit="day"),
-    ],
-)
+OPENAI_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT", "300"))
 
 
 @show_progress("getting summary")
@@ -97,11 +84,6 @@ def get_tags(idir, summary: str) -> dict:
     return tags
 
 
-def choose_key():
-    random.shuffle(GEMINI_KEYS)
-    return GEMINI_KEYS[0]
-
-
 @retry(tries=3, delay=2)
 def get_json_completion(prompt, model=TRANSLATION_MODEL):
     result = get_completion(prompt)
@@ -118,69 +100,11 @@ def tokenize(text: str):
     return token_integers
 
 
-@retry(tries=3, delay=2)
-def call_api_without_authhead(url, data):
-    headers = {
-        "Content-Type": "application/json",
-    }
-    response = requests.post(
-        url, headers=headers, json=data, timeout=300
-    )  # Added 5-minute timeout
-    response.raise_for_status()  # Raise HTTPError for bad responses (4xx and 5xx)
-    res = response.json()
-    return res
+def _openai_base_url() -> str:
+    if not OPENAI_URL:
+        raise ValueError("OPENAI_API_URL is required.")
 
-
-def gemini_completion(prompt, system_message, temperature, model, key):
-    os.makedirs("asset", exist_ok=True)
-
-    payload = {
-        "contents": {"parts": {"text": prompt}},
-        "systemInstruction": {"parts": {"text": system_message}},
-        "generationConfig": {
-            "temperature": 0.7,
-            "topK": 64,
-            "topP": 0.95,
-            "maxOutputTokens": 65536,
-            "responseMimeType": "text/plain",
-        },
-        "safetySettings": [
-            {
-                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                "threshold": "BLOCK_NONE",
-            },
-            {
-                "category": "HARM_CATEGORY_HATE_SPEECH",
-                "threshold": "BLOCK_NONE",
-            },
-            {
-                "category": "HARM_CATEGORY_HARASSMENT",
-                "threshold": "BLOCK_NONE",
-            },
-            {
-                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                "threshold": "BLOCK_NONE",
-            },
-        ],
-    }
-    max_retries = 10
-    for _ in range(max_retries):
-        api_url = GEMINI_API + f"{model}:generateContent" + "?key=" + key
-        res = call_api_without_authhead(api_url, payload)
-
-        try:
-            answer = res["candidates"][0]["content"]["parts"][0]["text"]
-            return answer
-        except Exception:
-            print(
-                "unexpect output: ",
-                res,
-            )
-    print("API call failed. Related payload is save in prompt.txt.")
-    with open("prompt.txt", "w") as f:
-        f.write(prompt)
-
-    raise Exception("Exceeded maximum retries.")
+    return OPENAI_URL.removesuffix("/chat/completions").rstrip("/")
 
 
 def get_completion(
@@ -189,68 +113,39 @@ def get_completion(
     model: str = TRANSLATION_MODEL,
     temperature: int = 1,
 ) -> str:
-    answer = ""
-    failed_key = []
-    for _ in range(len(GEMINI_KEYS) + 1):
-        if "gemini" in model:
-            try:
-                with pool.context(GEMINI_KEYS) as key:
-                    answer = gemini_completion(
-                        prompt=prompt,
-                        system_message=system_message,
-                        temperature=temperature,
-                        model=model,
-                        key=key,
-                    )
-            except Exception as e:
-                print(e)
-                # failed_key.append(key)
-                continue
-        else:
-            answer = openai_completion(
-                prompt=prompt,
-                system_message=system_message,
-                temperature=temperature,
-                model=model,
-            )
-
-        return answer
-    raise Exception("Failed to get completion.")
+    return openai_completion(
+        prompt=prompt,
+        system_message=system_message,
+        temperature=temperature,
+        model=model,
+    )
 
 
 def openai_completion(
     prompt, system_message=None, temperature=0.3, model=TASK_MODEL, json_output=False
 ) -> str:
+    if not OPENAI_KEY:
+        raise ValueError("OPENAI_API_KEY is required.")
+    if not model:
+        raise ValueError("OpenAI model is required.")
+
     if system_message:
-        message = [
+        messages = [
             {"role": "system", "content": system_message},
             {"role": "user", "content": prompt},
         ]
     else:
-        message = [{"role": "user", "content": prompt}]
-    data = {
+        messages = [{"role": "user", "content": prompt}]
+
+    client = OpenAI(api_key=OPENAI_KEY, base_url=_openai_base_url(), timeout=OPENAI_TIMEOUT)
+    completion_args = {
         "model": model,
         "temperature": temperature,
-        "messages": message,
+        "messages": messages,
         "stream": False,
-        "response_format": {"type": "json_object"} if json_output else None,
     }
-    res = call_api(OPENAI_URL, OPENAI_KEY, data)
-    answer = res["choices"][0]["message"]["content"]
+    if json_output:
+        completion_args["response_format"] = {"type": "json_object"}
 
-    return answer
-
-
-@retry(tries=5, delay=2)
-def call_api(url, access_token, data):
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.post(
-        url, headers=headers, json=data, timeout=300
-    )  # 添加5分钟超时
-    response.raise_for_status()
-    res = response.json()
-    return res
+    res = client.chat.completions.create(**completion_args)
+    return res.choices[0].message.content or ""

@@ -31,8 +31,6 @@ def test_transcribe_audio_returns_expected_shape(monkeypatch, tmp_path):
     fake_qwen_module = types.SimpleNamespace(Qwen3ASRModel=FakeModel)
     fake_torch_module = types.SimpleNamespace(bfloat16="bfloat16")
 
-    monkeypatch.setenv("GEMINI_API_KEY", "")
-
     from delta_context2.audio import transcribe as transcribe_mod
 
     monkeypatch.setitem(sys.modules, "qwen_asr", fake_qwen_module)
@@ -57,9 +55,7 @@ def test_transcribe_audio_returns_expected_shape(monkeypatch, tmp_path):
     assert result["audio"] == "audio-array"
 
 
-def test_format_words_handles_unspaced_tokens(monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", "")
-
+def test_format_words_handles_unspaced_tokens():
     from delta_context2.audio.transcribe import format_words
 
     words = [
@@ -72,9 +68,7 @@ def test_format_words_handles_unspaced_tokens(monkeypatch):
     assert [w["word"] for w in result] == ["Hello", "world"]
 
 
-def test_words_to_text_inserts_spaces_for_stripped_tokens(monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", "")
-
+def test_words_to_text_inserts_spaces_for_stripped_tokens():
     from delta_context2.audio import transcribe as transcribe_mod
 
     words = [
@@ -91,8 +85,6 @@ def test_transcribe_audio_on_fixture(tmp_path, monkeypatch):
     torch = pytest.importorskip("torch")
     if not torch.cuda.is_available():
         pytest.skip("CUDA not available")
-
-    monkeypatch.setenv("GEMINI_API_KEY", "")
 
     from delta_context2.audio import transcribe as transcribe_mod
 
