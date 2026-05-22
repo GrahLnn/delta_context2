@@ -1,10 +1,11 @@
 import os
 import re
+from urllib.parse import urlsplit, urlunsplit
 
 import demjson3
 from openai import OpenAI
 import tiktoken
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 from retry import retry
 
 from ..infomation.read_metadata import read_metadata
@@ -16,12 +17,18 @@ from .prompt import (
     SUMMARY_SYS_MESSAGE,
 )
 
-load_dotenv()
+def _load_project_dotenv() -> None:
+    dotenv_path = find_dotenv(usecwd=True)
+    load_dotenv(dotenv_path or None, override=True)
+
+
+_load_project_dotenv()
 OPENAI_URL = os.getenv("OPENAI_API_URL")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 TASK_MODEL = os.getenv("TASK_MODEL")
 TRANSLATION_MODEL = os.getenv("TRANSLATION_MODEL")
 OPENAI_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT", "300"))
+_CHAT_COMPLETIONS_PATH = "/chat/completions"
 
 
 @show_progress("getting summary")
@@ -100,11 +107,28 @@ def tokenize(text: str):
     return token_integers
 
 
-def _openai_base_url() -> str:
-    if not OPENAI_URL:
+def _normalize_openai_base_url(url: str | None) -> str:
+    if not url:
         raise ValueError("OPENAI_API_URL is required.")
 
-    return OPENAI_URL.removesuffix("/chat/completions").rstrip("/")
+    parsed_url = urlsplit(url.strip())
+    path = parsed_url.path.rstrip("/")
+    if path.endswith(_CHAT_COMPLETIONS_PATH):
+        path = path[: -len(_CHAT_COMPLETIONS_PATH)] or "/"
+
+    return urlunsplit(
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            path.rstrip("/"),
+            "",
+            "",
+        )
+    )
+
+
+def _openai_base_url() -> str:
+    return _normalize_openai_base_url(OPENAI_URL)
 
 
 def get_completion(
