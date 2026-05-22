@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, TextIO
 
-from alive_progress import alive_bar
 from dotenv import load_dotenv
 from ..utils.decorator import update_metadata
 
@@ -124,8 +123,7 @@ def render_video_with_subtitles(
     # duration = None
     # progress = [0]
 
-    # # 使用 alive_progress 显示进度条
-    # with alive_bar(100, title="render subtitle", manual=True) as bar:
+    # with Progress() as progress:
     #     for line in process.stdout:
     #         if duration is None:
     #             match = re.search(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2}),", line)
@@ -137,7 +135,7 @@ def render_video_with_subtitles(
     #             elapsed_time = get_seconds(match.group(1))
     #             if duration:
     #                 progress = round(elapsed_time / duration, 2)
-    #                 bar(progress)
+    #                 progress.update(task_id, completed=progress_value)
 
     # process.wait()
     return output_path

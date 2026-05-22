@@ -9,48 +9,38 @@ from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 
 # from pyannote.audio import Pipeline
 # from pydub import AudioSegment
-# from alive_progress import alive_bar, alive_it
 from ..infomation.read_metadata import read_metadata
 from ..text.utils import rm_repeated_sequences, split_para, split_text_into_chunks
 from ..utils.decorator import show_progress, update_metadata
 from ..utils.list import drop_duplicate, flatten
 
 # def segment_audio(audio_path):
-#     # 使用 pyannote.audio 进行语音分割
-#     with alive_bar(
-#         title="audio segmenting",
-#         spinner="dots",
-#         bar=None,
-#         monitor=False,
-#         stats=False,
-#     ) as bar:
-#         pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
-#         diarization = pipeline(str(audio_path))
-#         segments = []
-#         for turn, _, speaker in diarization.itertracks(yield_label=True):
-#             segments.append({"start": turn.start, "end": turn.end, "speaker": speaker})
+#     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
+#     diarization = pipeline(str(audio_path))
+#     segments = []
+#     for turn, _, speaker in diarization.itertracks(yield_label=True):
+#         segments.append({"start": turn.start, "end": turn.end, "speaker": speaker})
 
-#         # 调整分割片段的结束时间
-#         for i in range(len(segments) - 1):
-#             segments[i]["end"] = segments[i + 1]["start"]
+#     # 调整分割片段的结束时间
+#     for i in range(len(segments) - 1):
+#         segments[i]["end"] = segments[i + 1]["start"]
 
-#         # 获取音频文件的总时长并设置最后一个片段的结束时间
-#         audio = AudioSegment.from_file(str(audio_path))
-#         total_duration = len(audio) / 1000
-#         segments[-1]["end"] = total_duration
-#         bar()
+#     # 获取音频文件的总时长并设置最后一个片段的结束时间
+#     audio = AudioSegment.from_file(str(audio_path))
+#     total_duration = len(audio) / 1000
+#     segments[-1]["end"] = total_duration
 
-#         # 创建保存分割片段的目录
-#         chunks_dir = Path(audio_path).parent / "chunks"
-#         os.makedirs(chunks_dir, exist_ok=True)
+#     # 创建保存分割片段的目录
+#     chunks_dir = Path(audio_path).parent / "chunks"
+#     os.makedirs(chunks_dir, exist_ok=True)
 
-#         # 保存每个分割片段为单独的音频文件
-#         for idx, segment in enumerate(segments):
-#             start_time = segment["start"] * 1000  # 转换为毫秒
-#             end_time = segment["end"] * 1000  # 转换为毫秒
-#             chunk = audio[start_time:end_time]
-#             chunk_path = chunks_dir / f"chunk_{idx + 1}_{segment['speaker']}.wav"
-#             chunk.export(chunk_path, format="wav")
+#     # 保存每个分割片段为单独的音频文件
+#     for idx, segment in enumerate(segments):
+#         start_time = segment["start"] * 1000  # 转换为毫秒
+#         end_time = segment["end"] * 1000  # 转换为毫秒
+#         chunk = audio[start_time:end_time]
+#         chunk_path = chunks_dir / f"chunk_{idx + 1}_{segment['speaker']}.wav"
+#         chunk.export(chunk_path, format="wav")
 
 #     return segments
 
@@ -71,7 +61,7 @@ from ..utils.list import drop_duplicate, flatten
 
 # def transcribe_audio(audio_path, segments, model: whisper):
 #     result = []
-#     for segment in alive_it(segments):
+#     for segment in segments:
 #         start = segment["start"]
 #         end = segment["end"]
 #         audio_array = audio_segment_to_array(audio_path, start, end)

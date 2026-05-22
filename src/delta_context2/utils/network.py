@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 
 import httpx
-from alive_progress import alive_bar
+
+from .progress import download_progress
 
 
 def download_file(url: str, save_path: Path):
@@ -22,10 +23,12 @@ def download_file(url: str, save_path: Path):
         total_size = int(response.headers.get("content-length", 0))
 
         with open(save_path, "wb") as file:
-            with alive_bar(total_size, title=f"Downloading {save_path.name}") as bar:
+            with download_progress(
+                f"Downloading {save_path.name}", total_size
+            ) as advance:
                 for chunk in response.iter_bytes(chunk_size=8192):
                     size = file.write(chunk)
-                    bar(size)
+                    advance(size)
 
 
 def check_model_exist(model_type: str) -> tuple[Path, Path]:

@@ -7,7 +7,6 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 
 import tiktoken
-from alive_progress import alive_it
 
 from ..infomation.prompt import (
     TA_IMPROVEMENT_PROMPT,
@@ -16,6 +15,7 @@ from ..infomation.prompt import (
 )
 from ..infomation.read_metadata import read_metadata
 from ..utils.decorator import update_metadata
+from ..utils.progress import track_progress
 from .llm import get_completion
 
 
@@ -161,8 +161,11 @@ def multichunk_initial_translation(
     if done_idx == len(source_text_chunks) - 1:
         return translation_chunks
 
-    for i in alive_it(
-        range(done_idx + 1, len(source_text_chunks)), title="init translate"
+    pending = range(done_idx + 1, len(source_text_chunks))
+    for i in track_progress(
+        pending,
+        title="init translate",
+        total=len(source_text_chunks) - done_idx - 1,
     ):
         prompt = TA_INIT_TRANSLATION_PROMPT.format(
             SOURCE_LANG=source_lang,
@@ -231,9 +234,11 @@ You will be provided with a source text and its translation and your goal is to 
     if done_idx == len(source_text_chunks) - 1:
         return reflection_chunks
 
-    for i in alive_it(
-        range(done_idx + 1, len(source_text_chunks)),
+    pending = range(done_idx + 1, len(source_text_chunks))
+    for i in track_progress(
+        pending,
         title="reflect translate",
+        total=len(source_text_chunks) - done_idx - 1,
     ):
         # Will translate chunk i
         tagged_text = (
@@ -317,9 +322,11 @@ def multichunk_improve_translation(
     if done_idx == len(source_text_chunks) - 1:
         return translation_2_chunks
 
-    for i in alive_it(
-        range(done_idx + 1, len(source_text_chunks)),
+    pending = range(done_idx + 1, len(source_text_chunks))
+    for i in track_progress(
+        pending,
         title="improve translate",
+        total=len(source_text_chunks) - done_idx - 1,
     ):
         # Will translate chunk i
         tagged_text = "<TRANSLATE_THIS>" + source_text_chunks[i] + "</TRANSLATE_THIS>"

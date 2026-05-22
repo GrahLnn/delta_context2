@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 
 import demjson3
-from alive_progress import alive_bar, alive_it
 from tenacity import retry, stop_after_attempt
 
 import tiktoken
@@ -27,6 +26,7 @@ from ..infomation.read_metadata import read_metadata
 from ..text.utils import abs_uni_len, normalize_to_10
 from ..utils.decorator import update_metadata
 from ..utils.list import flatten
+from ..utils.progress import step_progress, track_progress
 
 
 def modify_zh_list(zh_list):
@@ -351,13 +351,9 @@ def split_to_atomic_part(
                 PARAGRAPH_A=chunk.translate(str.maketrans(".,", "  ")),
                 PARAGRAPH_B=translation.translate(str.maketrans("。，;", "   ")),
             )
-            with alive_bar(
-                1,
-                title=f"align chunk {i + 1}/{len(source_text_chunks)}",
-                bar=None,
-                stats=False,
-                monitor=False,
-            ) as bar:
+            with step_progress(
+                f"align chunk {i + 1}/{len(source_text_chunks)}"
+            ) as advance:
                 ttry_count = 0
                 while True:
                     try:
@@ -418,7 +414,7 @@ def split_to_atomic_part(
                     else:
                         en_texts.append(source_text)
                         zh_texts.append(translated_text)
-                bar()
+                advance()
             logsave.update(
                 {"first_fix": [{"en": e, "zh": z} for e, z in zip(en_texts, zh_texts)]}
             )
@@ -444,7 +440,7 @@ def split_to_atomic_part(
 
             chunk_atomic_zhs = []
             chunk_atomic_ens = []
-            for sentence_idx, (en_src, zh_tsl) in alive_it(
+            for sentence_idx, (en_src, zh_tsl) in track_progress(
                 enumerate(zip(en_texts, zh_texts)),
                 total=len(zh_texts),
                 title=f"split chunk {i + 1}/{len(source_text_chunks)}",

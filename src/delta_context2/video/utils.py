@@ -2,8 +2,6 @@ import os
 import re
 import subprocess
 
-from alive_progress import alive_bar
-
 from ..utils.subtitle import get_seconds
 
 
@@ -48,8 +46,7 @@ def compress_video(input_file):
 
     # duration = None
     # progress = 0
-    # # 使用 alive_progress 显示进度条
-    # with alive_bar(100, title="compressing", manual=True) as bar:
+    # with Progress() as progress:
     #     while True:
     #         line = process.stdout.readline()
     #         if not line and process.poll() is not None:
@@ -65,7 +62,7 @@ def compress_video(input_file):
     #             elapsed_time = get_seconds(match.group(1))
     #             if duration:
     #                 progress = round(elapsed_time / duration, 2)
-    #                 bar(progress)
+    #                 progress.update(task_id, completed=progress_value)
 
     # process.wait()
 

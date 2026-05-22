@@ -4,10 +4,10 @@ from pathlib import Path
 
 import httpx
 import yt_dlp
-from alive_progress import alive_bar
 from PIL import Image
 
 from ..text.utils import formal_file_name, formal_folder_name, remove_illegal_chars
+from ..utils.progress import step_progress
 from .llm import openai_completion
 from .prompt import SINGLE_TRANSLATION_PROMPT
 
@@ -36,7 +36,7 @@ def get_ytb_video_info(
     if ytb_cookies:
         options["cookiefile"] = ytb_cookies
     attempts = 0
-    with alive_bar(1, bar=None, title="fetch video info", monitor=False) as bar:
+    with step_progress("fetch video info") as advance:
         while attempts < max_retries:
             try:
                 with yt_dlp.YoutubeDL(options) as ydl:
@@ -78,7 +78,7 @@ def get_ytb_video_info(
                     data_path.parent.mkdir(parents=True, exist_ok=True)
                     with open(data_path, "w", encoding="utf-8") as file:
                         json.dump(metadata, file, ensure_ascii=False, indent=4)
-                    bar()
+                    advance()
                     return metadata
             except Exception as e:
                 print(f"Attempt {attempts + 1} failed with error: {e}")

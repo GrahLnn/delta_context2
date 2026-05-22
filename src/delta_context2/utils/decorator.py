@@ -2,7 +2,7 @@ import json
 from functools import wraps
 from pathlib import Path
 
-from alive_progress import alive_bar
+from .progress import step_progress
 
 
 def update_metadata(*fields):
@@ -34,9 +34,9 @@ def show_progress(title):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            with alive_bar(1, bar=None, title=title, monitor=False) as bar:
+            with step_progress(title) as advance:
                 result = func(*args, **kwargs)
-                bar()
+                advance()
             return result
 
         return wrapper
