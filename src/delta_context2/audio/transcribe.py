@@ -1,9 +1,9 @@
 import difflib
 
 import regex as re
-import whisper
 from tqdm import tqdm
 
+from .mega_asr import load_mono_audio, normalize_time_stamps, transcribe_with_mega_asr
 from ..infomation.llm import get_completion
 from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 
@@ -12,7 +12,7 @@ from ..infomation.prompt import TRANSCRIBTION_CORECTION_PROMPT
 from ..infomation.read_metadata import read_metadata
 from ..text.utils import rm_repeated_sequences, split_para, split_text_into_chunks
 from ..utils.decorator import show_progress, update_metadata
-from ..utils.list import drop_duplicate, flatten
+from ..utils.list import drop_duplicate
 
 # def segment_audio(audio_path):
 #     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
@@ -163,23 +163,6 @@ def _words_to_text(words) -> str:
     return " ".join([_get_attr_or_key(word, "word", "") or "" for word in words])
 
 
-def _normalize_qwen_words(time_stamps):
-    words = []
-    for stamp in time_stamps or []:
-        if isinstance(stamp, dict):
-            text = stamp.get("text") or stamp.get("word") or stamp.get("token")
-            start = stamp.get("start") or stamp.get("start_time")
-            end = stamp.get("end") or stamp.get("end_time")
-        else:
-            text = getattr(stamp, "text", None) or getattr(stamp, "word", None)
-            start = getattr(stamp, "start", None) or getattr(stamp, "start_time", None)
-            end = getattr(stamp, "end", None) or getattr(stamp, "end_time", None)
-        if text is None:
-            continue
-        words.append({"word": text, "start": start, "end": end})
-    return words
-
-
 @show_progress("Transcribing")
 @update_metadata(
     ("ord_words", lambda result: result["ord_words"]),
@@ -188,12 +171,12 @@ def _normalize_qwen_words(time_stamps):
 )
 def transcribe_audio(item_dir: str, audio_path: str) -> dict:
     """
-    使用 Qwen3-ASR (transformers 后端) + Forced Aligner 进行离线转录，返回原始信息。
+    使用 Mega-ASR LoRA 进行离线转录，词级时间戳由底层 Qwen3 forced aligner 统一产出。
     """
     if audio_path is None:
         raise ValueError("No audio path provided")
 
-    audio = whisper.load_audio(audio_path)
+    audio = load_mono_audio(audio_path)
 
     check = read_metadata(
         item_dir,
@@ -207,41 +190,12 @@ def transcribe_audio(item_dir: str, audio_path: str) -> dict:
             "language": check.get("language"),
         }
 
-    import torch
-    from qwen_asr import Qwen3ASRModel
-
-    model = Qwen3ASRModel.from_pretrained(
-        "Qwen/Qwen3-ASR-1.7B",
-        dtype=torch.bfloat16,
-        device_map="cuda:0",
-        forced_aligner="Qwen/Qwen3-ForcedAligner-0.6B",
-        forced_aligner_kwargs={
-            "dtype": torch.bfloat16,
-            "device_map": "cuda:0",
-        },
-    )
-
-    results = model.transcribe(
-        audio=audio_path,
-        language=None,
-        return_time_stamps=True,
-    )
-
-    del model
-
-    if not results:
-        raise ValueError("Qwen3-ASR returned no results")
-
-    first = results[0]
-    ord_transcription = _get_attr_or_key(first, "text", "")
-    language = _get_attr_or_key(first, "language", None)
-    time_stamps = (
-        _get_attr_or_key(first, "time_stamps", None)
-        or _get_attr_or_key(first, "timestamps", None)
-        or _get_attr_or_key(first, "words", None)
-        or []
-    )
-    words = _normalize_qwen_words(time_stamps)
+    result = transcribe_with_mega_asr(audio_path)
+    ord_transcription = result["text"]
+    language = result["language"]
+    words = normalize_time_stamps(result["time_stamps"])
+    if ord_transcription and not words:
+        raise ValueError("Mega-ASR returned text without word timestamps.")
 
     return {
         "ord_text": ord_transcription,
