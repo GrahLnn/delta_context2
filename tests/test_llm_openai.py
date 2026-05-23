@@ -68,6 +68,7 @@ def test_openai_completion_uses_openai_sdk(monkeypatch):
         "api_key": "test-key",
         "base_url": "https://aiberm.com/v1",
         "timeout": 123,
+        "max_retries": 0,
     }
     assert captured["completion_args"] == {
         "model": "test-model",
@@ -79,3 +80,80 @@ def test_openai_completion_uses_openai_sdk(monkeypatch):
         "stream": False,
         "response_format": {"type": "json_object"},
     }
+
+
+def test_openai_completion_retries_retryable_status(monkeypatch):
+    from openai import APIStatusError
+    import httpx
+
+    from delta_context2.infomation import llm
+
+    attempts = {"count": 0}
+
+    class FakeChatCompletions:
+        @staticmethod
+        def create(**kwargs):
+            attempts["count"] += 1
+            if attempts["count"] == 1:
+                request = httpx.Request("POST", "https://example.test/v1/chat/completions")
+                response = httpx.Response(503, request=request)
+                raise APIStatusError("service unavailable", response=response, body=None)
+            message = SimpleNamespace(content="done")
+            choice = SimpleNamespace(message=message)
+            return SimpleNamespace(choices=[choice])
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            self.chat = SimpleNamespace(completions=FakeChatCompletions())
+
+    monkeypatch.setattr(llm, "OpenAI", FakeOpenAI)
+    monkeypatch.setattr(llm, "OPENAI_KEY", "test-key")
+    monkeypatch.setattr(llm, "OPENAI_URL", "https://example.test/v1")
+    monkeypatch.setattr(llm, "OPENAI_MAX_ATTEMPTS", 2)
+    monkeypatch.setattr(llm, "OPENAI_RETRY_INITIAL_DELAY", 0)
+
+    assert llm.openai_completion("prompt", model="test-model") == "done"
+    assert attempts["count"] == 2
+
+
+def test_openai_completion_does_not_retry_non_retryable_status(monkeypatch):
+    from openai import AuthenticationError
+    import httpx
+    import pytest
+
+    from delta_context2.infomation import llm
+
+    attempts = {"count": 0}
+
+    class FakeChatCompletions:
+        @staticmethod
+        def create(**kwargs):
+            attempts["count"] += 1
+            request = httpx.Request("POST", "https://example.test/v1/chat/completions")
+            response = httpx.Response(401, request=request)
+            raise AuthenticationError("invalid key", response=response, body=None)
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            self.chat = SimpleNamespace(completions=FakeChatCompletions())
+
+    monkeypatch.setattr(llm, "OpenAI", FakeOpenAI)
+    monkeypatch.setattr(llm, "OPENAI_KEY", "test-key")
+    monkeypatch.setattr(llm, "OPENAI_URL", "https://example.test/v1")
+    monkeypatch.setattr(llm, "OPENAI_MAX_ATTEMPTS", 3)
+    monkeypatch.setattr(llm, "OPENAI_RETRY_INITIAL_DELAY", 0)
+
+    with pytest.raises(AuthenticationError):
+        llm.openai_completion("prompt", model="test-model")
+
+    assert attempts["count"] == 1
+
+
+def test_openai_http_loggers_are_quiet():
+    import logging
+
+    from delta_context2.infomation import llm
+
+    assert logging.getLogger("httpx").level >= logging.WARNING
+    assert logging.getLogger("httpcore").level >= logging.WARNING
+    assert logging.getLogger("openai").level >= logging.ERROR

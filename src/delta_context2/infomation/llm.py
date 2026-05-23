@@ -1,9 +1,11 @@
 import os
 import re
+import time
+import logging
 from urllib.parse import urlsplit, urlunsplit
 
 import demjson3
-from openai import OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 import tiktoken
 from dotenv import find_dotenv, load_dotenv
 from retry import retry
@@ -28,7 +30,20 @@ OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 TASK_MODEL = os.getenv("TASK_MODEL")
 TRANSLATION_MODEL = os.getenv("TRANSLATION_MODEL")
 OPENAI_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT", "300"))
+OPENAI_MAX_ATTEMPTS = int(os.getenv("OPENAI_MAX_ATTEMPTS", "3"))
+OPENAI_RETRY_INITIAL_DELAY = float(os.getenv("OPENAI_RETRY_INITIAL_DELAY", "1"))
+OPENAI_RETRY_BACKOFF = float(os.getenv("OPENAI_RETRY_BACKOFF", "2"))
 _CHAT_COMPLETIONS_PATH = "/chat/completions"
+_RETRYABLE_STATUS_CODES = {408, 409, 429, 500, 502, 503, 504}
+
+
+def _quiet_openai_http_logs() -> None:
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("openai").setLevel(logging.ERROR)
+
+
+_quiet_openai_http_logs()
 
 
 @show_progress("getting summary")
@@ -131,6 +146,32 @@ def _openai_base_url() -> str:
     return _normalize_openai_base_url(OPENAI_URL)
 
 
+def _is_retryable_openai_error(exc: Exception) -> bool:
+    if isinstance(exc, (APIConnectionError, APITimeoutError)):
+        return True
+    if isinstance(exc, APIStatusError):
+        return exc.status_code in _RETRYABLE_STATUS_CODES
+    return False
+
+
+def _create_chat_completion(client: OpenAI, completion_args: dict) -> object:
+    attempts = max(1, OPENAI_MAX_ATTEMPTS)
+    delay = max(0.0, OPENAI_RETRY_INITIAL_DELAY)
+    backoff = max(1.0, OPENAI_RETRY_BACKOFF)
+
+    for attempt in range(attempts):
+        try:
+            return client.chat.completions.create(**completion_args)
+        except Exception as exc:
+            if not _is_retryable_openai_error(exc) or attempt == attempts - 1:
+                raise
+            if delay > 0:
+                time.sleep(delay)
+            delay *= backoff
+
+    raise RuntimeError("OpenAI completion retry loop exited unexpectedly.")
+
+
 def get_completion(
     prompt: str,
     system_message: str = "",
@@ -161,7 +202,12 @@ def openai_completion(
     else:
         messages = [{"role": "user", "content": prompt}]
 
-    client = OpenAI(api_key=OPENAI_KEY, base_url=_openai_base_url(), timeout=OPENAI_TIMEOUT)
+    client = OpenAI(
+        api_key=OPENAI_KEY,
+        base_url=_openai_base_url(),
+        timeout=OPENAI_TIMEOUT,
+        max_retries=0,
+    )
     completion_args = {
         "model": model,
         "temperature": temperature,
@@ -171,5 +217,5 @@ def openai_completion(
     if json_output:
         completion_args["response_format"] = {"type": "json_object"}
 
-    res = client.chat.completions.create(**completion_args)
+    res = _create_chat_completion(client, completion_args)
     return res.choices[0].message.content or ""
