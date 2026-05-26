@@ -2,6 +2,8 @@ import os
 import re
 import time
 import logging
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from urllib.parse import urlsplit, urlunsplit
 
 import demjson3
@@ -34,7 +36,8 @@ OPENAI_MAX_ATTEMPTS = int(os.getenv("OPENAI_MAX_ATTEMPTS", "3"))
 OPENAI_RETRY_INITIAL_DELAY = float(os.getenv("OPENAI_RETRY_INITIAL_DELAY", "1"))
 OPENAI_RETRY_BACKOFF = float(os.getenv("OPENAI_RETRY_BACKOFF", "2"))
 _CHAT_COMPLETIONS_PATH = "/chat/completions"
-_RETRYABLE_STATUS_CODES = {408, 409, 429, 500, 502, 503, 504}
+_FATAL_STATUS_CODES = {400, 401, 403, 404, 422}
+_RETRYABLE_STATUS_CODES = {408, 409, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524}
 
 
 def _quiet_openai_http_logs() -> None:
@@ -150,8 +153,45 @@ def _is_retryable_openai_error(exc: Exception) -> bool:
     if isinstance(exc, (APIConnectionError, APITimeoutError)):
         return True
     if isinstance(exc, APIStatusError):
-        return exc.status_code in _RETRYABLE_STATUS_CODES
+        if exc.status_code in _FATAL_STATUS_CODES:
+            return False
+        if exc.status_code in _RETRYABLE_STATUS_CODES:
+            return True
+        if isinstance(exc.body, dict) and isinstance(exc.body.get("retryable"), bool):
+            return exc.body["retryable"]
     return False
+
+
+def _parse_retry_after(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        try:
+            retry_at = parsedate_to_datetime(str(value))
+        except (TypeError, ValueError, IndexError, OverflowError):
+            return None
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        seconds = (retry_at - datetime.now(timezone.utc)).total_seconds()
+    return max(0.0, seconds)
+
+
+def _retry_delay_for_openai_error(exc: Exception, fallback_delay: float) -> float:
+    if not isinstance(exc, APIStatusError):
+        return fallback_delay
+
+    retry_after = _parse_retry_after(exc.response.headers.get("retry-after"))
+    if retry_after is not None:
+        return retry_after
+
+    if isinstance(exc.body, dict):
+        retry_after = _parse_retry_after(exc.body.get("retry_after"))
+        if retry_after is not None:
+            return retry_after
+
+    return fallback_delay
 
 
 def _create_chat_completion(client: OpenAI, completion_args: dict) -> object:
@@ -165,8 +205,9 @@ def _create_chat_completion(client: OpenAI, completion_args: dict) -> object:
         except Exception as exc:
             if not _is_retryable_openai_error(exc) or attempt == attempts - 1:
                 raise
-            if delay > 0:
-                time.sleep(delay)
+            current_delay = _retry_delay_for_openai_error(exc, delay)
+            if current_delay > 0:
+                time.sleep(current_delay)
             delay *= backoff
 
     raise RuntimeError("OpenAI completion retry loop exited unexpectedly.")

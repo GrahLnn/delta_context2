@@ -116,6 +116,87 @@ def test_openai_completion_retries_retryable_status(monkeypatch):
     assert attempts["count"] == 2
 
 
+def test_openai_completion_retries_cloudflare_524_retryable_body(monkeypatch):
+    from openai import APIStatusError
+    import httpx
+
+    from delta_context2.infomation import llm
+
+    attempts = {"count": 0}
+    sleeps = []
+
+    class FakeChatCompletions:
+        @staticmethod
+        def create(**kwargs):
+            attempts["count"] += 1
+            if attempts["count"] == 1:
+                request = httpx.Request("POST", "https://example.test/v1/chat/completions")
+                response = httpx.Response(524, request=request)
+                raise APIStatusError(
+                    "origin response timeout",
+                    response=response,
+                    body={"retryable": True, "retry_after": 120},
+                )
+            message = SimpleNamespace(content="done")
+            choice = SimpleNamespace(message=message)
+            return SimpleNamespace(choices=[choice])
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            self.chat = SimpleNamespace(completions=FakeChatCompletions())
+
+    monkeypatch.setattr(llm, "OpenAI", FakeOpenAI)
+    monkeypatch.setattr(llm, "OPENAI_KEY", "test-key")
+    monkeypatch.setattr(llm, "OPENAI_URL", "https://example.test/v1")
+    monkeypatch.setattr(llm, "OPENAI_MAX_ATTEMPTS", 2)
+    monkeypatch.setattr(llm, "OPENAI_RETRY_INITIAL_DELAY", 0)
+    monkeypatch.setattr(llm.time, "sleep", sleeps.append)
+
+    assert llm.openai_completion("prompt", model="test-model") == "done"
+    assert attempts["count"] == 2
+    assert sleeps == [120.0]
+
+
+def test_openai_retry_delay_prefers_retry_after_header():
+    from openai import APIStatusError
+    import httpx
+
+    from delta_context2.infomation import llm
+
+    request = httpx.Request("POST", "https://example.test/v1/chat/completions")
+    response = httpx.Response(503, request=request, headers={"retry-after": "7"})
+    exc = APIStatusError(
+        "service unavailable",
+        response=response,
+        body={"retryable": True, "retry_after": 120},
+    )
+
+    assert llm._retry_delay_for_openai_error(exc, 1) == 7.0
+
+
+def test_openai_completion_honors_retryable_body_for_unknown_status(monkeypatch):
+    from openai import APIStatusError
+    import httpx
+
+    from delta_context2.infomation import llm
+
+    request = httpx.Request("POST", "https://example.test/v1/chat/completions")
+    response = httpx.Response(599, request=request)
+    retryable_error = APIStatusError(
+        "custom retryable error",
+        response=response,
+        body={"retryable": True},
+    )
+    fatal_error = APIStatusError(
+        "custom fatal error",
+        response=response,
+        body={"retryable": False},
+    )
+
+    assert llm._is_retryable_openai_error(retryable_error) is True
+    assert llm._is_retryable_openai_error(fatal_error) is False
+
+
 def test_openai_completion_does_not_retry_non_retryable_status(monkeypatch):
     from openai import AuthenticationError
     import httpx
