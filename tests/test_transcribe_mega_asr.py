@@ -126,6 +126,85 @@ def test_mega_asr_transcriber_mounts_lora_on_qwen_model(monkeypatch, tmp_path):
     assert captured["active"] is True
 
 
+def test_ensure_mega_asr_weights_downloads_missing_forced_aligner(monkeypatch, tmp_path):
+    from delta_context2.audio import mega_asr
+
+    (tmp_path / "Qwen3-ASR-1.7B").mkdir()
+    (tmp_path / "Qwen3-ASR-1.7B" / "config.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "Qwen3-ASR-1.7B" / "model.safetensors").write_bytes(b"model")
+    (tmp_path / "mega-asr-merged").mkdir()
+    router_dir = tmp_path / "audio_quality_router"
+    router_dir.mkdir()
+    (router_dir / "best_acc_model.safetensors").write_bytes(b"router")
+
+    downloads = []
+
+    def fake_download(repo_id, target_dir):
+        downloads.append((repo_id, target_dir))
+        target_dir.mkdir(parents=True, exist_ok=True)
+        (target_dir / "config.json").write_text("{}", encoding="utf-8")
+        (target_dir / "model.safetensors").write_bytes(b"model")
+
+    monkeypatch.setattr(mega_asr, "_download_snapshot", fake_download)
+
+    forced_aligner_dir = tmp_path / "Qwen3-ForcedAligner-0.6B"
+    mega_asr.ensure_mega_asr_weights(tmp_path, forced_aligner_dir)
+
+    assert downloads == [(mega_asr.QWEN_FORCED_ALIGNER_REPO_ID, forced_aligner_dir)]
+
+
+def test_checkpoint_has_model_rejects_config_without_weights(tmp_path):
+    from delta_context2.audio import mega_asr
+
+    model_dir = tmp_path / "incomplete-model"
+    model_dir.mkdir()
+    (model_dir / "config.json").write_text("{}", encoding="utf-8")
+
+    assert mega_asr._checkpoint_has_model(model_dir) is False
+
+
+def test_mega_asr_transcriber_passes_local_forced_aligner_path(monkeypatch, tmp_path):
+    from delta_context2.audio import mega_asr
+
+    captured = {}
+    qwen_inner_model = object()
+
+    class FakeQwen3ASRModel:
+        @classmethod
+        def from_pretrained(cls, *args, **kwargs):
+            captured["model_args"] = args
+            captured["model_kwargs"] = kwargs
+            return SimpleNamespace(model=qwen_inner_model)
+
+    class FakeSwitch:
+        def __init__(self, keep_delta_on_gpu=True):
+            pass
+
+        def add_adapter(self, **kwargs):
+            captured["adapter_dir"] = kwargs["adapter_dir"]
+
+        def set_active(self, active):
+            pass
+
+    monkeypatch.setitem(
+        sys.modules,
+        "qwen_asr",
+        SimpleNamespace(Qwen3ASRModel=FakeQwen3ASRModel),
+    )
+    monkeypatch.setattr(mega_asr, "ensure_mega_asr_weights", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mega_asr, "LoRADeltaSwitch", FakeSwitch)
+
+    settings = mega_asr.MegaASRSettings(
+        ckpt_dir=tmp_path,
+        routing_enabled=False,
+    )
+    mega_asr.MegaASRTranscriber(settings)
+
+    expected_aligner_path = tmp_path / mega_asr.DEFAULT_FORCED_ALIGNER_DIRNAME
+    assert captured["model_kwargs"]["forced_aligner"] == str(expected_aligner_path)
+    assert captured["model_kwargs"]["forced_aligner"] != mega_asr.QWEN_FORCED_ALIGNER_REPO_ID
+
+
 def test_format_words_handles_unspaced_tokens():
     from delta_context2.audio.transcribe import format_words
 

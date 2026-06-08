@@ -15,6 +15,7 @@ from safetensors.torch import safe_open
 MEGA_ASR_REPO_ID = "zhifeixie/Mega-ASR"
 QWEN_FORCED_ALIGNER_REPO_ID = "Qwen/Qwen3-ForcedAligner-0.6B"
 DEFAULT_CKPT_DIR = Path("ckpt") / "Mega-ASR"
+DEFAULT_FORCED_ALIGNER_DIRNAME = "Qwen3-ForcedAligner-0.6B"
 DEFAULT_ROUTER_WINDOW_SECONDS = 30.0
 DEFAULT_ROUTER_MAX_WINDOWS = 12
 DEFAULT_ROUTER_DEGRADED_RATIO = 0.5
@@ -56,6 +57,7 @@ class MegaASRSettings:
     max_inference_batch_size: int = 16
     max_new_tokens: int = DEFAULT_MAX_NEW_TOKENS
     keep_delta_on_gpu: bool = True
+    forced_aligner_dir: Path | None = None
 
     @classmethod
     def from_env(cls) -> "MegaASRSettings":
@@ -80,6 +82,11 @@ class MegaASRSettings:
             max_inference_batch_size=_env_int("MEGA_ASR_BATCH_SIZE", 16),
             max_new_tokens=_env_int("MEGA_ASR_MAX_NEW_TOKENS", DEFAULT_MAX_NEW_TOKENS),
             keep_delta_on_gpu=_env_bool("MEGA_ASR_KEEP_DELTA_ON_GPU", True),
+            forced_aligner_dir=(
+                Path(value)
+                if (value := os.getenv("MEGA_ASR_FORCED_ALIGNER_DIR"))
+                else None
+            ),
         )
 
 
@@ -417,25 +424,39 @@ def load_mono_audio(audio: str | os.PathLike[str], *, sample_rate: int = SAMPLE_
 
 
 def _checkpoint_has_model(path: Path) -> bool:
-    return path.is_dir() and (path / "config.json").is_file()
+    return (
+        path.is_dir()
+        and (path / "config.json").is_file()
+        and any(path.glob("*.safetensors"))
+    )
 
 
-def ensure_mega_asr_weights(ckpt_dir: Path) -> None:
-    model_dir = ckpt_dir / "Qwen3-ASR-1.7B"
-    lora_dir = ckpt_dir / "mega-asr-merged"
-    router_path = ckpt_dir / "audio_quality_router" / "best_acc_model.safetensors"
-
-    if _checkpoint_has_model(model_dir) and lora_dir.is_dir() and router_path.is_file():
-        return
-
+def _download_snapshot(repo_id: str, target_dir: Path) -> None:
     from huggingface_hub import snapshot_download
 
     snapshot_download(
-        repo_id=MEGA_ASR_REPO_ID,
+        repo_id=repo_id,
         repo_type="model",
-        local_dir=str(ckpt_dir),
+        local_dir=str(target_dir),
         local_dir_use_symlinks=False,
     )
+
+
+def ensure_mega_asr_weights(ckpt_dir: Path, forced_aligner_dir: Path | None = None) -> None:
+    model_dir = ckpt_dir / "Qwen3-ASR-1.7B"
+    lora_dir = ckpt_dir / "mega-asr-merged"
+    router_path = ckpt_dir / "audio_quality_router" / "best_acc_model.safetensors"
+    forced_aligner_dir = forced_aligner_dir or ckpt_dir / DEFAULT_FORCED_ALIGNER_DIRNAME
+
+    if not (
+        _checkpoint_has_model(model_dir)
+        and lora_dir.is_dir()
+        and router_path.is_file()
+    ):
+        _download_snapshot(MEGA_ASR_REPO_ID, ckpt_dir)
+
+    if not _checkpoint_has_model(forced_aligner_dir):
+        _download_snapshot(QWEN_FORCED_ALIGNER_REPO_ID, forced_aligner_dir)
 
 
 def _result_items(result: Any) -> list[Any]:
@@ -470,7 +491,12 @@ class MegaASRTranscriber:
     def __init__(self, settings: MegaASRSettings | None = None) -> None:
         self.settings = settings or MegaASRSettings.from_env()
         self.ckpt_dir = self.settings.ckpt_dir.expanduser()
-        ensure_mega_asr_weights(self.ckpt_dir)
+        self.forced_aligner_path = (
+            self.settings.forced_aligner_dir.expanduser()
+            if self.settings.forced_aligner_dir is not None
+            else self.ckpt_dir / DEFAULT_FORCED_ALIGNER_DIRNAME
+        )
+        ensure_mega_asr_weights(self.ckpt_dir, self.forced_aligner_path)
 
         self.model_path = self.ckpt_dir / "Qwen3-ASR-1.7B"
         self.lora_dir = self.ckpt_dir / "mega-asr-merged"
@@ -509,7 +535,7 @@ class MegaASRTranscriber:
             device_map=device_map,
             max_inference_batch_size=self.settings.max_inference_batch_size,
             max_new_tokens=self.settings.max_new_tokens,
-            forced_aligner=QWEN_FORCED_ALIGNER_REPO_ID,
+            forced_aligner=str(self.forced_aligner_path),
             forced_aligner_kwargs={
                 "dtype": dtype,
                 "device_map": device_map,
