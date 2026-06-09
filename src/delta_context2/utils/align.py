@@ -504,6 +504,134 @@ def mechanically_repair_zh_subtitle_segments(zh_list, subtitle_len=27):
     return result
 
 
+def _zh_can_merge_for_readability(left, right, subtitle_len):
+    max_merged_len = int(subtitle_len * 1.5)
+    return _zh_len(_join_zh_segments(left, right)) <= max_merged_len
+
+
+def _zh_starts_contrast_pair(text):
+    return text.strip().startswith(
+        (
+            "不只是",
+            "不只",
+            "不仅",
+            "不僅",
+            "不光",
+            "不单",
+            "不單",
+        )
+    )
+
+
+def _zh_starts_contrast_tail(text):
+    return text.strip().startswith(("而是", "而不是", "也不是"))
+
+
+def _zh_short_segment_prefers_previous(text):
+    text = text.strip()
+    return text.startswith(
+        (
+            "而是",
+            "而不是",
+            "也就是",
+            "也就是说",
+            "也就是說",
+            "从而",
+            "從而",
+            "于是",
+            "於是",
+            "因此",
+            "所以",
+            "同时",
+            "同時",
+            "并且",
+            "並且",
+            "再顺着",
+            "再順著",
+            "也就",
+        )
+    )
+
+
+def _zh_short_segment_prefers_next(text):
+    text = text.strip()
+    return text.startswith(
+        (
+            "不只是",
+            "不只",
+            "不仅",
+            "不僅",
+            "不光",
+            "不单",
+            "不單",
+            "当",
+            "當",
+            "如果",
+            "比如",
+            "也许",
+            "也許",
+            "或者",
+        )
+    )
+
+
+def _zh_is_short_for_readability(text, subtitle_len):
+    return _zh_len(text) <= min(13, max(8, subtitle_len // 2))
+
+
+def merge_short_zh_subtitle_segments_for_readability(zh_list, subtitle_len=27):
+    result = []
+    idx = 0
+    while idx < len(zh_list):
+        current = zh_list[idx].strip()
+        if not current:
+            idx += 1
+            continue
+
+        next_item = zh_list[idx + 1].strip() if idx + 1 < len(zh_list) else ""
+        if (
+            next_item
+            and _zh_is_short_for_readability(current, subtitle_len)
+            and _zh_starts_contrast_pair(current)
+            and _zh_starts_contrast_tail(next_item)
+            and _zh_can_merge_for_readability(current, next_item, subtitle_len)
+        ):
+            result.append(_join_zh_segments(current, next_item))
+            idx += 2
+            continue
+
+        if (
+            result
+            and _zh_is_short_for_readability(current, subtitle_len)
+            and (
+                _zh_short_segment_prefers_previous(current)
+                or (
+                    _zh_starts_contrast_tail(current)
+                    and _zh_starts_contrast_pair(result[-1])
+                )
+            )
+            and _zh_can_merge_for_readability(result[-1], current, subtitle_len)
+        ):
+            result[-1] = _join_zh_segments(result[-1], current)
+            idx += 1
+            continue
+
+        if (
+            next_item
+            and _zh_is_short_for_readability(current, subtitle_len)
+            and _zh_short_segment_prefers_next(current)
+            and _zh_can_merge_for_readability(current, next_item, subtitle_len)
+        ):
+            result.append(_join_zh_segments(current, next_item))
+            idx += 2
+            continue
+
+        result.append(current)
+        idx += 1
+
+    return result
+
+
 def _zh_segment_has_uncertain_readability_issue(prev_text, current_text):
     current = current_text.strip()
     previous = prev_text.strip()
@@ -552,7 +680,8 @@ def repair_subtitle_segments_for_readability(zh_list, subtitle_len=27, use_llm=T
     repaired = mechanically_repair_zh_subtitle_segments(zh_list, subtitle_len)
     if use_llm and needs_llm_subtitle_segment_repair(repaired):
         repaired = _repair_zh_segments_with_llm(repaired, subtitle_len)
-    return repaired
+    return merge_short_zh_subtitle_segments_for_readability(repaired, subtitle_len)
+
 
 
 def _weighted_word_counts(total_words, weights):

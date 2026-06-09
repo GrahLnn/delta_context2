@@ -116,3 +116,59 @@ def test_normal_short_chinese_segment_does_not_trigger_llm(monkeypatch):
     assert align.repair_subtitle_segments_for_readability(
         original,
     ) == original
+
+
+def test_short_contrast_subtitles_merge_for_readability():
+    from delta_context2.utils import align
+
+    original = ["不只是靠翻检书籍语料", "而是开始亲手设计它们了"]
+
+    assert align.repair_subtitle_segments_for_readability(
+        original,
+        use_llm=False,
+    ) == ["不只是靠翻检书籍语料 而是开始亲手设计它们了"]
+
+
+def test_short_readability_merge_preserves_text_and_rebalances_english():
+    from delta_context2.utils.align import (
+        rebalance_en_segments_for_subtitle_pacing,
+        repair_subtitle_segments_for_readability,
+    )
+
+    zh_list = [
+        "把概率估计从",
+        "不只是靠翻检书籍语料",
+        "而是开始亲手设计它们了",
+    ]
+    en_list = [
+        "moves the probability estimates from",
+        "looking through books",
+        "to designing them",
+    ]
+
+    repaired_zh_list = repair_subtitle_segments_for_readability(
+        zh_list,
+        use_llm=False,
+    )
+    repaired_en_list = rebalance_en_segments_for_subtitle_pacing(
+        repaired_zh_list,
+        en_list,
+    )
+
+    assert repaired_zh_list == [
+        "把概率估计从 不只是靠翻检书籍语料 而是开始亲手设计它们了"
+    ]
+    assert "".join(repaired_zh_list).replace(" ", "") == "".join(zh_list)
+    assert len(repaired_en_list) == len(repaired_zh_list)
+    assert " ".join(repaired_en_list).split() == " ".join(en_list).split()
+
+
+def test_short_readability_merge_keeps_unrelated_short_subtitles_separate():
+    from delta_context2.utils import align
+
+    original = ["想象一下 你有一个机器人", "而这种传输既慢又昂贵"]
+
+    assert align.repair_subtitle_segments_for_readability(
+        original,
+        use_llm=False,
+    ) == original

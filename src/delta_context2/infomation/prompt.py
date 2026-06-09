@@ -165,6 +165,7 @@ Rules:
 4. Avoid segments that start with dangling modifiers or function words such as 的, 地, 得, 密不可分的是, 完全不是, or a lone number that completes the previous phrase.
 5. Avoid segments that end with an unfinished relation such as 对, 给, 向, 把, 被, 将, 让, 使, 从, 在, 接近, 分散到, or a dangling 顿号/逗号.
 6. Avoid standalone fronted clauses such as 当……时 or 如果……, unless the following predicate is already in the same segment.
+7. Merge short adjacent contrast phrases such as 不只是…… / 而是…… when each part would be too short to read comfortably alone.
 
 Return valid JSON only:
 
