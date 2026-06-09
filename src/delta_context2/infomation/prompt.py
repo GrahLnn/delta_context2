@@ -152,6 +152,34 @@ SPLIT_SMALL_SENTENCE_PROMPT = """Your task is to divide a given sentence into a 
 
 Provide your answer within <answer> tags, with each part on a new line."""
 
+SUBTITLE_SEGMENT_REPAIR_PROMPT = """You are repairing Chinese subtitle segmentation for readability.
+
+The English source is context only. Do not force each Chinese subtitle segment to match the English word order, because Chinese and English can place modifiers in different positions.
+
+<english_context>
+{SOURCE_TEXT}
+</english_context>
+
+<current_chinese_segments>
+{CHINESE_SEGMENTS}
+</current_chinese_segments>
+
+Rules:
+1. Keep the Chinese text exactly the same when all segments are concatenated. Do not translate, rewrite, add, remove, or reorder content.
+2. Only move subtitle boundaries, merge adjacent segments, or split a segment at a natural Chinese reading point.
+3. Prefer segments around {SUBTITLE_LEN} visible Chinese-width characters, but a slightly longer segment is better than a broken phrase.
+4. Avoid segments that start with dangling modifiers or function words such as 的, 地, 得, 密不可分的是, 完全不是, or a lone number that completes the previous phrase.
+5. Avoid segments that end with an unfinished relation such as 对, 给, 向, 把, 被, 将, 让, 使, 从, 在, 接近, 分散到, or a dangling 顿号/逗号.
+6. Avoid standalone fronted clauses such as 当……时 or 如果……, unless the following predicate is already in the same segment.
+
+Return valid JSON only:
+
+```json
+{{
+  "segments": ["first repaired Chinese subtitle", "second repaired Chinese subtitle"]
+}}
+```"""
+
 TRANSCRIBTION_CORECTION_PROMPT = """You are an AI assistant tasked with fixing word recognition errors and completing necessary punctuation in a speaker transcription. Your goal is to improve the readability and accuracy of the transcription while maintaining its original meaning and style.
 
 Here is the transcription you will be working with:

@@ -21,6 +21,7 @@ from ..infomation.prompt import (
     PARAGRAPH_ALIGNMENT_TO_SENTENCE_PROMPT,
     SHORT_SEGMENT_TEXT_ALIGN_SENTENCE_ARRAY_PROMPT,
     SPLIT_SMALL_SENTENCE_PROMPT,
+    SUBTITLE_SEGMENT_REPAIR_PROMPT,
 )
 from ..infomation.read_metadata import read_metadata
 from ..text.utils import abs_uni_len, normalize_to_10
@@ -29,16 +30,63 @@ from ..utils.list import flatten
 from ..utils.progress import step_progress, track_progress
 
 
+_ZH_NUMBER_ENDINGS = (
+    "零",
+    "一",
+    "二",
+    "两",
+    "三",
+    "四",
+    "五",
+    "六",
+    "七",
+    "八",
+    "九",
+    "十",
+    "百",
+    "千",
+    "万",
+    "几",
+    "多",
+    "半",
+)
+_ZH_CLASSIFIER_PREFIXES = (
+    "个",
+    "种",
+    "件",
+    "条",
+    "位",
+    "次",
+    "层",
+    "类",
+    "段",
+    "份",
+    "组",
+    "批",
+    "些",
+)
+
+
+def _should_join_zh_split_fragment(current, next_item):
+    current = current.strip()
+    next_item = next_item.strip()
+    if len(current) <= 2:
+        return True
+    return current.endswith(_ZH_NUMBER_ENDINGS) and next_item.startswith(
+        _ZH_CLASSIFIER_PREFIXES
+    )
+
+
 def modify_zh_list(zh_list):
     processed_list = []
 
     i = 0
     while i < len(zh_list):
-        if len(zh_list[i]) <= 2 and i + 1 < len(zh_list):
-            # 如果当前项字符数小于等于2，并且不是最后一项，则将其添加到后一项
-            zh_list[i + 1] = zh_list[i] + "，" + zh_list[i + 1]
+        if i + 1 < len(zh_list) and _should_join_zh_split_fragment(
+            zh_list[i], zh_list[i + 1]
+        ):
+            zh_list[i + 1] = zh_list[i] + zh_list[i + 1]
         else:
-            # 否则将当前项添加到结果列表中
             processed_list.append(zh_list[i])
         i += 1
     return processed_list
@@ -314,6 +362,255 @@ def move_commas(en_list):
     return result
 
 
+def _join_zh_segments(left, right):
+    left = left.strip()
+    right = right.strip()
+    if not left:
+        return right
+    if not right:
+        return left
+    if right.startswith(("的", "地", "得")):
+        return f"{left}{right}"
+    return f"{left} {right}"
+
+
+def _zh_len(text):
+    return abs_uni_len(text.replace(" ", ""))
+
+
+def _normalize_zh_segments_for_compare(segments):
+    return re.sub(r"\s+", "", "".join(segments))
+
+
+def _find_known_continuation_break(text):
+    markers = (
+        " 你",
+        " 我",
+        " 他",
+        " 她",
+        " 它",
+        " 我们",
+        " 你们",
+        " 他们",
+        " 她们",
+        " 它们",
+        " 这",
+        " 那",
+        " 而",
+        " 并",
+        " 但",
+        " 所以",
+        " 因为",
+        " 如果",
+        " 当",
+        " 那么",
+    )
+    positions = [text.find(marker) for marker in markers if text.find(marker) > 0]
+    return min(positions) if positions else -1
+
+
+def _zh_ends_with_definite_open_relation(text):
+    text = text.rstrip(" ，,;；。")
+    return text.endswith(
+        (
+            "对",
+            "向",
+            "给",
+            "把",
+            "被",
+            "将",
+            "让",
+            "使",
+            "从",
+            "和",
+            "与",
+            "比",
+            "到",
+            "在",
+            "接近",
+            "靠近",
+            "分散到",
+            "分布到",
+            "需要",
+            "需要去",
+            "团队里",
+            "组里",
+            "其中",
+        )
+    )
+
+
+def _zh_starts_with_definite_tail(text):
+    text = text.strip()
+    if text.startswith(("的", "地", "得")):
+        return True
+    return _zh_len(text) <= 14 and text.startswith(
+        (
+            "完全不是",
+            "根本不是",
+            "并不是",
+            "也不是",
+            "不是",
+            "0 ",
+            "1 ",
+        )
+    )
+
+
+def _split_definite_zh_tail(previous, current, subtitle_len):
+    current = current.strip()
+    if not previous or not current:
+        return "", current
+
+    max_merged_len = int(subtitle_len * 1.65)
+    current_break = _find_known_continuation_break(current)
+
+    if current.startswith(("的", "地", "得")):
+        if current_break > 0:
+            return current[:current_break].strip(), current[current_break:].strip()
+        if _zh_len(_join_zh_segments(previous, current)) <= max_merged_len:
+            return current, ""
+
+    if _zh_ends_with_definite_open_relation(previous):
+        if current_break > 0:
+            prefix = current[:current_break].strip()
+            if _zh_len(_join_zh_segments(previous, prefix)) <= max_merged_len:
+                return prefix, current[current_break:].strip()
+        if _zh_len(_join_zh_segments(previous, current)) <= max_merged_len:
+            return current, ""
+
+    if _zh_starts_with_definite_tail(current):
+        if _zh_len(_join_zh_segments(previous, current)) <= max_merged_len:
+            return current, ""
+
+    return "", current
+
+
+def mechanically_repair_zh_subtitle_segments(zh_list, subtitle_len=27):
+    result = []
+    for zh in zh_list:
+        current = zh.strip()
+        if not current:
+            continue
+        if result:
+            moved, current = _split_definite_zh_tail(
+                result[-1], current, subtitle_len
+            )
+            if moved:
+                result[-1] = _join_zh_segments(result[-1], moved)
+            if not current:
+                continue
+        result.append(current)
+    return result
+
+
+def _zh_segment_has_uncertain_readability_issue(prev_text, current_text):
+    current = current_text.strip()
+    previous = prev_text.strip()
+    if not current:
+        return False
+    if current.startswith(
+        ("而当", "而如果", "但如果", "并且当", "也就是", "并使用")
+    ):
+        return True
+    if current.startswith(("密不可分的是", "热身例子", "更多可能的")):
+        return True
+    if current.endswith(("的", "了一个", "一个", "一种", "一些", "这件事")):
+        return True
+    if previous.endswith(("顿号", "逗号", "一个", "一种", "一些")):
+        return True
+    return False
+
+
+def needs_llm_subtitle_segment_repair(zh_list):
+    for idx, current in enumerate(zh_list):
+        previous = zh_list[idx - 1] if idx > 0 else ""
+        if _zh_segment_has_uncertain_readability_issue(previous, current):
+            return True
+    return False
+
+
+def _repair_zh_segments_with_llm(source_text, zh_list, subtitle_len):
+    prompt = SUBTITLE_SEGMENT_REPAIR_PROMPT.format(
+        SOURCE_TEXT=source_text,
+        CHINESE_SEGMENTS=json.dumps(zh_list, ensure_ascii=False),
+        SUBTITLE_LEN=subtitle_len,
+    )
+    result = get_json_completion(prompt)
+    repaired = result.get("segments")
+    if not isinstance(repaired, list) or not all(isinstance(s, str) for s in repaired):
+        return zh_list
+
+    repaired = [s.strip() for s in repaired if s.strip()]
+    if _normalize_zh_segments_for_compare(repaired) != _normalize_zh_segments_for_compare(
+        zh_list
+    ):
+        return zh_list
+    return repaired
+
+
+def repair_subtitle_segments_for_readability(
+    source_text, zh_list, subtitle_len=27, use_llm=True
+):
+    repaired = mechanically_repair_zh_subtitle_segments(zh_list, subtitle_len)
+    if use_llm and needs_llm_subtitle_segment_repair(repaired):
+        repaired = _repair_zh_segments_with_llm(source_text, repaired, subtitle_len)
+    return repaired
+
+
+def _weighted_word_counts(total_words, weights):
+    if not weights:
+        return []
+    if total_words < len(weights):
+        return []
+
+    total_weight = sum(weights)
+    if total_weight <= 0:
+        return []
+
+    raw_counts = [weight / total_weight * total_words for weight in weights]
+    counts = [max(1, int(count)) for count in raw_counts]
+
+    while sum(counts) > total_words:
+        candidates = [
+            (raw_counts[idx] - counts[idx], idx)
+            for idx, count in enumerate(counts)
+            if count > 1
+        ]
+        if not candidates:
+            return []
+        _, idx = min(candidates)
+        counts[idx] -= 1
+
+    while sum(counts) < total_words:
+        deficits = [(raw_counts[idx] - counts[idx], idx) for idx in range(len(counts))]
+        _, idx = max(deficits)
+        counts[idx] += 1
+
+    return counts
+
+
+def _has_subtitle_pacing_mismatch(zh_list, en_list):
+    for zh, en in zip(zh_list, en_list):
+        if _zh_len(zh) >= 10 and len(en.split()) <= 2:
+            return True
+    return False
+
+
+def rebalance_en_segments_for_subtitle_pacing(zh_list, en_list):
+    words = " ".join(en_list).split()
+    if len(zh_list) != len(en_list) or _has_subtitle_pacing_mismatch(zh_list, en_list):
+        counts = _weighted_word_counts(len(words), [_zh_len(zh) for zh in zh_list])
+        if counts:
+            result = []
+            offset = 0
+            for count in counts:
+                result.append(" ".join(words[offset : offset + count]))
+                offset += count
+            return result
+    return en_list
+
+
 @update_metadata(("atomic_part", lambda result: result))
 def split_to_atomic_part(
     dir, source_text_chunks, translated_chunks, subtitle_len=27, keep_cache=False
@@ -526,6 +823,15 @@ def split_to_atomic_part(
                             nzh_list.append(fix_item.strip())
                         else:
                             nzh_list.append(item)
+                    repaired_zh_list = repair_subtitle_segments_for_readability(
+                        en_src, nzh_list, subtitle_len
+                    )
+                    repaired_en_list = rebalance_en_segments_for_subtitle_pacing(
+                        repaired_zh_list, en_list
+                    )
+                    if len(repaired_zh_list) == len(repaired_en_list):
+                        nzh_list = repaired_zh_list
+                        en_list = repaired_en_list
                     logsave.update(
                         {
                             f"split_{sentence_idx}": [
