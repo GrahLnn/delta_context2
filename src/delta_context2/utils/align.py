@@ -530,9 +530,8 @@ def needs_llm_subtitle_segment_repair(zh_list):
     return False
 
 
-def _repair_zh_segments_with_llm(source_text, zh_list, subtitle_len):
+def _repair_zh_segments_with_llm(zh_list, subtitle_len):
     prompt = SUBTITLE_SEGMENT_REPAIR_PROMPT.format(
-        SOURCE_TEXT=source_text,
         CHINESE_SEGMENTS=json.dumps(zh_list, ensure_ascii=False),
         SUBTITLE_LEN=subtitle_len,
     )
@@ -549,12 +548,10 @@ def _repair_zh_segments_with_llm(source_text, zh_list, subtitle_len):
     return repaired
 
 
-def repair_subtitle_segments_for_readability(
-    source_text, zh_list, subtitle_len=27, use_llm=True
-):
+def repair_subtitle_segments_for_readability(zh_list, subtitle_len=27, use_llm=True):
     repaired = mechanically_repair_zh_subtitle_segments(zh_list, subtitle_len)
     if use_llm and needs_llm_subtitle_segment_repair(repaired):
-        repaired = _repair_zh_segments_with_llm(source_text, repaired, subtitle_len)
+        repaired = _repair_zh_segments_with_llm(repaired, subtitle_len)
     return repaired
 
 
@@ -824,7 +821,7 @@ def split_to_atomic_part(
                         else:
                             nzh_list.append(item)
                     repaired_zh_list = repair_subtitle_segments_for_readability(
-                        en_src, nzh_list, subtitle_len
+                        nzh_list, subtitle_len
                     )
                     repaired_en_list = rebalance_en_segments_for_subtitle_pacing(
                         repaired_zh_list, en_list

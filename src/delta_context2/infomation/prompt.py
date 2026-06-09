@@ -154,12 +154,6 @@ Provide your answer within <answer> tags, with each part on a new line."""
 
 SUBTITLE_SEGMENT_REPAIR_PROMPT = """You are repairing Chinese subtitle segmentation for readability.
 
-The English source is context only. Do not force each Chinese subtitle segment to match the English word order, because Chinese and English can place modifiers in different positions.
-
-<english_context>
-{SOURCE_TEXT}
-</english_context>
-
 <current_chinese_segments>
 {CHINESE_SEGMENTS}
 </current_chinese_segments>

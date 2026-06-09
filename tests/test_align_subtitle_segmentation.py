@@ -15,7 +15,6 @@ def test_definite_tail_repair_keeps_chinese_modifier_with_previous_segment():
     from delta_context2.utils.align import repair_subtitle_segments_for_readability
 
     result = repair_subtitle_segments_for_readability(
-        "you learn orders of magnitude more if you sit down for lunch with a couple team members",
         [
             "到底是什么样子；而如果你有机会和团队里",
             "的几个人坐下来一起吃顿午饭 你能了解到的信息会多得多",
@@ -37,7 +36,6 @@ def test_rebalance_en_segments_keeps_anchor_count_after_chinese_boundary_repair(
     )
 
     zh_list = repair_subtitle_segments_for_readability(
-        "you learn orders of magnitude more if you sit down for lunch with a couple team members",
         [
             "到底是什么样子；而如果你有机会和团队里",
             "的几个人坐下来一起吃顿午饭 你能了解到的信息会多得多",
@@ -78,7 +76,6 @@ def test_uncertain_readability_issue_uses_llm_boundary_repair(monkeypatch):
     monkeypatch.setattr(align, "get_json_completion", fake_get_json_completion)
 
     result = align.repair_subtitle_segments_for_readability(
-        "And inseparably he had this whole method",
         ["而且 与记录猜测次数这件事", "密不可分的是 他还设计了一整套方法"],
     )
 
@@ -86,7 +83,8 @@ def test_uncertain_readability_issue_uses_llm_boundary_repair(monkeypatch):
         "而且 与记录猜测次数这件事密不可分的是",
         "他还设计了一整套方法",
     ]
-    assert "English source is context only" in captured["prompt"]
+    assert "english_context" not in captured["prompt"]
+    assert "And inseparably" not in captured["prompt"]
 
 
 def test_llm_boundary_repair_rejects_text_changes(monkeypatch):
@@ -101,7 +99,6 @@ def test_llm_boundary_repair_rejects_text_changes(monkeypatch):
     original = ["而且 与记录猜测次数这件事", "密不可分的是 他还设计了一整套方法"]
 
     assert align.repair_subtitle_segments_for_readability(
-        "And inseparably he had this whole method",
         original,
     ) == original
 
@@ -117,6 +114,5 @@ def test_normal_short_chinese_segment_does_not_trigger_llm(monkeypatch):
     original = ["想象一下 你有一个机器人", "而这种传输既慢又昂贵"]
 
     assert align.repair_subtitle_segments_for_readability(
-        "Imagine you have a robot and the transmission is slow and costly",
         original,
     ) == original
